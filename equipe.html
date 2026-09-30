@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.8">
+<meta name="ps-version" content="e1.9">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -255,6 +255,17 @@ var REC_SEMIS=[
 desc:"V\u00e9rifier les dates en rayon et dans la r\u00e9serve correspondante. Sortir les produits qui p\u00e9riment dans les 3 prochains mois : mise en avant, retour au labo si possible, sinon les sortir en p\u00e9rim\u00e9s. \u00c0 faire avant la fin du mois."},
 {id:"auto-manquants",modele:true,actif:true,title:"Traiter les manquants clients",recur:{freq:"ouvre"},assignee:"",priority:"normal",
 desc:"Relancer les produits command\u00e9s pour un client et pr\u00e9venir ceux dont la commande est arriv\u00e9e."}];
+/* Etapes cochables d'une tache (ex. controle des peremptions sur plusieurs zones) */
+function recEtapesZone(zone){var out=[];String(zone||"").split(" + ").forEach(function(part){part=part.trim();if(!part)return;var m=/^(.*?)\s*\(([^)]*,[^)]*)\)\s*$/.exec(part);
+if(m){var base=m[1].trim();m[2].split(",").forEach(function(x){x=x.trim();if(x)out.push(base?base+" : "+x:x)})}else out.push(part)});return out}
+function recChecks(t){if(!t)return null;if(t.checks&&t.checks.length)return t.checks;
+if(t.deModele==="auto-peremptions"){var z=String(t.title||"").split(" : ").slice(1).join(" : ");var e=recEtapesZone(z);if(e.length>1)return e.map(function(l){return{label:l,done:false}})}return null}
+function recCocher(t,i,qui,auj){var c=(recChecks(t)||[]).map(function(x){return Object.assign({},x)});if(!c[i])return{};
+c[i].done=!c[i].done;if(c[i].done){c[i].par=qui||"";c[i].le=auj}else{delete c[i].par;delete c[i].le}
+var tout=c.every(function(x){return x.done});var ch={checks:c};
+if(tout&&!t.done){ch.done=true;ch.doneBy=qui||"";ch.doneAt=auj}
+if(!tout&&t.done){ch.done=false;ch.doneBy=undefined;ch.doneAt=undefined}
+return ch}
 /* Renvoie la nouvelle liste de taches si quelque chose est a creer, sinon null */
 function recGenerer(tasks,events,auj){
 tasks=tasks||[];var ids={};tasks.forEach(function(t){ids[t.id]=1});
@@ -268,7 +279,8 @@ if(chS)modif[rdvT.id]=Object.assign({},rdvT,{semes:semes})}
 liste.forEach(function(t){if(!t||!t.modele||t.actif===false)return;
 if(t.recur){var d=recDerniere(t.recur,t.genJusqua||recPlus(t.depuis||auj,-1),auj);
 if(d){var id="rec-"+t.id+"-"+d;var tropTard=!t.genJusqua&&t.delai&&recPlus(d,Number(t.delai))<auj;if(!ids[id]&&!tropTard){ids[id]=1;var zone=t.programme?t.programme[String(recDate(d).getMonth()+1)]:"";
-ajout.push({id:id,title:t.title+(zone?" : "+zone:""),desc:t.desc||"",assignee:t.assignee||"",priority:t.priority||"normal",done:false,created:recDate(d).toLocaleDateString("fr-FR"),echeance:t.delai?recPlus(d,Number(t.delai)):d,deModele:t.id,creePar:"automatique"})}
+var etapes=zone?recEtapesZone(zone):[];
+ajout.push({id:id,checks:etapes.length>1?etapes.map(function(l){return{label:l,done:false}}):undefined,title:t.title+(zone?" : "+zone:""),desc:t.desc||"",assignee:t.assignee||"",priority:t.priority||"normal",done:false,created:recDate(d).toLocaleDateString("fr-FR"),echeance:t.delai?recPlus(d,Number(t.delai)):d,deModele:t.id,creePar:"automatique"})}
 modif[t.id]=Object.assign({},t,{genJusqua:d})}}
 if(t.auto==="rdv_stock"){var jA=Number(t.joursAvant)||7;var gen=((modif[t.id]||t).gen||[]).slice();var ch=false;
 (events||[]).forEach(function(ev){if(!ev||!ev.lab||!ev.date||(ev.type&&ev.type!=="rdv"))return;
@@ -285,6 +297,18 @@ var neufs={};ajout.forEach(function(a){if(quot[a.deModele])neufs[a.deModele]=a.i
 var garde=liste.filter(function(t){return !(t&&!t.modele&&!t.done&&neufs[t.deModele]&&t.id!==neufs[t.deModele])});
 return garde.map(function(t){return modif[t.id]||t}).concat(ajout)}
 
+/* Tache a plusieurs zones : on coche chaque zone, la tache se termine quand tout est coche */
+function EtapesChips(p){var ck=p.ck;var n=ck.filter(function(x){return x.done}).length;
+return h("div",{style:{marginTop:8}},
+h("div",{style:{fontSize:13,fontWeight:700,color:n?"var(--orange)":"var(--text3)",marginBottom:6}},n===ck.length?"\u2714 Toutes les zones sont faites":n?"\u23f3 En cours : "+n+" sur "+ck.length:"Coche chaque zone quand elle est faite :"),
+h("div",{style:{display:"grid",gap:6}},ck.map(function(x,i){return h("button",{key:i,type:"button",onClick:function(){p.onEtape(p.t,i)},style:{display:"flex",gap:10,alignItems:"center",textAlign:"left",width:"100%",padding:"8px 10px",borderRadius:10,background:x.done?"var(--accent-bg)":"var(--bg2)",border:"1px solid "+(x.done?"var(--accent)":"var(--border)")}},
+h(Case,{on:!!x.done}),h("span",{style:{flex:1,fontSize:14,textDecoration:x.done?"line-through":"none",color:x.done?"var(--text3)":"var(--text)"}},x.label),
+x.done&&x.par?h("span",{style:{fontSize:12,color:"var(--text3)"}},x.par):null)})))}
+function TacheEtapes(p){var t=p.t;
+return h("div",{style:{padding:12,borderRadius:12,background:p.pourMoi?"var(--accent-bg)":"var(--bg)",border:"1px solid var(--border)"}},
+h("div",{style:{fontWeight:700,fontSize:15,lineHeight:1.3}},String(t.title).split(" : ")[0]),
+t.echeance?h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:3}},"\ud83d\udcc5 avant le "+recJoliDate(t.echeance)):null,
+h(EtapesChips,{t:t,ck:p.ck,onEtape:p.onEtape}))}
 /* ===== Taches ===== */
 var PRIO={urgent:{l:"Urgent",bg:"var(--red-bg)",c:"var(--red)",o:0},normal:{l:"Normal",bg:"var(--blue-bg)",c:"var(--blue)",o:1},basse:{l:"Quand possible",bg:"var(--bg3)",c:"var(--text3)",o:2}};
 function Taches(p){
@@ -304,6 +328,7 @@ sous:moi?(mesN?mesN+" pour toi, "+moi:"Rien de sp\u00e9cial pour toi, "+moi+" \u
 !aFaire.length?h(Vide,null,"\ud83c\udf89 Tout est fait, bravo l'\u00e9quipe !"):
 h("div",{style:{display:"grid",gap:8}},vis.map(function(t){
 var pr=PRIO[t.priority]||PRIO.normal;var pourMoi=moi&&t.assignee===moi;
+var ckT=recChecks(t);if(ckT)return h(TacheEtapes,{key:t.id,t:t,ck:ckT,onEtape:p.onEtape,pourMoi:pourMoi});
 return h("button",{key:t.id,onClick:function(){p.onFait(t)},style:{display:"flex",gap:12,alignItems:"flex-start",textAlign:"left",width:"100%",padding:"12px",borderRadius:12,background:pourMoi?"var(--accent-bg)":"var(--bg)",border:"1px solid "+(t.priority==="urgent"?"var(--red)":"var(--border)")}},
 h(Case,{on:false}),
 h("div",{style:{flex:1,minWidth:0}},
@@ -653,6 +678,7 @@ h("button",{type:"button",onClick:function(){p.onFait(t,!t.done)},"aria-label":t
 h("div",{style:{flex:1,minWidth:0}},
 h("div",{style:{fontWeight:700,fontSize:15,lineHeight:1.3,textDecoration:t.done?"line-through":"none"}},t.title),
 t.desc?h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:3,lineHeight:1.4,whiteSpace:"pre-wrap"}},t.desc):null,
+recChecks(t)&&p.onEtape?h(EtapesChips,{t:t,ck:recChecks(t),onEtape:p.onEtape}):null,
 h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap",alignItems:"center"}},
 t.priority!=="normal"?h(Pastille,{bg:pr.bg,c:pr.c},t.priority==="urgent"?"\u26a1 Urgent":pr.l):null,
 h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udc64 "+(t.assignee||"Toute l'\u00e9quipe")),
@@ -919,6 +945,10 @@ var liste=(dRef.current.tasks||[]).map(function(x){if(x.id!==t.id)return x;var y
 if(fait){y.doneBy=moi||"";y.doneAt=aujIso()}else{delete y.doneBy;delete y.doneAt}return y});
 majListe("tasks",liste);
 if(fait)montrer("\u2705 \u00ab "+t.title+" \u00bb faite",function(){tacheFaite(t,false)})}
+function etapeFaite(t,i){
+var cur=(dRef.current.tasks||[]).filter(function(x){return x.id===t.id})[0]||t;var ch=recCocher(cur,i,moi||"",aujIso());
+var liste=(dRef.current.tasks||[]).map(function(x){if(x.id!==t.id)return x;var y=Object.assign({},x,ch);if(ch.done===false){delete y.doneBy;delete y.doneAt}return y});majListe("tasks",liste);
+if(ch.done)montrer("\u2705 \u00ab "+t.title+" \u00bb termin\u00e9e, bravo")}
 function quiFait(t,nom){
 var liste=(dRef.current.tasks||[]).map(function(x){return x.id===t.id?Object.assign({},x,{doneBy:nom}):x});majListe("tasks",liste)}
 function cocherTG(id,i){
@@ -979,7 +1009,7 @@ var props={moi:moi,resp:resp,complet:vue!=="accueil"};
 function aller(v){setVue(v);window.scrollTo(0,0)}
 var cat=rea&&rea.CAT?rea.CAT:null;
 var blocs={
-taches:h(Taches,Object.assign({key:"t",tasks:d.tasks,onFait:function(t){tacheFaite(t,true)},onRefaire:function(t){tacheFaite(t,false)},onGerer:function(){aller("taches")}},props)),
+taches:h(Taches,Object.assign({key:"t",tasks:d.tasks,onEtape:etapeFaite,onFait:function(t){tacheFaite(t,true)},onRefaire:function(t){tacheFaite(t,false)},onGerer:function(){aller("taches")}},props)),
 tg:h(TetesGondole,Object.assign({key:"g",tdgs:d.tdgs,photos:photos,ventes:ventes,onCheck:cocherTG,onGerer:function(){aller("tg")}},props)),
 challenges:h(Challenges,Object.assign({key:"c",challenges:d.challenges,ventes:ventes,cat:cat,onGerer:function(){aller("challenges")}},props)),
 reassort:h(Reassort,Object.assign({key:"r",rea:rea,reaCharge:reaCharge,faits:faits,onFait:reassortFait},props))};
@@ -1011,7 +1041,7 @@ etat.ok===false&&!etat.maj?h("div",{style:{background:"var(--red-bg)",color:"var
 charge&&!etat.maj?h(Vide,null,"Chargement\u2026"):
 vue==="accueil"?h("div",{className:"grille"},blocs.taches,blocs.reassort,blocs.tg,blocs.challenges):
 h("div",{style:{maxWidth:820}},
-vue==="taches"?h(PageTaches,{tasks:d.tasks,noms:noms,moi:moi,onFait:tacheFaite,onQui:quiFait,onEnregistrer:function(t){enregistrerEl("tasks",t)},onSupprimer:function(t){supprimerEl("tasks",t)}}):
+vue==="taches"?h(PageTaches,{tasks:d.tasks,noms:noms,moi:moi,onFait:tacheFaite,onQui:quiFait,onEtape:etapeFaite,onEnregistrer:function(t){enregistrerEl("tasks",t)},onSupprimer:function(t){supprimerEl("tasks",t)}}):
 vue==="tg"?h(PageTG,{tdgs:d.tdgs,photos:photos,ventes:ventes,resp:resp,noms:noms,moi:moi,cat:cat,montrer:montrer,onCheck:cocherTG,onStatut:statutTG,onPhoto:photoTG,onEnregistrer:function(t){enregistrerEl("tdgs",t)},onSupprimer:function(t){supprimerEl("tdgs",t)}}):
 vue==="challenges"?h(PageChallenges,{challenges:d.challenges,ventes:ventes,moi:moi,resp:resp,noms:noms,cat:cat,onEnregistrer:function(c){enregistrerEl("challenges",c)},onSupprimer:function(c){supprimerEl("challenges",c)}}):
 blocs[vue]),
