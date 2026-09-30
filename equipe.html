@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.7">
+<meta name="ps-version" content="e1.8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -223,6 +223,7 @@ h("p",{style:{fontSize:12,color:"var(--text3)",textAlign:"center",marginTop:14}}
    une tache a faire a chaque echeance. Les identifiants des taches creees sont
    fixes (rec-<modele>-<date>, rdvstk-<rdv>) : deux appareils qui les creent en
    meme temps produisent la meme tache, sans doublon. */
+var REC_MOIS=["janvier","f\u00e9vrier","mars","avril","mai","juin","juillet","ao\u00fbt","septembre","octobre","novembre","d\u00e9cembre"];
 var RECUR_JOURS=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
 var REC_RANGS={"1":"1er","2":"2e","3":"3e","4":"4e","-1":"dernier"};
 function recIso(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
@@ -247,16 +248,29 @@ if(r.freq==="mois_jour")return"le "+(Number(r.n)===1?"1er":r.n)+" de chaque mois
 if(r.freq==="ouvre")return"chaque jour d'ouverture (lundi au samedi)";
 return""}
 var REC_MODELE_RDV={id:"auto-rdv-stock",modele:true,auto:"rdv_stock",actif:true,joursAvant:7,assignee:"",priority:"normal",title:"Stock tournant avant chaque RDV labo",gen:[]};
+/* Taches proposees par PharmaScope, creees une seule fois (on peut ensuite les mettre en pause) */
+var REC_PEREMPTIONS={"1":"tiroirs g\u00e9n\u00e9riques M \u00e0 Z","2":"tiroirs princeps A \u00e0 L + injectables et frigo","3":"solaires + dermocosm\u00e9tique corps","4":"dermocosm\u00e9tique visage","5":"orthop\u00e9die, contention et maintien \u00e0 domicile","6":"tiroirs princeps M \u00e0 Z + hom\u00e9opathie (rayon et tiroir)","7":"b\u00e9b\u00e9 et pu\u00e9riculture + hygi\u00e8ne et corps + soins capillaires","8":"petits tiroirs (gyn\u00e9co, suppositoires, gouttes, gouttes buvables, ophtalmo) + bucco-dentaire + v\u00e9t\u00e9rinaire","9":"m\u00e9dicaments conseil (douleur, digestion, sommeil, peau) + tiroirs cr\u00e8mes et topiques + tiroirs externes","10":"m\u00e9dicaments conseil de l'hiver (rhume, toux, gorge, nez) + tiroirs ORL + tiroirs sachets et buvables","11":"compl\u00e9ments alimentaires, phytoth\u00e9rapie et aromath\u00e9rapie","12":"tiroirs g\u00e9n\u00e9riques A \u00e0 L"};
+var REC_SEMIS=[
+{id:"auto-peremptions",modele:true,actif:true,title:"Contr\u00f4le des p\u00e9remptions",recur:{freq:"mois_jour",n:1},delai:27,programme:REC_PEREMPTIONS,assignee:"",priority:"normal",
+desc:"V\u00e9rifier les dates en rayon et dans la r\u00e9serve correspondante. Sortir les produits qui p\u00e9riment dans les 3 prochains mois : mise en avant, retour au labo si possible, sinon les sortir en p\u00e9rim\u00e9s. \u00c0 faire avant la fin du mois."},
+{id:"auto-manquants",modele:true,actif:true,title:"Traiter les manquants clients",recur:{freq:"ouvre"},assignee:"",priority:"normal",
+desc:"Relancer les produits command\u00e9s pour un client et pr\u00e9venir ceux dont la commande est arriv\u00e9e."}];
 /* Renvoie la nouvelle liste de taches si quelque chose est a creer, sinon null */
 function recGenerer(tasks,events,auj){
 tasks=tasks||[];var ids={};tasks.forEach(function(t){ids[t.id]=1});
 var ajout=[],modif={};var liste=tasks;
 if(!ids[REC_MODELE_RDV.id]){liste=tasks.concat([Object.assign({},REC_MODELE_RDV,{gen:[],depuis:auj})]);ids[REC_MODELE_RDV.id]=1;modif.__nouveau=1}
+var rdvT=null;liste.forEach(function(t){if(t&&t.id===REC_MODELE_RDV.id)rdvT=t});
+if(rdvT){var semes=(rdvT.semes||[]).slice();var chS=false;
+REC_SEMIS.forEach(function(sm){if(semes.indexOf(sm.id)>=0)return;semes.push(sm.id);chS=true;
+if(!ids[sm.id]){var m0=recDate(auj);liste=liste.concat([Object.assign({},sm,{depuis:recIso(new Date(m0.getFullYear(),m0.getMonth(),0))})]);ids[sm.id]=1}});
+if(chS)modif[rdvT.id]=Object.assign({},rdvT,{semes:semes})}
 liste.forEach(function(t){if(!t||!t.modele||t.actif===false)return;
 if(t.recur){var d=recDerniere(t.recur,t.genJusqua||recPlus(t.depuis||auj,-1),auj);
-if(d){var id="rec-"+t.id+"-"+d;if(!ids[id]){ids[id]=1;ajout.push({id:id,title:t.title,desc:t.desc||"",assignee:t.assignee||"",priority:t.priority||"normal",done:false,created:recDate(d).toLocaleDateString("fr-FR"),echeance:d,deModele:t.id,creePar:"automatique"})}
+if(d){var id="rec-"+t.id+"-"+d;var tropTard=!t.genJusqua&&t.delai&&recPlus(d,Number(t.delai))<auj;if(!ids[id]&&!tropTard){ids[id]=1;var zone=t.programme?t.programme[String(recDate(d).getMonth()+1)]:"";
+ajout.push({id:id,title:t.title+(zone?" : "+zone:""),desc:t.desc||"",assignee:t.assignee||"",priority:t.priority||"normal",done:false,created:recDate(d).toLocaleDateString("fr-FR"),echeance:t.delai?recPlus(d,Number(t.delai)):d,deModele:t.id,creePar:"automatique"})}
 modif[t.id]=Object.assign({},t,{genJusqua:d})}}
-if(t.auto==="rdv_stock"){var jA=Number(t.joursAvant)||7;var gen=(t.gen||[]).slice();var ch=false;
+if(t.auto==="rdv_stock"){var jA=Number(t.joursAvant)||7;var gen=((modif[t.id]||t).gen||[]).slice();var ch=false;
 (events||[]).forEach(function(ev){if(!ev||!ev.lab||!ev.date||(ev.type&&ev.type!=="rdv"))return;
 var dt=String(ev.date).slice(0,10);if(dt<=auj)return;
 if(auj<recPlus(dt,-jA-3))return;
@@ -265,7 +279,11 @@ var id="rdvstk-"+cle;if(ids[id])return;ids[id]=1;var ech=recPlus(dt,-jA);if(ech<
 ajout.push({id:id,title:"Stock tournant "+ev.lab+" (RDV "+recJoliDate(dt)+")",desc:"Faire l'inventaire tournant des produits "+ev.lab+" pour partir d'un stock juste quand on passera la commande au rendez-vous.",assignee:t.assignee||"",priority:"normal",done:false,created:new Date().toLocaleDateString("fr-FR"),echeance:ech,deModele:t.id,rdv:dt,lab:ev.lab,creePar:"automatique"})});
 if(ch)modif[t.id]=Object.assign({},modif[t.id]||t,{gen:gen.slice(-80)})}});
 if(!ajout.length&&!Object.keys(modif).length)return null;
-return liste.map(function(t){return modif[t.id]||t}).concat(ajout)}
+/* tache quotidienne : on ne garde que la plus recente si l'ancienne n'a pas ete cochee */
+var quot={};liste.forEach(function(t){if(t&&t.modele&&t.recur&&t.recur.freq==="ouvre")quot[t.id]=1});
+var neufs={};ajout.forEach(function(a){if(quot[a.deModele])neufs[a.deModele]=a.id});
+var garde=liste.filter(function(t){return !(t&&!t.modele&&!t.done&&neufs[t.deModele]&&t.id!==neufs[t.deModele])});
+return garde.map(function(t){return modif[t.id]||t}).concat(ajout)}
 
 /* ===== Taches ===== */
 var PRIO={urgent:{l:"Urgent",bg:"var(--red-bg)",c:"var(--red)",o:0},normal:{l:"Normal",bg:"var(--blue-bg)",c:"var(--blue)",o:1},basse:{l:"Quand possible",bg:"var(--bg3)",c:"var(--text3)",o:2}};
@@ -660,7 +678,9 @@ rec.map(function(t){return h("div",{key:t.id,style:{display:"flex",gap:10,alignI
 h("div",{style:{flex:1,minWidth:0}},
 h("div",{style:{fontWeight:700,fontSize:15}},"\ud83d\udd01 "+t.title),
 h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:3}},recLibelle(t.recur)+" \u00b7 pour "+(t.assignee||"toute l'\u00e9quipe")),
-h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:3}},t.actif===false?"En pause":"Prochaine fois : "+recJoliDate(recProchaine(t.recur,recPlus(auj,-1))))),
+h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:3}},t.actif===false?"En pause":"Prochaine fois : "+recJoliDate(recProchaine(t.recur,recPlus(auj,-1)))),
+t.programme?h("details",{style:{marginTop:6}},h("summary",{style:{fontSize:13,fontWeight:700,cursor:"pointer",color:"var(--accent)"}},"Programme sur 12 mois"),
+h("div",{style:{display:"grid",gap:3,marginTop:6,fontSize:13}},[10,11,12,1,2,3,4,5,6,7,8,9].map(function(m){var cur=new Date().getMonth()+1===m;return h("div",{key:m,style:{fontWeight:cur?700:400,color:cur?"var(--accent)":"var(--text2)"}},REC_MOIS[m-1]+" : "+t.programme[String(m)])}))):null),
 h("button",{type:"button",onClick:function(){p.onEnregistrer(Object.assign({},t,{actif:t.actif===false}))},style:{flexShrink:0,padding:"6px 10px",borderRadius:8,background:"var(--bg3)",color:"var(--text2)",fontSize:13,fontWeight:700}},t.actif===false?"\u25b6 Reprendre":"\u23f8 Pause"),
 h(BtnModif,{onClick:function(){p.onModifier(t)}}))}))}
 
