@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.5">
+<meta name="ps-version" content="e1.6">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -77,8 +77,6 @@ var LOGO_URI="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMDAgQ
 
 /* ===== Connexion equipe ===== */
 var COMPTE={id:"pharma",hash:"3fa6b1b1"};
-/* Responsable des challenges : voit les ventes de toute l'equipe. Meme code que son compte PharmaScope. */
-var RESPONSABLE={nom:"Camille",hash:"dde79b8"};
 function hashSimple(s){var x=0;for(var i=0;i<s.length;i++){x=((x<<5)-x)+s.charCodeAt(i);x=x&x}return Math.abs(x).toString(16)}
 function lsGet(k,def){try{var s=localStorage.getItem(k);return s===null?def:JSON.parse(s)}catch(e){return def}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
@@ -335,7 +333,7 @@ function nb1(x){return (Math.round(x*10)/10).toString().replace(".",",")}
 function ResultatTG(p){
 var r=analyseTG(p.t,p.vd);
 var codes=(p.t.produits||[]).map(function(x){return x.c?String(x.c).replace(/\s/g,""):""}).filter(function(c){return c&&p.vd&&p.vd.T&&p.vd.T[c]});
-var perso=!r.err&&p.vd&&p.vd.V?(p.resp?h(RepartitionEquipe,{vd:p.vd,codes:codes,d0:p.t.debut,d1:p.t.fin,moi:p.moi}):h(LignePerso,{moi:p.moi,r:ventesPerso(p.vd,codes,p.t.debut,p.t.fin,p.moi)})):null;
+var perso=!r.err&&p.vd&&p.vd.V?h(LignePerso,{moi:p.moi,r:ventesPerso(p.vd,codes,p.t.debut,p.t.fin,p.moi)}):null;
 if(r.err)return h("div",{style:{fontSize:13,color:"var(--text3)",background:"var(--bg3)",borderRadius:10,padding:"8px 11px"}},"\ud83d\udcca "+r.err);
 var st=styleNote(r.note);var pc=Math.round(r.lq*100);
 var avis=r.D<14?"Trop t\u00f4t pour juger : attendre au moins 14 jours ("+r.D+" pour l'instant).":r.fiab==="faible"?"Peu de bo\u00eetes vendues : r\u00e9sultat encore incertain.":r.note>=6?"Bons r\u00e9sultats : on garde la TG en place.":r.note>=4?"R\u00e9sultats moyens : essayer de changer l'emplacement, le facing ou l'\u00e9tiquette prix.":"R\u00e9sultats d\u00e9cevants : \u00e0 revoir avec Alexandra.";
@@ -372,10 +370,10 @@ codes.forEach(function(c){var v=vd.V[c];if(!v)return;Object.keys(v).forEach(func
 return Object.keys(m).map(function(n){return[n,Math.round(m[n])]}).filter(function(x){return x[1]>0}).sort(function(a,b){return b[1]-a[1]})}
 function RepartitionEquipe(p){
 var l=ventesParPersonne(p.vd,p.codes,p.d0,p.d1);
-if(!l.length)return h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:6}},"\ud83d\udd11 Pas encore de ventes par personne sur cette p\u00e9riode.");
+if(!l.length)return h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:6}},"Pas encore de ventes par personne sur cette p\u00e9riode.");
 var mx=l[0][1]||1;var tot=0;l.forEach(function(x){tot+=x[1]});
 return h("div",{style:{marginTop:8,padding:"8px 10px",borderRadius:10,background:"var(--violet-bg)"}},
-h("div",{style:{fontSize:12,fontWeight:800,color:"var(--violet)",marginBottom:6}},"\ud83d\udd11 Ventes par personne ("+tot+" bo\u00eete"+(tot>1?"s":"")+")"),
+h("div",{style:{fontSize:12,fontWeight:800,color:"var(--violet)",marginBottom:6}},"\ud83d\udc65 Ventes par personne ("+tot+" bo\u00eete"+(tot>1?"s":"")+")"),
 h("div",{style:{display:"grid",gap:4}},l.map(function(x,i){return h("div",{key:x[0],style:{display:"grid",gridTemplateColumns:"minmax(70px,110px) 1fr 38px",gap:8,alignItems:"center",fontSize:13}},
 h("span",{className:"coupe",style:{fontWeight:nomCle(x[0])===nomCle(p.moi||"")?800:600}},(i<3?["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"][i]+" ":"")+x[0]),
 h("div",{style:{height:8,borderRadius:5,background:"var(--bg2)",overflow:"hidden"}},h("div",{style:{height:"100%",width:Math.round(x[1]/mx*100)+"%",background:"var(--violet)"}})),
@@ -394,10 +392,9 @@ if(c.fin&&c.fin>=auj&&pr<obj){var restent=joursEntre(auj,c.fin)+1;var besoin=(ob
 lignes.push(h("span",{key:"b"}," \u00b7 il en faut ",h("b",{style:{color:besoin>rythme*1.1?"var(--orange)":"var(--accent)"}},nb1(besoin)+"/jour")," pour l'objectif"));
 lignes.push(h("div",{key:"p",style:{marginTop:2}},"\u00c0 ce rythme : environ ",h("b",null,proj+" / "+obj)," \u00e0 la fin"+(proj>=obj?" \ud83c\udfaf":"")))}
 else if(pr>=obj){lignes.push(h("span",{key:"o"}," \u00b7 objectif d\u00e9pass\u00e9 de ",h("b",null,(pr-obj)+" bo\u00eete"+(pr-obj>1?"s":""))))}
-var perso=p.vd&&!p.resp?ventesPerso(p.vd,codesChallenge(c,p.vd,p.cat),c.debut,c.fin,p.moi):null;
 var codesC=p.vd?codesChallenge(c,p.vd,p.cat):[];
 return h("div",null,h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:8,lineHeight:1.5}},lignes),
-p.vd&&p.vd.V?(p.resp?h(RepartitionEquipe,{vd:p.vd,codes:codesC,d0:c.debut,d1:c.fin,moi:p.moi}):h(LignePerso,{moi:p.moi,r:perso})):null)}
+p.vd&&p.vd.V?h(RepartitionEquipe,{vd:p.vd,codes:codesC,d0:c.debut,d1:c.fin,moi:p.moi}):null)}
 function Challenges(p){
 var auj=aujIso();
 var liste=(p.challenges||[]).filter(function(c){
@@ -408,7 +405,7 @@ return true});
 liste.sort(function(a,b){return String(a.fin||"9999").localeCompare(String(b.fin||"9999"))});
 return h(Carte,{id:"challenges",icone:"\ud83c\udfc6",titre:"Challenges en cours",
 droite:h(Pastille,{bg:"var(--violet-bg)",c:"var(--violet)"},liste.length),
-sous:"Progression de l'\u00e9quipe (en nombre de produits vendus)"},
+sous:"Progression de l'\u00e9quipe et ventes de chacun (en bo\u00eetes)"},
 !liste.length?h(Vide,null,"Pas de challenge en ce moment"):
 h("div",{style:{display:"grid",gap:10}},liste.map(function(c){
 var obj=Number(c.objectif)||0;var pr=Number(c.progres)||0;
@@ -754,12 +751,7 @@ var vtS=useState(null);var ventes=vtS[0],setVentes=vtS[1];
 var etS=useState({ok:null,maj:null});var etat=etS[0],setEtat=etS[1];
 var chS=useState(true);var charge=chS[0],setCharge=chS[1];
 var moiS=useState(function(){return lsGet("pse_moi","")});var moi=moiS[0],setMoi=moiS[1];
-var rsS=useState(function(){return lsGet("pse_resp",0)===1});var resp0=rsS[0],setResp=rsS[1];
-var resp=resp0&&nomCle(moi)===nomCle(RESPONSABLE.nom);
-var cdS=useState(null);var saisieCode=cdS[0],setSaisieCode=cdS[1];
-useEffect(function(){if(resp0&&nomCle(moi)!==nomCle(RESPONSABLE.nom)){setResp(false);lsSet("pse_resp",0)}},[moi]);
-function validerCode(){if(hashSimple(String(saisieCode||"").trim().toLowerCase())===RESPONSABLE.hash){setResp(true);lsSet("pse_resp",1);setSaisieCode(null);montrer("\ud83d\udd11 Acc\u00e8s responsable des challenges activ\u00e9")}else montrer("Code incorrect")}
-function quitterResp(){setResp(false);lsSet("pse_resp",0);montrer("\ud83d\udd12 Acc\u00e8s responsable ferm\u00e9")}
+var resp=false;try{localStorage.removeItem("pse_resp")}catch(e){}
 var choixS=useState(false);var choix=choixS[0],setChoix=choixS[1];
 var vueS=useState("accueil");var vue=vueS[0],setVue=vueS[1];
 var toastS=useState(null);var toast=toastS[0],setToast=toastS[1];
@@ -896,10 +888,7 @@ h("div",{style:{fontSize:13,color:"var(--text2)",marginBottom:8}},"Choisis ton p
 h("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},
 h(Puce,{on:!moi,onClick:function(){setMoi("");setChoix(false)}},"Toute l'\u00e9quipe"),
 noms.map(function(n){return h(Puce,{key:n,on:moi===n,onClick:function(){setMoi(n);setChoix(false)}},n)}))):null,
-nomCle(moi)===nomCle(RESPONSABLE.nom)?h("div",{style:{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",background:resp?"var(--violet-bg)":"var(--bg2)",border:"1px solid "+(resp?"var(--violet)":"var(--border)"),borderRadius:12,padding:"8px 12px",marginBottom:14,fontSize:13}},
-resp?[h("span",{key:"t",style:{flex:1,fontWeight:700,color:"var(--violet)"}},"\ud83d\udd11 Acc\u00e8s responsable des challenges : ventes de toute l'\u00e9quipe visibles"),h(Bouton,{key:"b",onClick:quitterResp},"\ud83d\udd12 Fermer")]:
-saisieCode===null?[h("span",{key:"t",style:{flex:1,color:"var(--text2)"}},"Responsable des challenges ?"),h(Bouton,{key:"b",onClick:function(){setSaisieCode("")}},"\ud83d\udd11 Acc\u00e8s responsable")]:
-[h("input",{key:"i",type:"password",autoFocus:true,value:saisieCode,onChange:function(e){setSaisieCode(e.target.value)},onKeyDown:function(e){if(e.key==="Enter")validerCode()},placeholder:"Ton code PharmaScope",style:Object.assign({},chp,{flex:1,minWidth:150,width:"auto"})}),h(Bouton,{key:"ok",type:"primaire",onClick:validerCode},"Valider"),h(Bouton,{key:"x",onClick:function(){setSaisieCode(null)}},"Annuler")]):null,
+
 h("nav",{className:"tuiles",style:{marginBottom:16}},
 tuile("\u2705","T\u00e2ches",nT,"var(--accent)","var(--accent-bg)","taches"),
 tuile("\ud83d\udecd\ufe0f","T\u00eates de gondole",nTG,"var(--orange)","var(--orange-bg)","tg"),
