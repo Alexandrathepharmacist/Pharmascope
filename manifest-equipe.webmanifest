@@ -1,0 +1,14 @@
+{
+  "name": "PharmaScope Équipe - Pharmacie de Veyrier-du-Lac",
+  "short_name": "PS Équipe",
+  "start_url": "./equipe.html",
+  "scope": "./equipe.html",
+  "display": "standalone",
+  "background_color": "#f3f6f5",
+  "theme_color": "#059669",
+  "icons": [
+    {"src": "icon-192.png?v=20260929b", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png?v=20260929b", "sizes": "512x512", "type": "image/png"},
+    {"src": "apple-touch-icon.png?v=20260929b", "sizes": "180x180", "type": "image/png"}
+  ]
+}
