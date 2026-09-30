@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.9">
+<meta name="ps-version" content="e1.10">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -277,7 +277,7 @@ REC_SEMIS.forEach(function(sm){if(semes.indexOf(sm.id)>=0)return;semes.push(sm.i
 if(!ids[sm.id]){var m0=recDate(auj);liste=liste.concat([Object.assign({},sm,{depuis:recIso(new Date(m0.getFullYear(),m0.getMonth(),0))})]);ids[sm.id]=1}});
 if(chS)modif[rdvT.id]=Object.assign({},rdvT,{semes:semes})}
 liste.forEach(function(t){if(!t||!t.modele||t.actif===false)return;
-if(t.recur){var d=recDerniere(t.recur,t.genJusqua||recPlus(t.depuis||auj,-1),auj);
+if(t.recur){var avance=t.avance!=null?Number(t.avance)||0:(t.id==="auto-peremptions"?3:0);var d=recDerniere(t.recur,t.genJusqua||recPlus(t.depuis||auj,-1),recPlus(auj,avance));
 if(d){var id="rec-"+t.id+"-"+d;var tropTard=!t.genJusqua&&t.delai&&recPlus(d,Number(t.delai))<auj;if(!ids[id]&&!tropTard){ids[id]=1;var zone=t.programme?t.programme[String(recDate(d).getMonth()+1)]:"";
 var etapes=zone?recEtapesZone(zone):[];
 ajout.push({id:id,checks:etapes.length>1?etapes.map(function(l){return{label:l,done:false}}):undefined,title:t.title+(zone?" : "+zone:""),desc:t.desc||"",assignee:t.assignee||"",priority:t.priority||"normal",done:false,created:recDate(d).toLocaleDateString("fr-FR"),echeance:t.delai?recPlus(d,Number(t.delai)):d,deModele:t.id,creePar:"automatique"})}
