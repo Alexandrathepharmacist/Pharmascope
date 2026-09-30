@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.6">
+<meta name="ps-version" content="e1.7">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -97,7 +97,7 @@ var SUPA_URL="https://untfyvsfcpeqjaxzbpjk.supabase.co";
 var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVudGZ5dnNmY3BlcWpheHpicGprIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyODE3NDMsImV4cCI6MjA5OTg1Nzc0M30.Jqaz3bvl86dOfZM_OfZboPLQuHN6vCv5wlO0zOIsp1g";
 var db=null;
 try{if(window.supabase&&window.supabase.createClient)db=window.supabase.createClient(SUPA_URL,SUPA_KEY)}catch(e){}
-var CLES=["tasks","tdgs","challenges","team","equipe_reassort_faits"];
+var CLES=["tasks","tdgs","challenges","team","equipe_reassort_faits","events"];
 var SYNC_BASE={},SYNC_TS={};
 var ENVOIS={n:0};
 
@@ -218,14 +218,63 @@ h("button",{type:"button",onClick:function(){setVoir(!voir)},"aria-label":"Affic
 h("button",{onClick:ok,style:{width:"100%",padding:14,borderRadius:10,background:"#059669",color:"#fff",fontWeight:700,fontSize:16}},"Se connecter"),
 h("p",{style:{fontSize:12,color:"var(--text3)",textAlign:"center",marginTop:14}},"La session reste ouverte sur cet appareil.")))}
 
+/* ===== TACHES RECURRENTES ET AUTOMATIQUES (partage PharmaScope / version equipe) =====
+   Une tache "modele" (modele:true) ne s'affiche pas comme une tache : elle cree
+   une tache a faire a chaque echeance. Les identifiants des taches creees sont
+   fixes (rec-<modele>-<date>, rdvstk-<rdv>) : deux appareils qui les creent en
+   meme temps produisent la meme tache, sans doublon. */
+var RECUR_JOURS=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+var REC_RANGS={"1":"1er","2":"2e","3":"3e","4":"4e","-1":"dernier"};
+function recIso(d){return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function recDate(s){var p=String(s||"").split("-");return new Date(+p[0],(+p[1]||1)-1,+p[2]||1)}
+function recPlus(s,n){var d=recDate(s);d.setDate(d.getDate()+n);return recIso(d)}
+function recJoliDate(s){if(!s)return"";var d=recDate(s);var m=["janv.","f\u00e9vr.","mars","avr.","mai","juin","juil.","ao\u00fbt","sept.","oct.","nov.","d\u00e9c."];return RECUR_JOURS[d.getDay()]+" "+d.getDate()+" "+m[d.getMonth()]}
+function recTombe(r,d){
+if(!r)return false;var wd=d.getDay();var fin=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+if(r.freq==="semaine")return wd===Number(r.jour);
+if(r.freq==="mois_jour")return d.getDate()===Math.min(Number(r.n)||1,fin);
+if(r.freq==="mois_rang"){if(wd!==Number(r.jour))return false;var rg=Number(r.rang);if(rg===-1)return d.getDate()+7>fin;return Math.floor((d.getDate()-1)/7)+1===rg}
+if(r.freq==="ouvre")return wd>=1&&wd<=6;
+return false}
+/* derniere echeance dans ]depuis ; auj] */
+function recDerniere(r,depuis,auj){var d=recDate(auj),stop=depuis?recDate(depuis):null;for(var i=0;i<400;i++){if(stop&&d<=stop)return null;if(recTombe(r,d))return recIso(d);d.setDate(d.getDate()-1)}return null}
+function recProchaine(r,apres){var d=recDate(apres);for(var i=0;i<400;i++){d.setDate(d.getDate()+1);if(recTombe(r,d))return recIso(d)}return null}
+function recLibelle(r){
+if(!r)return"";
+if(r.freq==="semaine")return"chaque "+RECUR_JOURS[Number(r.jour)];
+if(r.freq==="mois_rang")return"le "+(REC_RANGS[String(r.rang)]||"1er")+" "+RECUR_JOURS[Number(r.jour)]+" de chaque mois";
+if(r.freq==="mois_jour")return"le "+(Number(r.n)===1?"1er":r.n)+" de chaque mois";
+if(r.freq==="ouvre")return"chaque jour d'ouverture (lundi au samedi)";
+return""}
+var REC_MODELE_RDV={id:"auto-rdv-stock",modele:true,auto:"rdv_stock",actif:true,joursAvant:7,assignee:"",priority:"normal",title:"Stock tournant avant chaque RDV labo",gen:[]};
+/* Renvoie la nouvelle liste de taches si quelque chose est a creer, sinon null */
+function recGenerer(tasks,events,auj){
+tasks=tasks||[];var ids={};tasks.forEach(function(t){ids[t.id]=1});
+var ajout=[],modif={};var liste=tasks;
+if(!ids[REC_MODELE_RDV.id]){liste=tasks.concat([Object.assign({},REC_MODELE_RDV,{gen:[],depuis:auj})]);ids[REC_MODELE_RDV.id]=1;modif.__nouveau=1}
+liste.forEach(function(t){if(!t||!t.modele||t.actif===false)return;
+if(t.recur){var d=recDerniere(t.recur,t.genJusqua||recPlus(t.depuis||auj,-1),auj);
+if(d){var id="rec-"+t.id+"-"+d;if(!ids[id]){ids[id]=1;ajout.push({id:id,title:t.title,desc:t.desc||"",assignee:t.assignee||"",priority:t.priority||"normal",done:false,created:recDate(d).toLocaleDateString("fr-FR"),echeance:d,deModele:t.id,creePar:"automatique"})}
+modif[t.id]=Object.assign({},t,{genJusqua:d})}}
+if(t.auto==="rdv_stock"){var jA=Number(t.joursAvant)||7;var gen=(t.gen||[]).slice();var ch=false;
+(events||[]).forEach(function(ev){if(!ev||!ev.lab||!ev.date||(ev.type&&ev.type!=="rdv"))return;
+var dt=String(ev.date).slice(0,10);if(dt<=auj)return;
+if(auj<recPlus(dt,-jA-3))return;
+var cle=String(ev.id||(ev.lab+"|"+dt));if(gen.indexOf(cle)>=0)return;gen.push(cle);ch=true;
+var id="rdvstk-"+cle;if(ids[id])return;ids[id]=1;var ech=recPlus(dt,-jA);if(ech<auj)ech=auj;
+ajout.push({id:id,title:"Stock tournant "+ev.lab+" (RDV "+recJoliDate(dt)+")",desc:"Faire l'inventaire tournant des produits "+ev.lab+" pour partir d'un stock juste quand on passera la commande au rendez-vous.",assignee:t.assignee||"",priority:"normal",done:false,created:new Date().toLocaleDateString("fr-FR"),echeance:ech,deModele:t.id,rdv:dt,lab:ev.lab,creePar:"automatique"})});
+if(ch)modif[t.id]=Object.assign({},modif[t.id]||t,{gen:gen.slice(-80)})}});
+if(!ajout.length&&!Object.keys(modif).length)return null;
+return liste.map(function(t){return modif[t.id]||t}).concat(ajout)}
+
 /* ===== Taches ===== */
 var PRIO={urgent:{l:"Urgent",bg:"var(--red-bg)",c:"var(--red)",o:0},normal:{l:"Normal",bg:"var(--blue-bg)",c:"var(--blue)",o:1},basse:{l:"Quand possible",bg:"var(--bg3)",c:"var(--text3)",o:2}};
 function Taches(p){
-var tout=p.tasks||[];var moi=p.moi;
+var tout=(p.tasks||[]).filter(function(t){return !t.modele});var moi=p.moi;
 var fs=useState(false);var toutes=fs[0],setToutes=fs[1];
 var aFaire=tout.filter(function(t){return !t.done});
 aFaire.sort(function(a,b){var pa=(PRIO[a.priority]||PRIO.normal).o,pb=(PRIO[b.priority]||PRIO.normal).o;
-var ma=moi&&a.assignee===moi?0:1,mb=moi&&b.assignee===moi?0:1;return ma-mb||pa-pb||(a.id||0)-(b.id||0)});
+var ma=moi&&a.assignee===moi?0:1,mb=moi&&b.assignee===moi?0:1;var ea=a.echeance||"9999",eb=b.echeance||"9999";return ma-mb||(ea<eb?-1:ea>eb?1:0)||pa-pb||(a.id>b.id?1:a.id<b.id?-1:0)});
 var aujF=aujIso();
 var faitesAuj=tout.filter(function(t){return t.done&&t.doneAt===aujF});
 var limite=p.complet?999:5;
@@ -244,6 +293,8 @@ h("div",{style:{fontWeight:700,fontSize:15,lineHeight:1.3}},t.title),
 t.desc?h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:3,lineHeight:1.4}},t.desc):null,
 h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap",alignItems:"center"}},
 t.priority==="urgent"?h(Pastille,{bg:pr.bg,c:pr.c},"\u26a1 Urgent"):null,
+t.echeance?h(Pastille,{bg:t.echeance<aujF?"var(--red-bg)":"var(--bg3)",c:t.echeance<aujF?"var(--red)":"var(--text2)"},(t.echeance<aujF?"\u26a0\ufe0f pr\u00e9vue ":"\ud83d\udcc5 ")+recJoliDate(t.echeance)):null,
+t.deModele?h(Pastille,{bg:"var(--violet-bg)",c:"var(--violet)"},"\ud83d\udd01 automatique"):null,
 t.assignee?h(Pastille,{bg:pourMoi?"var(--accent)":"var(--bg3)",c:pourMoi?"#fff":"var(--text2)"},"\ud83d\udc64 "+t.assignee):null)))})),
 aFaire.length>vis.length?h(BoutonLien,{onClick:function(){setToutes(true)}},"Voir les "+(aFaire.length-vis.length)+" autres t\u00e2ches"):null,
 p.onGerer?h(BoutonLien,{onClick:p.onGerer},"\u270f\ufe0f Ajouter ou modifier des t\u00e2ches"):null,
@@ -469,13 +520,18 @@ res.length?h("div",{style:{border:"1px solid var(--border)",borderRadius:10,marg
 return h("button",{key:x.c+x.lab+x.n,type:"button",onClick:function(){ajouter(x)},style:{display:"block",width:"100%",textAlign:"left",padding:"9px 12px",borderBottom:"1px solid var(--border)",fontSize:14}},x.n,h("span",{style:{fontSize:12,color:"var(--text3)",marginLeft:6}},x.lab))})):null):
 h("div",{style:{fontSize:13,color:"var(--text3)"}},"Liste des produits en cours de chargement\u2026"))}
 
+function recVersChoix(r){if(!r)return"";return r.freq==="ouvre"?"ouvre":r.freq}
 function FormTache(p){
-var t0=p.tache||{};
-var s=useState({title:t0.title||"",desc:t0.desc||"",assignee:t0.assignee||p.moi||"",priority:t0.priority||"normal"});var f=s[0],setF=s[1];
+var t0=p.tache||{};var r0=t0.recur||{};
+var s=useState({title:t0.title||"",desc:t0.desc||"",assignee:t0.assignee!=null?t0.assignee:(p.moi||""),priority:t0.priority||"normal",echeance:t0.echeance||"",mode:recVersChoix(t0.recur),jour:String(r0.jour!=null?r0.jour:1),rang:String(r0.rang||1),n:String(r0.n||1)});var f=s[0],setF=s[1];
+var modeFige=!!p.tache&&!t0.modele;
+function recF(){if(!f.mode)return null;if(f.mode==="semaine")return{freq:"semaine",jour:Number(f.jour)};if(f.mode==="mois_rang")return{freq:"mois_rang",rang:Number(f.rang),jour:Number(f.jour)};if(f.mode==="mois_jour")return{freq:"mois_jour",n:Number(f.n)};return{freq:"ouvre"}}
 function maj(k,v){var n=Object.assign({},f);n[k]=v;setF(n)}
 var ok=f.title.trim().length>0;
 return h(Fenetre,{titre:p.tache?"Modifier la t\u00e2che":"Nouvelle t\u00e2che",onFermer:p.onFermer,
-pied:[h(Bouton,{key:"ok",type:"primaire",disabled:!ok,onClick:function(){if(ok)p.onEnregistrer(Object.assign({},t0,{title:f.title.trim(),desc:f.desc.trim(),assignee:f.assignee,priority:f.priority}))}},"Enregistrer"),
+pied:[h(Bouton,{key:"ok",type:"primaire",disabled:!ok,onClick:function(){if(!ok)return;var base=Object.assign({},t0,{title:f.title.trim(),desc:f.desc.trim(),assignee:f.assignee,priority:f.priority});var r=modeFige?null:recF();
+if(r){base.modele=true;base.recur=r;if(base.actif===undefined)base.actif=true;if(!base.depuis)base.depuis=aujIso();delete base.echeance}else{delete base.modele;delete base.recur;if(f.echeance)base.echeance=f.echeance;else delete base.echeance}
+p.onEnregistrer(base)}},"Enregistrer"),
 h(Bouton,{key:"an",onClick:p.onFermer},"Annuler"),
 p.tache?h(Bouton,{key:"su",type:"danger",style:{marginLeft:"auto"},onClick:p.onSupprimer},"Supprimer"):null]},
 h(Champ,{l:"T\u00e2che"},h("input",{value:f.title,autoFocus:!p.tache,onChange:function(e){maj("title",e.target.value)},placeholder:"Ex. : ranger la r\u00e9ception CERP",style:chp})),
@@ -483,7 +539,15 @@ h(Champ,{l:"Pr\u00e9cisions (facultatif)"},h("textarea",{value:f.desc,rows:3,onC
 h(Grille,null,
 h(Champ,{l:"Pour qui"},h(ChoixNom,{noms:p.noms,value:f.assignee,onChange:function(v){maj("assignee",v)}})),
 h(Champ,{l:"Priorit\u00e9"},h("select",{value:f.priority,onChange:function(e){maj("priority",e.target.value)},style:chp},
-h("option",{value:"urgent"},"Urgent"),h("option",{value:"normal"},"Normal"),h("option",{value:"basse"},"Quand possible")))))}
+h("option",{value:"urgent"},"Urgent"),h("option",{value:"normal"},"Normal"),h("option",{value:"basse"},"Quand possible")))),
+modeFige?null:h(Champ,{l:"\ud83d\udd01 R\u00e9p\u00e9ter"},h("select",{value:f.mode,onChange:function(e){maj("mode",e.target.value)},style:chp},
+h("option",{value:""},"Non, une seule fois"),h("option",{value:"semaine"},"Chaque semaine"),h("option",{value:"mois_rang"},"Chaque mois (ex. 1er lundi du mois)"),h("option",{value:"mois_jour"},"Chaque mois \u00e0 date fixe"),h("option",{value:"ouvre"},"Chaque jour d'ouverture"))),
+f.mode==="mois_rang"||f.mode==="semaine"?h(Grille,null,
+f.mode==="mois_rang"?h(Champ,{l:"Quel"},h("select",{value:f.rang,onChange:function(e){maj("rang",e.target.value)},style:chp},["1","2","3","4","-1"].map(function(r){return h("option",{key:r,value:r},REC_RANGS[r])}))):null,
+h(Champ,{l:"Jour"},h("select",{value:f.jour,onChange:function(e){maj("jour",e.target.value)},style:chp},[1,2,3,4,5,6,0].map(function(j){return h("option",{key:j,value:String(j)},RECUR_JOURS[j])})))):null,
+f.mode==="mois_jour"?h(Champ,{l:"Jour du mois"},h("select",{value:f.n,onChange:function(e){maj("n",e.target.value)},style:chp},Array.from({length:31},function(_,i){return h("option",{key:i,value:String(i+1)},i===0?"1er":String(i+1))}))):null,
+f.mode&&recF()?h("div",{style:{fontSize:13,color:"var(--text2)"}},"La t\u00e2che appara\u00eetra "+recLibelle(recF())+". Prochaine fois : "+recJoliDate(recProchaine(recF(),recPlus(aujIso(),-1)))):null,
+!f.mode?h(Champ,{l:"Pour le (facultatif)"},h("input",{type:"date",value:f.echeance,onChange:function(e){maj("echeance",e.target.value)},style:chp})):null)}
 
 function FormTG(p){
 var t0=p.tg||{};
@@ -553,14 +617,16 @@ function BtnModif(p){return h("button",{type:"button",onClick:p.onClick,"aria-la
 function PageTaches(p){
 var os=useState("todo");var ong=os[0],setOng=os[1];
 var es=useState(null);var edit=es[0],setEdit=es[1];
-var tout=p.tasks||[];var moi=p.moi;
+var modeles=(p.tasks||[]).filter(function(t){return t.modele});
+var tout=(p.tasks||[]).filter(function(t){return !t.modele});var moi=p.moi;
 var nTodo=tout.filter(function(t){return !t.done}).length;
 var liste=tout.filter(function(t){return ong==="todo"?!t.done:ong==="done"?t.done:true});
 liste.sort(function(a,b){if(!!a.done!==!!b.done)return a.done?1:-1;var pa=(PRIO[a.priority]||PRIO.normal).o,pb=(PRIO[b.priority]||PRIO.normal).o;
 var ma=moi&&a.assignee===moi?0:1,mb=moi&&b.assignee===moi?0:1;return ma-mb||pa-pb||(b.id||0)-(a.id||0)});
 return h("div",null,
 h(EnTetePage,{icone:"\u2705",titre:"T\u00e2ches",nouveau:"+ Nouvelle t\u00e2che",onNouveau:function(){setEdit({})}}),
-h(Onglets,{value:ong,onChange:setOng,items:[["todo","\u00c0 faire",nTodo],["done","Faites",tout.length-nTodo],["all","Toutes",tout.length]]}),
+h(Onglets,{value:ong,onChange:setOng,items:[["todo","\u00c0 faire",nTodo],["done","Faites",tout.length-nTodo],["all","Toutes",tout.length],["rec","\ud83d\udd01 R\u00e9currentes",modeles.length]]}),
+ong==="rec"?h(ListeModeles,{modeles:modeles,onModifier:setEdit,onEnregistrer:p.onEnregistrer,onSupprimer:p.onSupprimer,noms:p.noms}):
 !liste.length?h(Vide,null,ong==="todo"?"\ud83c\udf89 Rien \u00e0 faire pour l'instant":"Aucune t\u00e2che"):
 h("div",{style:{display:"grid",gap:8}},liste.map(function(t){
 var pr=PRIO[t.priority]||PRIO.normal;var pourMoi=moi&&t.assignee===moi;
@@ -572,10 +638,31 @@ t.desc?h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:3,lineHeight:1
 h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap",alignItems:"center"}},
 t.priority!=="normal"?h(Pastille,{bg:pr.bg,c:pr.c},t.priority==="urgent"?"\u26a1 Urgent":pr.l):null,
 h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udc64 "+(t.assignee||"Toute l'\u00e9quipe")),
-t.done&&t.doneBy?h("span",{style:{fontSize:12,color:"var(--text3)"}},"faite par "+t.doneBy+(t.doneAt?" le "+dateFr(t.doneAt):"")):null)),
+t.echeance&&!t.done?h(Pastille,{bg:t.echeance<aujIso()?"var(--red-bg)":"var(--bg3)",c:t.echeance<aujIso()?"var(--red)":"var(--text2)"},(t.echeance<aujIso()?"\u26a0\ufe0f pr\u00e9vue ":"\ud83d\udcc5 ")+recJoliDate(t.echeance)):null,
+t.deModele?h(Pastille,{bg:"var(--violet-bg)",c:"var(--violet)"},"\ud83d\udd01"):null,
+t.done?h("span",{style:{display:"inline-flex",gap:6,alignItems:"center",fontSize:12,color:"var(--text3)"}},"faite par",
+h("select",{value:t.doneBy||"",onChange:function(e){p.onQui(t,e.target.value)},style:{fontSize:13,padding:"3px 6px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)"}},
+h("option",{value:""},"\u2014 qui ? \u2014"),(p.noms||[]).concat(t.doneBy&&(p.noms||[]).indexOf(t.doneBy)<0?[t.doneBy]:[]).map(function(n){return h("option",{key:n,value:n},n)})),
+t.doneAt?"le "+dateFr(t.doneAt):""):null)),
 h(BtnModif,{onClick:function(){setEdit(t)}}))})),
 edit?h(FormTache,{tache:edit.id?edit:null,noms:p.noms,moi:moi,onFermer:function(){setEdit(null)},
 onEnregistrer:function(t){p.onEnregistrer(t);setEdit(null)},onSupprimer:function(){p.onSupprimer(edit);setEdit(null)}}):null)}
+
+function ListeModeles(p){
+var ms=p.modeles||[];var auj=aujIso();
+var rdv=ms.filter(function(t){return t.auto==="rdv_stock"})[0];var rec=ms.filter(function(t){return t.recur});
+return h("div",{style:{display:"grid",gap:10}},
+rdv?h("div",{style:{padding:12,borderRadius:12,background:"var(--bg2)",border:"1px solid var(--border)",opacity:rdv.actif===false?.6:1}},
+h("div",{style:{fontWeight:700,fontSize:15}},"\ud83d\udce6 Stock tournant avant chaque RDV labo"),
+h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:4,lineHeight:1.45}},"Pour chaque RDV commercial not\u00e9 dans PharmaScope, une t\u00e2che \u00ab Stock tournant \u00bb est \u00e0 faire "+(rdv.joursAvant||7)+" jours avant le RDV (elle appara\u00eet 3 jours plus t\u00f4t), pour partir d'un stock juste quand on passe la commande."+(rdv.actif===false?" (en pause)":""))):null,
+!rec.length?h(Vide,null,"Aucune t\u00e2che r\u00e9currente. Cr\u00e9e-en une avec \u00ab + Nouvelle t\u00e2che \u00bb puis \u00ab R\u00e9p\u00e9ter \u00bb."):null,
+rec.map(function(t){return h("div",{key:t.id,style:{display:"flex",gap:10,alignItems:"flex-start",padding:12,borderRadius:12,background:"var(--bg2)",border:"1px solid var(--border)",opacity:t.actif===false?.6:1}},
+h("div",{style:{flex:1,minWidth:0}},
+h("div",{style:{fontWeight:700,fontSize:15}},"\ud83d\udd01 "+t.title),
+h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:3}},recLibelle(t.recur)+" \u00b7 pour "+(t.assignee||"toute l'\u00e9quipe")),
+h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:3}},t.actif===false?"En pause":"Prochaine fois : "+recJoliDate(recProchaine(t.recur,recPlus(auj,-1))))),
+h("button",{type:"button",onClick:function(){p.onEnregistrer(Object.assign({},t,{actif:t.actif===false}))},style:{flexShrink:0,padding:"6px 10px",borderRadius:8,background:"var(--bg3)",color:"var(--text2)",fontSize:13,fontWeight:700}},t.actif===false?"\u25b6 Reprendre":"\u23f8 Pause"),
+h(BtnModif,{onClick:function(){p.onModifier(t)}}))}))}
 
 function PageTG(p){
 var auj=aujIso();
@@ -798,6 +885,9 @@ function vis(){if(document.visibilityState==="visible")recharger(false)}
 document.addEventListener("visibilitychange",vis);
 window.addEventListener("online",vis);
 return function(){clearInterval(iv);document.removeEventListener("visibilitychange",vis);window.removeEventListener("online",vis)}},[]);
+/* Taches recurrentes et stock tournant avant RDV : creees des que les donnees du cloud sont la */
+var jourGen=aujIso();
+useEffect(function(){if(charge||!etat.ok||!db||ENVOIS.n>0)return;var r=recGenerer(d.tasks||[],d.events||[],aujIso());if(r)majListe("tasks",r)},[d.tasks,d.events,charge,etat.ok,jourGen]);
 /* Le lendemain, la liste des produits remontes repart de zero */
 useEffect(function(){var iv=setInterval(function(){if(fRef.current.date!==aujIso())setFaitsRow({date:aujIso(),c:{}})},60000);return function(){clearInterval(iv)}},[]);
 
@@ -809,6 +899,8 @@ var liste=(dRef.current.tasks||[]).map(function(x){if(x.id!==t.id)return x;var y
 if(fait){y.doneBy=moi||"";y.doneAt=aujIso()}else{delete y.doneBy;delete y.doneAt}return y});
 majListe("tasks",liste);
 if(fait)montrer("\u2705 \u00ab "+t.title+" \u00bb faite",function(){tacheFaite(t,false)})}
+function quiFait(t,nom){
+var liste=(dRef.current.tasks||[]).map(function(x){return x.id===t.id?Object.assign({},x,{doneBy:nom}):x});majListe("tasks",liste)}
 function cocherTG(id,i){
 var liste=(dRef.current.tdgs||[]).map(function(t){if(t.id!==id)return t;
 var c=(t.checks||[]).map(function(x,j){return j===i?Object.assign({},x,{done:!x.done}):x});return Object.assign({},t,{checks:c})});
@@ -851,7 +943,7 @@ var faits=faitsRow.date===aujIso()?faitsRow.c||{}:{};
 var noms=(d.team||[]).map(function(m){return m.name}).filter(function(x){return !!x});
 if(!noms.length){var vus={};(d.tasks||[]).forEach(function(t){if(t.assignee&&!vus[t.assignee]){vus[t.assignee]=1;noms.push(t.assignee)}})}
 
-var nT=(d.tasks||[]).filter(function(t){return !t.done}).length;
+var nT=(d.tasks||[]).filter(function(t){return !t.done&&!t.modele}).length;
 var auj=aujIso();
 var nTG=(d.tdgs||[]).filter(function(t){var e=tgEtat(t,auj);return e==="encours"||e==="demonter"}).length;
 var nCh=(d.challenges||[]).filter(function(c){return c.active!==false&&!(c.fin&&c.fin<auj)&&!(c.debut&&c.debut>plusJours(7))}).length;
@@ -899,7 +991,7 @@ etat.ok===false&&!etat.maj?h("div",{style:{background:"var(--red-bg)",color:"var
 charge&&!etat.maj?h(Vide,null,"Chargement\u2026"):
 vue==="accueil"?h("div",{className:"grille"},blocs.taches,blocs.reassort,blocs.tg,blocs.challenges):
 h("div",{style:{maxWidth:820}},
-vue==="taches"?h(PageTaches,{tasks:d.tasks,noms:noms,moi:moi,onFait:tacheFaite,onEnregistrer:function(t){enregistrerEl("tasks",t)},onSupprimer:function(t){supprimerEl("tasks",t)}}):
+vue==="taches"?h(PageTaches,{tasks:d.tasks,noms:noms,moi:moi,onFait:tacheFaite,onQui:quiFait,onEnregistrer:function(t){enregistrerEl("tasks",t)},onSupprimer:function(t){supprimerEl("tasks",t)}}):
 vue==="tg"?h(PageTG,{tdgs:d.tdgs,photos:photos,ventes:ventes,resp:resp,noms:noms,moi:moi,cat:cat,montrer:montrer,onCheck:cocherTG,onStatut:statutTG,onPhoto:photoTG,onEnregistrer:function(t){enregistrerEl("tdgs",t)},onSupprimer:function(t){supprimerEl("tdgs",t)}}):
 vue==="challenges"?h(PageChallenges,{challenges:d.challenges,ventes:ventes,moi:moi,resp:resp,noms:noms,cat:cat,onEnregistrer:function(c){enregistrerEl("challenges",c)},onSupprimer:function(c){supprimerEl("challenges",c)}}):
 blocs[vue]),
