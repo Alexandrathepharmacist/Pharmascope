@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v8.24">
+<meta name="ps-version" content="v8.25">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -359,7 +359,7 @@ return new Response(stream).text().then(function(t){return JSON.parse(t)})
 
 /* Etat de la derniere sauvegarde cloud, diffuse a l'ecran */
 var CLOUD_ETAT={ok:null,msg:""};
-var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
+var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
 function avertir(msg){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg}}))}catch(e){}}
 function proposerAnnulation(msg,annuler){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg,undo:annuler}}))}catch(e){}}
 function notifierCloud(ok,msg){CLOUD_ETAT={ok:ok,msg:msg||""};try{window.dispatchEvent(new CustomEvent("ps-cloud",{detail:CLOUD_ETAT}))}catch(e){}}
@@ -1550,7 +1550,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.24";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.25";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 var NAVG=[
 {id:"pilotage",label:"Piloter",icon:"\ud83d\udcca",items:[
@@ -1564,6 +1564,8 @@ var NAVG=[
 {id:"commandes",label:"Commandes",icon:"\ud83d\udce6"},
 {id:"recos",label:"Recos",icon:"\ud83d\udca1"},
 {id:"avis",label:"Avis par marque",icon:"\ud83e\udded"},
+{id:"duels",label:"Leader & challenger",icon:"\ud83e\udd4a"},
+{id:"nouvgamme",label:"Nouvelle gamme ?",icon:"\ud83e\uddea"},
 {id:"memo",label:"Memo RDV",icon:"\ud83d\udcdd"},
 {id:"dormant",label:"Stock dormant",icon:"\ud83d\udca4"},
 {id:"prix",label:"Contr\u00f4le des prix",icon:"\ud83c\udff7"},
@@ -4399,6 +4401,58 @@ if(!moves)return pd;
 Object.keys(cpP).forEach(function(s){if(!P[s].length)delete P[s];else P[s].sort(function(a,b){return (b.ca||0)-(a.ca||0)})});
 Object.keys(cpL).forEach(function(s){var t=0;L[s].forEach(function(r){t+=Math.abs(r[0])+Math.abs(r[2])});if(t<0.01&&!P[s])delete L[s]});
 return Object.assign({},pd,{P:P,L:L,CONSOL:moves})}
+/* ===== REGROUPEMENT DE MARQUES SOUS UN LABO (v8.25) =====
+   Certaines marques arrivent par des fournisseurs differents (distributeur,
+   grossiste, depot...). On les range toutes sous un meme labo, avec tout leur
+   historique de ventes et leur stock. Exception possible par marque (ex. Erborian
+   reste a part meme si c'est aussi de la cosmetique coreenne). */
+var REGROUPEMENTS_MARQUES=[{labo:"LAFFIN",marques:["MEDICUBE","BEAUTY OF JOSEON","JOSEON","COSRX","BIODANCE"],sauf:["ERBORIAN"]}];
+function laboRegroupe(nom){
+var N=nomNorm(nom);
+for(var g=0;g<REGROUPEMENTS_MARQUES.length;g++){var R=REGROUPEMENTS_MARQUES[g];
+if((R.sauf||[]).some(function(x){return N.indexOf(" "+x+" ")>=0}))continue;
+if(R.marques.some(function(x){return N.indexOf(" "+x+" ")>=0}))return R.labo}
+return null}
+function regrouperMarquesLabo(pd){
+if(!pd||!pd.P||!pd.L||!pd.M||!pd.M.length)return pd;
+var n=pd.M.length;var P=null,L=null,STKL=null,STKV=null,cpP={},cpL={},cpS={},moves=0;
+function init(){if(P)return;P=Object.assign({},pd.P);L=Object.assign({},pd.L);STKL=pd.STKL?Object.assign({},pd.STKL):null;STKV=pd.STKV||null}
+function prepP(s){if(!cpP[s]){P[s]=(P[s]||[]).slice();cpP[s]=1}}
+function prepL(s){if(!cpL[s]){var src=L[s]||[];var a=[];for(var i=0;i<n;i++){var r=src[i];a.push(r?[r[0]||0,r[1]||0,r[2]||0]:[0,0,0])}L[s]=a;cpL[s]=1}}
+function prepS(s){if(!STKL)return;if(!cpS[s]){var t=STKL[s]||{total_ht:0,total_qty:0,nb_refs:0};STKL[s]={total_ht:t.total_ht||0,total_qty:t.total_qty||0,nb_refs:t.nb_refs||0};cpS[s]=1}}
+function bougerStock(c,de,vers,val){
+if(!STKL||!pd.STKU)return;var q=pd.STKU[c];if(!(q>0))return;
+prepS(de);prepS(vers);
+STKL[de].total_ht-=val;STKL[de].total_qty-=q;STKL[de].nb_refs-=1;
+STKL[vers].total_ht+=val;STKL[vers].total_qty+=q;STKL[vers].nb_refs+=1}
+Object.keys(pd.P).forEach(function(sup){
+(pd.P[sup]||[]).forEach(function(p){
+if(!p||!p.c)return;var cible=laboRegroupe(p.n);if(!cible||cible===sup)return;
+init();prepP(sup);prepP(cible);prepL(sup);prepL(cible);
+for(var i=0;i<n;i++){var a=(p.caM&&p.caM[i])||0,mg=(p.mM&&p.mM[i])||0,q=(p.qm&&p.qm[i])||0;if(!a&&!mg&&!q)continue;
+L[sup][i][0]-=a;L[sup][i][1]-=mg;L[sup][i][2]-=q;
+L[cible][i][0]+=a;L[cible][i][1]+=mg;L[cible][i][2]+=q}
+var ex=null;P[cible].forEach(function(y,k){if(y.c===p.c)ex=k});
+if(ex===null){P[cible].push(p)}
+else{var b=P[cible][ex];var t=Object.assign({},b,{caM:(b.caM||[]).slice(),mM:(b.mM||[]).slice(),qm:(b.qm||[]).slice(),ca:(b.ca||0)+(p.ca||0),m:(b.m||0)+(p.m||0),q:(b.q||0)+(p.q||0)});
+for(var j=0;j<n;j++){t.caM[j]=(t.caM[j]||0)+((p.caM&&p.caM[j])||0);t.mM[j]=(t.mM[j]||0)+((p.mM&&p.mM[j])||0);t.qm[j]=(t.qm[j]||0)+((p.qm&&p.qm[j])||0)}
+P[cible][ex]=t}
+P[sup]=P[sup].filter(function(y){return y!==p});
+var sv=pd.STKV?pd.STKV[p.c]:null;var val=typeof sv==="number"?sv:(Array.isArray(sv)?(sv[0]||0):0);
+bougerStock(p.c,sup,cible,val);
+moves++})});
+/* produits en stock mais jamais vendus */
+if(pd.STKV)Object.keys(pd.STKV).forEach(function(c){var v=pd.STKV[c];if(!Array.isArray(v))return;
+var cible=laboRegroupe(v[1]);if(!cible||v[2]===cible)return;
+init();if(STKV===pd.STKV)STKV=Object.assign({},pd.STKV);
+STKV[c]=[v[0],v[1],cible];bougerStock(c,v[2]||"Divers",cible,v[0]||0);moves++});
+if(!moves)return pd;
+Object.keys(cpP).forEach(function(s){if(!P[s].length)delete P[s];else P[s].sort(function(a,b){return (b.ca||0)-(a.ca||0)})});
+Object.keys(cpL).forEach(function(s){var t=0;L[s].forEach(function(r){t+=Math.abs(r[0])+Math.abs(r[2])});if(t<0.01&&!P[s])delete L[s]});
+if(STKL)Object.keys(cpS).forEach(function(s){var t=STKL[s];t.total_ht=Math.round(t.total_ht*100)/100;if(t.nb_refs<=0&&Math.abs(t.total_ht)<0.01)delete STKL[s]});
+var out=Object.assign({},pd,{P:P,L:L,REGROUP:moves});if(STKL)out.STKL=STKL;if(STKV)out.STKV=STKV;
+return out}
+
 /* Correspondances Ospharm -> fournisseurs Winpharma (cle = nom Ospharm sans espaces ni ponctuation) */
 var LAB_CORRESP={"CHAUVINBAUSCHLOMB":["BAUSCH ET LOMB"],"KENVUEJOHNSONJOHNSON":["JOHNSON & JOHNSON KENVUE"],"BSNRADIANTE":["RADIANTE BSN"],"SUPERDIET":["SUPERDIET REF"],"ADERMA":["ADERMA"],"LACTALISNUTRITIONSANTE":["DELICAL"]};
 var FOURN_PAS_LABO=["PHARMAZON"];
@@ -7279,7 +7333,7 @@ corps)
    Cle = nom de l univers tel que defini dans pd.U. */
 var MOTS_UNIV={
 "Hygi\u00e8ne bucco-dentaire":["ORAL B","ORAL-B","ORALB","ELMEX","FLUOCARIL","PARODONTAX","SENSODYNE","MERIDOL","ELGYDIUM","ARTHRODONT","INAVA","MARVIS","FLUOWHITE","HEXTRIL","BROSSE A DENT","BROSSET","DENTIFRICE","BAIN DE BOUCHE","FIL DENTAIRE","GUM TRAVLER","GUM ORTHO","GUM SOFT","GUM TECHNIQUE","GUM JUNIOR","BUCCODENTAL"],
-"Dermocosm\u00e9tique":["CREME","SERUM","SOLAIRE","SPF","HYDRATANT","ANTI-AGE","CICALFATE","CICAPLAST","EAU THERMALE"],
+"Dermocosm\u00e9tique":["CREME","SERUM","SOLAIRE","SPF","HYDRATANT","ANTI-AGE","CICALFATE","CICAPLAST","EAU THERMALE","MEDICUBE","BEAUTY OF JOSEON","COSRX","BIODANCE"],
 "Soins capillaires":["SHAMPOING","SHAMPOOING","CAPILLAIRE","CHEVEUX","ANTICHUTE","ANTI-CHUTE"],
 "B\u00e9b\u00e9 & Pu\u00e9riculture":["BEBE","NOURRISSON","LINGETTE","BIBERON","TETINE","LINIMENT","COUCHE"]};
 function motsUnivers(uName,pdU){
@@ -7414,6 +7468,481 @@ x.couv=x.ach>0?x.stk/(x.ach/52):null;
 x.obj=pd.U[x.nom]?pd.U[x.nom].obj:null;x.icone=pd.U[x.nom]?pd.U[x.nom].icon:null});
 var r={liste:liste,totCA:totCA,totM:totM,cmp:cmp,saisonMois:saisonIdx.map(function(k){return pd.M[k]}),labsDelta:labsDelta,d12:d12,lf:lf};
 _ustCache={P:pd.P,U:pd.U,S:pd.STKU,O:UNIV_OVR.o,C:UNIV_CODES.o,r:r};return r}
+
+/* ===== NOUVELLE GAMME : faut-il la faire entrer ? (v8.25) =====
+   Avant un essai (quelques references) ou l'ouverture d'un marche complet :
+   1) ce que disent deja les ventes (produits de la marque vendus via grossiste...)
+   2) le rayon concerne (taille, evolution, marge, marques en place)
+   3) une simulation a partir des hypotheses (marge, ventes, implantation)
+   4) un score /10 et un avis, puis le suivi reel de l'essai mois par mois. */
+function motsGamme(txt){return String(txt||"").split(/[,;]+/).map(function(x){return nomNorm(x).trim()}).filter(function(x){return x.length>=3})}
+function produitsDeGamme(pd,mots){
+var out=[];if(!pd||!pd.P||!mots||!mots.length)return out;var vu={};
+function ok(nom){var N=nomNorm(nom);return mots.some(function(m){return N.indexOf(" "+m+" ")>=0})}
+Object.keys(pd.P).forEach(function(s){(pd.P[s]||[]).forEach(function(p){if(!p||!p.c||vu[p.c])return;if(ok(p.n)){vu[p.c]=1;out.push({sup:s,p:p})}})});
+if(pd.STKV)Object.keys(pd.STKV).forEach(function(c){var v=pd.STKV[c];if(vu[c]||!Array.isArray(v))return;if(ok(v[1])){vu[c]=1;out.push({sup:v[2]||"Divers",p:{c:c,n:v[1],ca:0,m:0,q:0},stockSeul:true})}});
+return out}
+function medianeListe(a){if(!a.length)return 0;var b=a.slice().sort(function(x,y){return x-y});var k=Math.floor(b.length/2);return b.length%2?b[k]:(b[k-1]+b[k])/2}
+var GAMME_UNIV_DEF="Dermocosm\u00e9tique";
+function analyseGamme(pd,proj,metres){
+if(!pd||!pd.P||!pd.M||!pd.M.length)return null;
+var lf=dernierMoisComplet(pd);if(lf<0)return null;var w0=Math.max(0,lf-11);var nbM=lf-w0+1;
+var mots=motsGamme(proj.mots||proj.nom);
+var items=produitsDeGamme(pd,mots);
+var umap=universDe(pd);var votes={};
+var dem={ca:0,m:0,q:0,refs:0,mois:0,stk:0,lignes:[]};var moisVu={};
+items.forEach(function(it){var p=it.p;var ca=0,m=0,q=0;
+for(var i=w0;i<=lf;i++){ca+=(p.caM&&p.caM[i])||0;m+=(p.mM&&p.mM[i])||0;var qq=(p.qm&&p.qm[i])||0;q+=qq;if(qq>0)moisVu[i]=1}
+var stq=pd.STKU&&pd.STKU[p.c]>0?pd.STKU[p.c]:0;
+if(ca>0||stq>0){dem.lignes.push({c:p.c,n:p.n,sup:it.sup,ca:ca,m:m,q:q,stk:stq});dem.ca+=ca;dem.m+=m;dem.q+=q;dem.stk+=stq;if(ca>0)dem.refs++}
+var u=umap[p.c];if(u)votes[u]=(votes[u]||0)+Math.max(1,ca)});
+dem.mois=Object.keys(moisVu).length;dem.parMois=dem.ca/nbM;
+dem.lignes.sort(function(a,b){return b.ca-a.ca});
+var univAuto=Object.keys(votes).sort(function(a,b){return votes[b]-votes[a]})[0]||null;
+if(univAuto===UNIV_AUTRE||univAuto===UNIV_INC)univAuto=null;
+var st=statsUnivers(pd);
+var univNom=proj.univ||univAuto||GAMME_UNIV_DEF;
+var U=null;if(st)st.liste.forEach(function(x){if(x.nom===univNom)U=x});
+var ray=null;
+if(U){
+var parRef=[];U.prods.forEach(function(q){if(q.ca>0)parRef.push(q.ca/nbM)});
+var labs=Object.keys(U.labs).filter(function(k){return k.indexOf("Via ")!==0&&k!=="Labo non identifi\u00e9"&&U.labs[k].ca>0}).map(function(k){var l=U.labs[k];return{nom:k,ca:l.ca,part:U.ca?l.ca/U.ca:0,tx:l.ca?l.m/l.ca*100:0,evo:l.ca0>0?(l.ca1-l.ca0)/l.ca0*100:null}}).sort(function(a,b){return b.ca-a.ca});
+var mt=metres?parseFloat(metres[univNom])||0:0;
+var qU=0;U.prods.forEach(function(q){qU+=q.q||0});var pb=parRef.slice().sort(function(a,b){return a-b});
+ray={nom:univNom,ca:U.ca,m:U.m,tx:U.tx,evo:U.evo,nRefs:U.nRefs,medRef:pb.length?pb[Math.floor(pb.length*0.75)]:0,coutU:qU>0?U.ach/qU:0,labs:labs,mt:mt,margeMetre:mt?U.m/mt:null,part:U.partCA}}
+return{dem:dem,ray:ray,univAuto:univAuto,univNom:univNom,mots:mots,nbM:nbM,lf:lf,w0:w0,items:items}}
+/* Hypotheses : celles saisies, sinon des valeurs par defaut tirees des ventes */
+function hypGamme(proj,an){
+var h=proj.h||{};var essai=proj.type!=="marche";
+var ray=an&&an.ray;var d={};
+d.refs=essai?6:30;
+var refs=h.refs>0?h.refs:d.refs;
+d.tx=ray&&ray.tx>0?Math.round(ray.tx):33;
+var tx=h.tx>0?h.tx:d.tx;
+d.caMois=Math.round(Math.max(ray?refs*ray.medRef:0,an?an.dem.parMois:0));
+var caMois=h.caMois>0?h.caMois:d.caMois;
+d.impl=Math.round(Math.max(caMois*(1-tx/100)*3,ray&&ray.coutU?refs*3*ray.coutU:0)/10)*10;
+var impl=h.impl>0?h.impl:d.impl;
+d.cannib=essai?30:40;
+var cannib=typeof h.cannib==="number"&&h.cannib>=0?h.cannib:d.cannib;
+var mt=h.mt>0?h.mt:0;
+return{refs:refs,tx:tx,caMois:caMois,impl:impl,cannib:cannib,mt:mt,def:d}}
+function simulerGamme(hy,ray,k){
+var txR=ray&&ray.tx>0?ray.tx:hy.tx;
+var caAn=hy.caMois*12*k;var margeAn=caAn*hy.tx/100;
+var perte=caAn*hy.cannib/100*txR/100;
+var gain=margeAn-perte;
+var achatMois=hy.caMois*k*(1-hy.tx/100);
+var ecoul=achatMois>0?hy.impl/achatMois:null;
+return{k:k,caAn:caAn,caNouveau:caAn*(1-hy.cannib/100),margeAn:margeAn,perte:perte,gain:gain,ecoul:ecoul,margeMetre:hy.mt>0?margeAn/hy.mt:null}}
+function avisGamme(proj,an,hy,sim){
+var essai=proj.type!=="marche";var ray=an.ray;var dem=an.dem;var crit=[];
+var s1=dem.ca>=300||dem.mois>=4?2:(dem.ca>0?1:0);
+crit.push({l:"Demande d\u00e9j\u00e0 pr\u00e9sente",s:s1,t:dem.ca>0?fmtE(dem.ca)+" HT vendus sur "+an.nbM+" mois sans r\u00e9f\u00e9rencement ("+dem.mois+" mois avec ventes)":"Aucune vente de la marque sur "+an.nbM+" mois"});
+var ev=ray?ray.evo:null;var s2=ev===null||ev===undefined?1:(ev>=3?2:(ev>=-3?1:0));
+crit.push({l:"Dynamique du rayon",s:s2,t:ray?(ev===null||ev===undefined?"\u00c9volution inconnue (pas assez d'historique)":"Rayon "+ray.nom+" : "+(ev>=0?"+":"")+ev.toFixed(1)+" % sur un an"):"Rayon non trouv\u00e9"});
+var txR=ray?ray.tx:null;var s3=txR===null?1:(hy.tx>=txR+2?2:(hy.tx>=txR-2?1:0));
+crit.push({l:"Marge vs rayon",s:s3,t:"Marge attendue "+hy.tx+" % contre "+(txR!==null?txR.toFixed(1)+" %":"?")+" en moyenne dans le rayon"});
+var e=sim.ecoul;var s4=e===null?0:(e<=3?2:(e<=6?1:0));
+crit.push({l:"\u00c9coulement de l'implantation",s:s4,t:e===null?"Ventes attendues nulles":"Commande d'implantation \u00e9coul\u00e9e en "+e.toFixed(1)+" mois environ"});
+var r=hy.impl>0?sim.gain/hy.impl:(sim.gain>0?2:0);var s5=r>=1?2:(sim.gain>0?1:0);
+crit.push({l:"Rentabilit\u00e9 r\u00e9elle",s:s5,t:"Marge vraiment gagn\u00e9e : "+fmtE(Math.round(sim.gain))+"/an pour "+fmtE(hy.impl)+" de stock immobilis\u00e9"});
+var score=0;crit.forEach(function(c){score+=c.s});
+var v=score>=7?"go":(score>=4?"prudent":"non");
+var titre=v==="go"?(essai?"Essai \u00e0 lancer":"Ouverture justifi\u00e9e"):(v==="prudent"?(essai?"Essai possible, avec un objectif clair":"Commencer plut\u00f4t par un essai"):"Pas maintenant");
+var act=[];
+if(s3<2&&txR!==null)act.push("N\u00e9gocier les conditions avec le d\u00e9l\u00e9gu\u00e9 : viser au moins "+Math.ceil(txR+2)+" % de marge (le rayon fait "+txR.toFixed(1)+" %).");
+if(s4<2){var cible=Math.round(hy.caMois*(1-hy.tx/100)*3/10)*10;if(cible>0&&cible<hy.impl)act.push("All\u00e9ger la commande d'implantation : environ "+fmtE(cible)+" HT (3 mois de ventes) au lieu de "+fmtE(hy.impl)+".")}
+if(s1===0)act.push("Aucune demande visible : commencer par les 3 \u00e0 5 best-sellers de la marque, pas toute la gamme.");
+if(s1>0&&dem.lignes.length)act.push("Partir des produits d\u00e9j\u00e0 demand\u00e9s par vos clients : "+dem.lignes.slice(0,3).map(function(x){return x.n}).join(", ")+".");
+if(ray&&ray.labs.length&&hy.cannib>=30)act.push("\u00c9viter les doublons avec les marques d\u00e9j\u00e0 en place ("+ray.labs.slice(0,3).map(function(x){return x.nom}).join(", ")+") : choisir des produits qu'elles n'ont pas.");
+act.push("Demander au d\u00e9l\u00e9gu\u00e9 un droit de retour ou d'\u00e9change des invendus en cas d'arr\u00eat.");
+if(v!=="non")act.push("Donner de la visibilit\u00e9 d\u00e8s l'arriv\u00e9e : t\u00eate de gondole, fiche conseil, brief \u00e9quipe ; objectif : "+fmtE(hy.caMois)+" HT/mois, point \u00e0 3 mois.");
+return{score:score,v:v,titre:titre,crit:crit,actions:act}}
+/* Suivi reel apres le lancement */
+function suiviGamme(pd,an,proj,hy){
+if(!proj.debut||!pd||!pd.M)return null;
+var m0=proj.debut.slice(0,7);var i0=pd.M.indexOf(m0);
+if(i0<0){if(m0>pd.M[pd.M.length-1])return{attente:true,lignes:[]};i0=0}
+var lignes=[];var cum=0,cumM=0,cumAch=0,nPleins=0,sumPleins=0;var lf=dernierMoisComplet(pd);
+for(var i=i0;i<pd.M.length;i++){var ca=0,m=0,q=0;
+an.items.forEach(function(it){var p=it.p;ca+=(p.caM&&p.caM[i])||0;m+=(p.mM&&p.mM[i])||0;q+=(p.qm&&p.qm[i])||0});
+var enCours=i>lf;cum+=ca;cumM+=m;cumAch+=ca-m;if(!enCours&&i>i0){nPleins++;sumPleins+=ca}
+lignes.push({mois:pd.M[i],ca:ca,m:m,q:q,obj:hy.caMois,enCours:enCours})}
+var moy=nPleins?sumPleins/nPleins:null;
+var ecoule=hy.impl>0?cumAch/hy.impl*100:null;
+var verdict=null;
+if(nPleins>=3&&moy!==null){var r=hy.caMois>0?moy/hy.caMois:0;
+verdict=r>=1?{v:"go",t:"Objectif atteint ("+Math.round(r*100)+" %) : la gamme a sa place, vous pouvez l'adopter."}:(r>=0.6?{v:"prudent",t:"Objectif atteint \u00e0 "+Math.round(r*100)+" % : prolonger en ajustant (r\u00e9f\u00e9rences, visibilit\u00e9, conseil \u00e9quipe)."}:{v:"non",t:"Objectif atteint \u00e0 "+Math.round(r*100)+" % seulement : envisager l'arr\u00eat et le retour des invendus."})}
+else verdict={v:"attente",t:"Encore "+(3-nPleins)+" mois complet"+(3-nPleins>1?"s":"")+" avant de juger l'essai (il faut au moins 3 mois pleins)."};
+return{lignes:lignes,cum:cum,cumM:cumM,moy:moy,ecoule:ecoule,verdict:verdict,nPleins:nPleins}}
+var GAMME_META={go:{l:"Feu vert",i:"\ud83d\udfe2",c:"var(--accent)",bg:"var(--accent-bg)"},prudent:{l:"Prudence",i:"\ud83d\udfe0",c:"var(--orange)",bg:"var(--orange-bg)"},non:{l:"Pas maintenant",i:"\ud83d\udd34",c:"var(--red)",bg:"var(--red-bg)"},attente:{l:"En cours",i:"\u23f3",c:"var(--blue)",bg:"var(--blue-bg)"}};
+var GAMME_STATUTS=[["etude","\u00c0 l'\u00e9tude"],["essai","En essai"],["adoptee","Adopt\u00e9e"],["abandon","Abandonn\u00e9e"]];
+function libStatutGamme(s){var r="\u00c0 l'\u00e9tude";GAMME_STATUTS.forEach(function(x){if(x[0]===s)r=x[1]});return r}
+
+function NouvelleGammePage(props){
+var pd=props.pd;var projets=props.projets||[];var setProjets=props.setProjets;
+var selS=useState(function(){return projets.length?projets[0].id:null});var sel=selS[0];var setSel=selS[1];
+var nvS=useState("");var nv=nvS[0];var setNv=nvS[1];
+var proj=null;projets.forEach(function(p){if(p.id===sel)proj=p});
+if(!proj&&projets.length)proj=projets[0];
+var entete=React.createElement(EnTeteOutil,{titre:"\ud83e\uddea Nouvelle gamme : bonne id\u00e9e ?",sous:"Avant de faire entrer une marque (essai de quelques r\u00e9f\u00e9rences ou ouverture d'un march\u00e9), PharmaScope regarde ce que vos clients ach\u00e8tent d\u00e9j\u00e0, la sant\u00e9 du rayon concern\u00e9 et vos hypoth\u00e8ses, puis estime ce que la gamme peut vraiment rapporter. Une fois lanc\u00e9e, il suit l'essai mois par mois."});
+if(!pd||!pd.P||!pd.M)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\ud83d\udcca",titre:"Pas encore de ventes",texte:"Importez vos ventes Winpharma pour pouvoir \u00e9valuer une nouvelle gamme.",action:props.setPage?function(){props.setPage("import")}:null}));
+function maj(ch){setProjets(projets.map(function(p){return p.id===proj.id?Object.assign({},p,ch):p}))}
+function majH(k,v){var h=Object.assign({},proj.h||{});var x=parseFloat(String(v).replace(",","."));if(v===""||isNaN(x))delete h[k];else h[k]=x;maj({h:h})}
+function creer(){var nom=nv.trim();if(!nom)return;var id="g"+Date.now();
+var p={id:id,nom:nom,mots:nom,type:"essai",univ:null,h:{},statut:"etude",debut:"",notes:"",cree:new Date().toISOString().slice(0,10)};
+setProjets(projets.concat([p]));setSel(id);setNv("")}
+function supprimer(){if(!proj)return;if(!window.confirm("Supprimer l'\u00e9tude \u00ab "+proj.nom+" \u00bb ?"))return;var reste=projets.filter(function(p){return p.id!==proj.id});setProjets(reste);setSel(reste.length?reste[0].id:null)}
+var inp={padding:"7px 9px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:14,width:"100%",boxSizing:"border-box"};
+var carte={background:"var(--bg2)",borderRadius:"var(--radius)",padding:16,border:"1px solid var(--border)",marginBottom:14};
+var h3={fontSize:15,fontWeight:700,marginBottom:10};
+var lab={fontSize:12,color:"var(--text3)",marginBottom:4,display:"block"};
+var aide={fontSize:11,color:"var(--text3)",marginTop:3,lineHeight:1.4};
+/* barre des etudes */
+var barre=React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:16}},
+projets.map(function(p){var on=proj&&p.id===proj.id;
+return React.createElement("button",{key:p.id,onClick:function(){setSel(p.id)},style:{padding:"7px 12px",borderRadius:20,fontSize:13,fontWeight:600,background:on?"var(--accent)":"var(--bg2)",color:on?"#fff":"var(--text2)",border:"1px solid "+(on?"var(--accent)":"var(--border)")}},p.nom+" \u00b7 "+libStatutGamme(p.statut))}),
+React.createElement("div",{style:{display:"flex",gap:6,flex:"1 1 240px",maxWidth:380}},
+React.createElement("input",{value:nv,placeholder:"Marque \u00e0 \u00e9tudier (ex. Eucerin)",onChange:function(e){setNv(e.target.value)},onKeyDown:function(e){if(e.key==="Enter")creer()},style:inp}),
+React.createElement("button",{onClick:creer,style:{padding:"7px 14px",borderRadius:8,background:"var(--accent)",color:"#fff",fontWeight:700,fontSize:13,whiteSpace:"nowrap"}},"+ \u00c9tudier")));
+if(!proj)return React.createElement("div",null,entete,barre,React.createElement(VideOutil,{icone:"\ud83e\uddea",titre:"Aucune \u00e9tude en cours",texte:"Tapez le nom d'une marque ci-dessus (Biostime, Eucerin...) : PharmaScope cherche tout de suite si vos clients l'ach\u00e8tent d\u00e9j\u00e0 et dans quel rayon elle arriverait."}));
+var an=analyseGamme(pd,proj,props.metres);
+if(!an)return React.createElement("div",null,entete,barre,React.createElement(VideOutil,{icone:"\ud83d\udcca",titre:"Pas assez de ventes",texte:"Il faut au moins un mois complet de ventes import\u00e9es."}));
+var hy=hypGamme(proj,an);var ray=an.ray;
+var sims=[simulerGamme(hy,ray,0.5),simulerGamme(hy,ray,1),simulerGamme(hy,ray,1.5)];
+var avis=avisGamme(proj,an,hy,sims[1]);var meta=GAMME_META[avis.v];
+var suivi=suiviGamme(pd,an,proj,hy);
+var univList=[];var st=statsUnivers(pd);if(st)st.liste.forEach(function(x){if(x.nom!==UNIV_REMB&&x.nom!==UNIV_SERV&&x.nom!==UNIV_INC)univList.push(x.nom)});
+if(univList.indexOf(an.univNom)<0)univList.unshift(an.univNom);
+function champ(k,titre,unite,aideTxt){var v=proj.h&&proj.h[k]!==undefined?proj.h[k]:"";
+return React.createElement("div",null,React.createElement("label",{style:lab},titre+(unite?" ("+unite+")":"")),
+React.createElement("input",{type:"number",min:0,step:"any",value:v,placeholder:String(hy.def[k]!==undefined?hy.def[k]:""),onChange:function(e){majH(k,e.target.value)},style:inp}),
+aideTxt?React.createElement("div",{style:aide},aideTxt):null)}
+/* 1. La gamme */
+var bloc1=React.createElement("div",{style:carte},
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:10}},
+React.createElement("div",{style:h3},"1. Le projet"),
+React.createElement("button",{onClick:supprimer,style:{fontSize:12,color:"var(--red)",padding:"4px 8px"}},"Supprimer l'\u00e9tude")),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}},
+React.createElement("div",null,React.createElement("label",{style:lab},"Type de projet"),
+React.createElement(Pastilles,{val:proj.type==="marche"?"marche":"essai",set:function(v){maj({type:v})},options:[["essai","Essai (quelques r\u00e9f.)"],["marche","Ouverture de march\u00e9"]]})),
+React.createElement("div",null,React.createElement("label",{style:lab},"Mots recherch\u00e9s dans vos ventes"),
+React.createElement("input",{value:proj.mots||"",onChange:function(e){maj({mots:e.target.value})},placeholder:proj.nom,style:inp}),
+React.createElement("div",{style:aide},"S\u00e9parez par des virgules (ex. EUCERIN, AQUAPHOR) pour inclure les sous-marques.")),
+React.createElement("div",null,React.createElement("label",{style:lab},"Rayon concern\u00e9"),
+React.createElement("select",{value:an.univNom,onChange:function(e){maj({univ:e.target.value})},style:inp},univList.map(function(u){return React.createElement("option",{key:u,value:u},u)})),
+React.createElement("div",{style:aide},an.univAuto&&!proj.univ?"D\u00e9duit des produits d\u00e9j\u00e0 vendus.":"Choisissez le rayon o\u00f9 la gamme sera install\u00e9e.")),
+React.createElement("div",null,React.createElement("label",{style:lab},"Statut"),
+React.createElement("select",{value:proj.statut||"etude",onChange:function(e){var ch={statut:e.target.value};if(e.target.value==="essai"&&!proj.debut)ch.debut=new Date().toISOString().slice(0,10);maj(ch)},style:inp},GAMME_STATUTS.map(function(x){return React.createElement("option",{key:x[0],value:x[0]},x[1])})))));
+/* 2. Demande deja presente */
+var dem=an.dem;
+var bloc2=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"2. Vos clients l'ach\u00e8tent-ils d\u00e9j\u00e0 ?"),
+dem.lignes.length?React.createElement("div",null,
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)",marginBottom:8,lineHeight:1.5}},"Sur les "+an.nbM+" derniers mois complets : ",React.createElement("b",null,fmtE(Math.round(dem.ca))+" HT"),", "+Math.round(dem.q)+" unit\u00e9s, "+dem.refs+" r\u00e9f\u00e9rence"+(dem.refs>1?"s":"")+" vendue"+(dem.refs>1?"s":"")+", des ventes "+dem.mois+" mois sur "+an.nbM+". C'est la demande qui existe d\u00e9j\u00e0 sans que la marque soit en rayon (commandes client, grossiste...)."),
+React.createElement("div",{style:{overflowX:"auto"}},React.createElement("table",{style:{width:"100%",fontSize:12,borderCollapse:"collapse"}},
+React.createElement("thead",null,React.createElement("tr",{style:{color:"var(--text3)",textAlign:"left"}},["Produit","Achet\u00e9 via","Qt\u00e9","CA HT","Stock"].map(function(t,i){return React.createElement("th",{key:t,style:{padding:"4px 6px",textAlign:i>=2?"right":"left",fontWeight:600}},t)}))),
+React.createElement("tbody",null,dem.lignes.slice(0,15).map(function(l){return React.createElement("tr",{key:l.c,style:{borderTop:"1px solid var(--border)"}},
+React.createElement("td",{style:{padding:"4px 6px"}},l.n),React.createElement("td",{style:{padding:"4px 6px",color:"var(--text3)"}},l.sup),
+React.createElement("td",{style:{padding:"4px 6px",textAlign:"right"}},l.q),React.createElement("td",{style:{padding:"4px 6px",textAlign:"right"}},fmtE(Math.round(l.ca))),
+React.createElement("td",{style:{padding:"4px 6px",textAlign:"right"}},l.stk||"-"))}))))):
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)",lineHeight:1.5}},"Aucun produit contenant \u00ab "+an.mots.join(", ")+" \u00bb vendu sur les "+an.nbM+" derniers mois. Pas de demande visible dans vos ventes : les clients qui la cherchent repartent peut-\u00eatre sans (\u00e0 v\u00e9rifier aupr\u00e8s de l'\u00e9quipe)."));
+/* 3. Le rayon */
+var bloc3=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"3. Le rayon "+an.univNom),
+ray?React.createElement("div",null,
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:12}},
+React.createElement(KPICard,{title:"CA HT sur 12 mois",value:fmtE(Math.round(ray.ca)),sub:(ray.part*100).toFixed(1)+" % de la pharmacie"}),
+React.createElement(KPICard,{title:"\u00c9volution sur un an",value:ray.evo===null||ray.evo===undefined?"-":(ray.evo>=0?"+":"")+ray.evo.toFixed(1)+" %",subColor:ray.evo>=0?"var(--accent)":"var(--red)",sub:ray.evo===null||ray.evo===undefined?"pas assez d'historique":(ray.evo>=0?"rayon qui grandit":"rayon qui recule")}),
+React.createElement(KPICard,{title:"Marge moyenne",value:ray.tx.toFixed(1)+" %",sub:"la r\u00e9f\u00e9rence \u00e0 battre"}),
+React.createElement(KPICard,{title:"Vente d'une bonne r\u00e9f\u00e9rence",value:fmtE(Math.round(ray.medRef))+"/mois",sub:"une bonne r\u00e9f. : 3 sur 4 des "+ray.nRefs+" r\u00e9f. vendent moins"}),
+ray.margeMetre?React.createElement(KPICard,{title:"Marge par m\u00e8tre de rayon",value:fmtE(Math.round(ray.margeMetre))+"/an",sub:ray.mt+" m d\u00e9clar\u00e9s (page Univers)"}):null),
+React.createElement("div",{style:{fontSize:12,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",marginBottom:6}},"Marques d\u00e9j\u00e0 en place"),
+React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:5}},ray.labs.slice(0,6).map(function(l){
+return React.createElement("div",{key:l.nom,style:{display:"flex",alignItems:"center",gap:8,fontSize:12}},
+React.createElement("div",{style:{width:130,flexShrink:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",fontWeight:600}},l.nom),
+React.createElement("div",{style:{flex:1,background:"var(--bg3)",borderRadius:4,height:10,minWidth:40}},React.createElement("div",{style:{width:Math.max(2,l.part*100)+"%",height:10,borderRadius:4,background:"var(--accent)"}})),
+React.createElement("div",{style:{width:150,flexShrink:0,textAlign:"right",color:"var(--text2)"}},Math.round(l.part*100)+" % \u00b7 marge "+l.tx.toFixed(0)+" %"+(l.evo!==null?" \u00b7 "+(l.evo>=0?"+":"")+l.evo.toFixed(0)+" %":"")))}))):
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Pas de ventes dans ce rayon sur 12 mois."));
+/* 4. Hypotheses */
+var bloc4=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"4. Vos hypoth\u00e8ses"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text2)",marginBottom:10,lineHeight:1.5}},"Les cases gris\u00e9es montrent la valeur utilis\u00e9e par d\u00e9faut (tir\u00e9e de vos ventes). Remplacez-les d\u00e8s que vous avez les vrais chiffres du d\u00e9l\u00e9gu\u00e9."),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:12}},
+champ("refs","Nombre de r\u00e9f\u00e9rences","",null),
+champ("tx","Marge attendue","%","Avec la remise et les conditions n\u00e9goci\u00e9es."),
+champ("caMois","Ventes attendues","\u20ac HT/mois",ray?"Rep\u00e8re : "+hy.refs+" r\u00e9f. \u00d7 "+fmtE(Math.round(ray.medRef))+" (vente d'une bonne r\u00e9f. du rayon)"+(dem.parMois>0?", demande actuelle "+fmtE(Math.round(dem.parMois))+"/mois":"")+".":null),
+champ("impl","Commande d'implantation","\u20ac HT","Montant du premier bon de commande. Par d\u00e9faut : 3 mois de ventes au prix d'achat, et au moins 3 bo\u00eetes par r\u00e9f\u00e9rence."),
+champ("cannib","Ventes prises aux autres marques","%","Part des ventes qui se feraient de toute fa\u00e7on sur une marque d\u00e9j\u00e0 en rayon. Hypoth\u00e8se \u00e0 ajuster."),
+champ("mt","Place en rayon","m\u00e8tres","Facultatif : pour comparer la marge au m\u00e8tre.")));
+/* 5. Resultat */
+var noms=["Prudent","Probable","Optimiste"];
+function ligne(t,f,aideT){return React.createElement("tr",{style:{borderTop:"1px solid var(--border)"}},React.createElement("td",{style:{padding:"6px",color:"var(--text2)"}},t,aideT?React.createElement("div",{style:{fontSize:10,color:"var(--text3)"}},aideT):null),sims.map(function(s,i){return React.createElement("td",{key:i,style:{padding:"6px",textAlign:"right",fontWeight:i===1?700:500}},f(s))}))}
+var bloc5=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"5. Ce que la gamme peut rapporter en un an"),
+React.createElement("div",{style:{overflowX:"auto"}},React.createElement("table",{style:{width:"100%",fontSize:13,borderCollapse:"collapse",minWidth:420}},
+React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",null),sims.map(function(s,i){return React.createElement("th",{key:i,style:{padding:"6px",textAlign:"right",color:i===1?"var(--accent)":"var(--text3)"}},noms[i],React.createElement("div",{style:{fontSize:10,fontWeight:400}},"ventes \u00d7"+String(s.k).replace(".",",")))}))),
+React.createElement("tbody",null,
+ligne("CA HT de la gamme",function(s){return fmtE(Math.round(s.caAn))}),
+ligne("dont CA vraiment nouveau",function(s){return fmtE(Math.round(s.caNouveau))},"hors ventes prises aux autres marques"),
+ligne("Marge de la gamme",function(s){return fmtE(Math.round(s.margeAn))}),
+ligne("Marge perdue sur les autres marques",function(s){return "\u2212"+fmtE(Math.round(s.perte))}),
+ligne("Marge vraiment gagn\u00e9e",function(s){return React.createElement("span",{style:{color:s.gain>=0?"var(--accent)":"var(--red)"}},fmtE(Math.round(s.gain)))}),
+ligne("Implantation \u00e9coul\u00e9e en",function(s){return s.ecoul===null?"-":s.ecoul.toFixed(1)+" mois"}),
+hy.mt>0?ligne("Marge par m\u00e8tre",function(s){return fmtE(Math.round(s.margeMetre))+(ray&&ray.margeMetre?" (rayon "+fmtE(Math.round(ray.margeMetre))+")":"")}):null))));
+/* 6. Avis */
+var bloc6=React.createElement("div",{style:{background:"var(--bg2)",borderRadius:"var(--radius)",padding:18,border:"2px solid "+meta.c,marginBottom:14}},
+React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:12}},
+React.createElement("span",{style:{fontSize:15,fontWeight:800}},"\ud83e\udded L'avis de PharmaScope"),
+React.createElement("span",{style:{padding:"4px 12px",borderRadius:20,background:meta.bg,color:meta.c,fontWeight:800,fontSize:14}},meta.i+" "+avis.score+"/10 \u00b7 "+meta.l),
+React.createElement("span",{style:{fontSize:13,fontWeight:600,color:"var(--text2)"}},avis.titre)),
+React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:6,marginBottom:12}},avis.crit.map(function(c){
+return React.createElement("div",{key:c.l,style:{display:"flex",gap:10,alignItems:"flex-start",fontSize:13}},
+React.createElement("span",{style:{flexShrink:0,width:44,textAlign:"center",padding:"2px 0",borderRadius:10,fontWeight:700,fontSize:12,background:c.s===2?"var(--accent-bg)":(c.s===1?"var(--orange-bg)":"var(--red-bg)"),color:c.s===2?"var(--accent)":(c.s===1?"var(--orange)":"var(--red)")}},c.s+"/2"),
+React.createElement("div",null,React.createElement("b",null,c.l)," \u2014 ",React.createElement("span",{style:{color:"var(--text2)"}},c.t)))})),
+React.createElement("div",{style:{fontSize:12,fontWeight:700,color:"var(--text3)",textTransform:"uppercase",marginBottom:4}},"Ce que je ferais"),
+React.createElement("ul",{style:{margin:"0 0 10px 18px",fontSize:13,lineHeight:1.6}},avis.actions.map(function(x,i){return React.createElement("li",{key:i},x)})),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",lineHeight:1.5}},"Score calcul\u00e9 sur le sc\u00e9nario probable : 5 crit\u00e8res not\u00e9s sur 2. C'est une aide \u00e0 la d\u00e9cision : \u00e0 croiser avec l'image de la marque, la client\u00e8le de passage et les conditions du d\u00e9l\u00e9gu\u00e9."));
+/* 7. Suivi */
+var bloc7=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"6. Suivi de l'essai"),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,marginBottom:12}},
+React.createElement("div",null,React.createElement("label",{style:lab},"Date d'arriv\u00e9e en rayon"),
+React.createElement("input",{type:"date",value:proj.debut||"",onChange:function(e){maj({debut:e.target.value})},style:inp})),
+React.createElement("div",{style:{gridColumn:"1 / -1",minWidth:0}},React.createElement("label",{style:lab},"Notes (conditions, d\u00e9l\u00e9gu\u00e9, r\u00e9f\u00e9rences choisies...)"),
+React.createElement("textarea",{value:proj.notes||"",onChange:function(e){maj({notes:e.target.value})},rows:2,style:Object.assign({},inp,{resize:"vertical"})}))),
+!proj.debut?React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Indiquez la date d'arriv\u00e9e des produits : PharmaScope comparera ensuite chaque mois les ventes r\u00e9elles \u00e0 l'objectif de "+fmtE(hy.caMois)+" HT/mois."):
+(suivi&&suivi.attente)?React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Les ventes de ce mois ne sont pas encore import\u00e9es."):
+suivi?React.createElement("div",null,
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:12}},
+React.createElement(KPICard,{title:"Ventes depuis l'arriv\u00e9e",value:fmtE(Math.round(suivi.cum))+" HT",sub:"marge "+fmtE(Math.round(suivi.cumM))}),
+React.createElement(KPICard,{title:"Moyenne par mois plein",value:suivi.moy===null?"-":fmtE(Math.round(suivi.moy)),sub:"objectif "+fmtE(hy.caMois)}),
+React.createElement(KPICard,{title:"Implantation \u00e9coul\u00e9e",value:suivi.ecoule===null?"-":Math.round(suivi.ecoule)+" %",sub:"au prix d'achat"})),
+React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:5,marginBottom:10}},suivi.lignes.map(function(l){var r=l.obj>0?l.ca/l.obj:0;
+return React.createElement("div",{key:l.mois,style:{display:"flex",alignItems:"center",gap:8,fontSize:12}},
+React.createElement("div",{style:{width:90,flexShrink:0}},moisCourt(l.mois)+(l.enCours?" *":"")),
+React.createElement("div",{style:{flex:1,background:"var(--bg3)",borderRadius:4,height:12,position:"relative",minWidth:40}},
+React.createElement("div",{style:{width:Math.min(100,r*100)+"%",height:12,borderRadius:4,background:r>=1?"var(--accent)":(r>=0.6?"var(--orange)":"var(--red)")}})),
+React.createElement("div",{style:{width:120,flexShrink:0,textAlign:"right"}},fmtE(Math.round(l.ca))+" \u00b7 "+Math.round(r*100)+" %"))})),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginBottom:10}},"* mois en cours. Premier mois souvent incomplet : il n'est pas compt\u00e9 dans la moyenne."),
+React.createElement("div",{style:{padding:"10px 12px",borderRadius:10,background:GAMME_META[suivi.verdict.v].bg,color:GAMME_META[suivi.verdict.v].c,fontWeight:600,fontSize:13}},GAMME_META[suivi.verdict.v].i+" "+suivi.verdict.t)):null);
+return React.createElement("div",null,entete,barre,bloc1,bloc2,bloc3,bloc4,bloc5,bloc6,bloc7)}
+
+/* ===== LEADER & CHALLENGER (v8.25) =====
+   Pour une categorie de produits similaires (ex. maux de gorge : Strepsils,
+   Drill, Lysopaine...), on compare les marques sur les ventes, la notoriete et
+   la marge reellement faite par boite. Objectif : garder 2 marques par
+   categorie, le LEADER (celle que les clients demandent) et le CHALLENGER
+   (celle qui fait le plus de marge par boite, a pousser au comptoir). */
+var DUEL_PRESETS=[
+{nom:"Maux de gorge",mots:"STREPSILS, DRILL, LYSOPAINE, STREFEN, COLDANGINE, ANGI SPRAY",excl:"TOUX"},
+{nom:"Lavage de nez",mots:"STERIMAR, PHYSIOMER, PRORHINEL, RHINOMER",excl:""},
+{nom:"Rhume et \u00e9tat grippal",mots:"HUMEX, FERVEX, DOLIRHUME, ACTIFED, RHINADVIL",excl:"TOUX, GORGE"},
+{nom:"Toux",mots:"TOPLEXIL, HELICIDINE, EXOMUC, FLUDITEC, BRONCHOKOD, MUCOMYST, STODAL, DRILL TOUX, HUMEX TOUX",excl:""},
+{nom:"Br\u00fblures d'estomac",mots:"GAVISCON, MAALOX, RENNIE, XOLAAM",excl:""},
+{nom:"Anti-poux",mots:"POUXIT, PARANIX",excl:""},
+{nom:"Anti-moustiques",mots:"CINQ SUR CINQ, INSECT ECRAN, PARAKITO, MOUSTIDOSE, BODYGUARD",excl:""},
+{nom:"Douleurs musculaires",mots:"FLECTOR, VOLTAREN, ARNICAN, PERSKINDOL",excl:""}];
+var NOTOR_RANG={forte:3,moyenne:2,faible:1};
+var NOTOR_LIB={forte:"Forte",moyenne:"Moyenne",faible:"Faible"};
+function analyseDuel(pd,cat){
+if(!pd||!pd.P||!pd.M||!pd.M.length)return null;
+var lf=dernierMoisComplet(pd);if(lf<0)return null;var w0=Math.max(0,lf-11);var nbM=lf-w0+1;
+/* comparaison a l'an dernier : 12 mois si possible, sinon les 3 derniers mois */
+var cmp=null;if(w0-12>=0)cmp={a:w0,b:lf,lib:"sur 12 mois"};else if(lf-2-12>=0)cmp={a:lf-2,b:lf,lib:"sur 3 mois"};
+var mots=motsGamme(cat.mots);var excl=motsGamme(cat.excl);
+/* une marque = un mot-cle ; le mot-cle le plus long gagne (DRILL TOUX avant DRILL) */
+var tri=mots.slice().sort(function(a,b){return b.length-a.length});
+var M={};mots.forEach(function(m){M[m]={cle:m,nom:m,ca:0,m:0,q:0,ca1:0,ca0:0,q1:0,q0:0,stkV:0,stkQ:0,refs:[]}});
+var vu={};
+Object.keys(pd.P).forEach(function(sup){(pd.P[sup]||[]).forEach(function(p){
+if(!p||!p.c||vu[p.c])return;var N=nomNorm(p.n);
+if(excl.some(function(x){return N.indexOf(" "+x+" ")>=0}))return;
+var k=null;for(var t=0;t<tri.length;t++){if(N.indexOf(" "+tri[t]+" ")>=0){k=tri[t];break}}
+if(!k)return;vu[p.c]=1;var B=M[k];
+var ca=0,m=0,q=0,der=-1;
+for(var i=0;i<pd.M.length;i++){var qq=(p.qm&&p.qm[i])||0;if(qq>0)der=i;
+if(i>=w0&&i<=lf){ca+=(p.caM&&p.caM[i])||0;m+=(p.mM&&p.mM[i])||0;q+=qq}
+if(cmp){if(i>=cmp.a&&i<=cmp.b){B.ca1+=(p.caM&&p.caM[i])||0;B.q1+=qq}if(i>=cmp.a-12&&i<=cmp.b-12){B.ca0+=(p.caM&&p.caM[i])||0;B.q0+=qq}}}
+var stq=pd.STKU&&pd.STKU[p.c]>0?pd.STKU[p.c]:0;var sv=pd.STKV?pd.STKV[p.c]:null;
+var val=typeof sv==="number"?sv:(Array.isArray(sv)?sv[0]:(stq>0&&q>0?stq*Math.max(0,(ca-m)/q):0));
+B.ca+=ca;B.m+=m;B.q+=q;B.stkQ+=stq;B.stkV+=stq>0?val:0;
+B.refs.push({c:p.c,n:p.n,sup:sup,ca:ca,m:m,q:q,stk:stq,der:der,mu:q>0?m/q:null})})});
+var liste=Object.keys(M).map(function(k){return M[k]}).filter(function(b){return b.q>0||b.stkQ>0});
+var totQ=0;liste.forEach(function(b){totQ+=b.q});
+var rfa=cat.rfa||{};var notor=cat.notor||{};
+liste.forEach(function(b){
+b.rfa=parseFloat(rfa[b.cle])||0;
+b.mEff=b.m+b.ca*b.rfa/100;
+b.tx=b.ca>0?b.mEff/b.ca*100:0;
+b.mu=b.q>0?b.mEff/b.q:0;
+b.pu=b.q>0?b.ca/b.q:0;
+b.part=totQ?b.q/totQ:0;
+b.evo=cmp&&b.q0>0?(b.q1-b.q0)/b.q0*100:null;
+b.notorAuto=b.part>=0.4?"forte":(b.part>=0.15?"moyenne":"faible");
+b.notor=notor[b.cle]||b.notorAuto;b.notorManuel=!!notor[b.cle];
+b.couv=b.q>0?b.stkQ/(b.q/nbM):null;
+b.refs.sort(function(x,y){return y.q-x.q});
+b.nom=b.cle.charAt(0)+b.cle.slice(1).toLowerCase()});
+/* LEADER : la plus connue, puis la plus vendue */
+var vend=liste.filter(function(b){return b.q>0});
+vend.sort(function(a,b){return (NOTOR_RANG[b.notor]-NOTOR_RANG[a.notor])||(b.q-a.q)});
+var leader=cat.leader&&vend.filter(function(b){return b.cle===cat.leader})[0]||vend[0]||null;
+/* CHALLENGER : parmi les autres, la meilleure marge par boite, avec un minimum de ventes */
+var autres=vend.filter(function(b){return b!==leader});
+var credibles=autres.filter(function(b){return b.part>=0.05||b.q>=12});
+var pool=credibles.length?credibles:autres;
+pool=pool.slice().sort(function(a,b){return (b.mu-a.mu)||(b.tx-a.tx)});
+var chall=cat.chall&&autres.filter(function(b){return b.cle===cat.chall})[0]||pool[0]||null;
+var leaderMargeMieux=!!(leader&&chall&&leader.mu>=chall.mu);
+liste.forEach(function(b){b.role=b===leader?"leader":(b===chall?"challenger":"autre");b.reco=recoDuel(b,leader,chall,leaderMargeMieux,nbM)});
+liste.sort(function(a,b){var r={leader:0,challenger:1,autre:2};return (r[a.role]-r[b.role])||(b.q-a.q)});
+return{liste:liste,leader:leader,chall:chall,totQ:totQ,nbM:nbM,cmp:cmp,leaderMargeMieux:leaderMargeMieux,mots:mots}}
+function recoDuel(b,leader,chall,lmm,nbM){
+var r={v:"maintien",t:"",pourquoi:[]};
+var mortes=b.refs.filter(function(x){return x.stk>0&&(x.der<0||x.q===0)});
+if(b.q===0){r.v="arret";r.t="Arr\u00eater : plus aucune vente sur "+nbM+" mois";r.pourquoi.push("Du stock dort sans se vendre : \u00e0 retourner ou \u00e9couler.");return r}
+if(b.tx<0)r.pourquoi.push("Marge n\u00e9gative : v\u00e9rifier le prix de vente et le prix d'achat dans Winpharma.");
+if(b.role==="leader"){
+if(lmm){r.v="developpement";r.t="Garder et d\u00e9velopper : c'est la marque demand\u00e9e ET celle qui marge le plus";r.pourquoi.push("Aucune autre marque ne fait plus de marge par bo\u00eete : pas besoin de d\u00e9tourner les clients.")}
+else{r.v="maintien";r.t="Garder en stock, sans le pousser";r.pourquoi.push("Les clients le demandent ("+Math.round(b.part*100)+" % des bo\u00eetes vendues) : ne pas le supprimer, sinon ils vont ailleurs.");
+if(chall)r.pourquoi.push("Chaque bo\u00eete de "+b.nom+" rapporte "+fmtE(b.mu)+" contre "+fmtE(chall.mu)+" pour "+chall.nom+" : quand le client n'a pas de pr\u00e9f\u00e9rence, conseiller "+chall.nom+".");
+r.pourquoi.push("N\u00e9gocier ses conditions (remise, remises arri\u00e8re) pour am\u00e9liorer sa marge.")}}
+else if(b.role==="challenger"){
+if(lmm){r.v="maintien";r.t="Garder en second choix";r.pourquoi.push("Il marge moins que le leader : utile pour offrir le choix, pas \u00e0 pousser.")}
+else{r.v="developpement";r.t="D\u00e9velopper : c'est lui qu'il faut conseiller";r.pourquoi.push("Meilleure marge par bo\u00eete de la cat\u00e9gorie parmi les marques qui se vendent : "+fmtE(b.mu)+" (taux "+b.tx.toFixed(0)+" %).");
+r.pourquoi.push("Le mettre \u00e0 hauteur des yeux, \u00e0 c\u00f4t\u00e9 du leader, et le citer en premier au comptoir ; t\u00eate de gondole ou challenge \u00e9quipe en saison.")}}
+else{
+if(chall&&b.mu>chall.mu&&b.part<0.05){r.v="relance";r.t="\u00c0 tester en conseil";r.pourquoi.push("Tr\u00e8s bonne marge par bo\u00eete ("+fmtE(b.mu)+") mais trop peu de ventes pour \u00eatre le challenger aujourd'hui.")}
+else if(b.part>=0.15){r.v="relance";r.t="R\u00e9duire : ne garder que ses meilleures r\u00e9f\u00e9rences";r.pourquoi.push("Il p\u00e8se encore "+Math.round(b.part*100)+" % des bo\u00eetes : l'arr\u00eater d'un coup ferait perdre des clients.");if(chall)r.pourquoi.push("Mais il marge moins que "+chall.nom+" ("+fmtE(b.mu)+" contre "+fmtE(chall.mu)+" par bo\u00eete).")}
+else{r.v="arret";r.t="Arr\u00eater : ni leader, ni meilleure marge";r.pourquoi.push("Seulement "+Math.round(b.part*100)+" % des bo\u00eetes vendues, pour "+fmtE(b.mu)+" de marge par bo\u00eete.");r.pourquoi.push("\u00c9couler le stock, ne plus recommander, r\u00e9orienter vers "+(chall?chall.nom:"le challenger")+".")}}
+if(mortes.length)r.pourquoi.push(mortes.length+" r\u00e9f\u00e9rence"+(mortes.length>1?"s":"")+" en stock sans aucune vente sur "+nbM+" mois : \u00e0 retirer.");
+if(b.couv!==null&&b.couv>6&&r.v!=="arret")r.pourquoi.push("Plus de 6 mois de stock en r\u00e9serve : commander moins.");
+if(b.evo!==null&&b.evo<=-20)r.pourquoi.push("Ventes en baisse de "+Math.round(-b.evo)+" % par rapport \u00e0 l'an dernier.");
+if(b.evo!==null&&b.evo>=20)r.pourquoi.push("Ventes en hausse de "+Math.round(b.evo)+" % par rapport \u00e0 l'an dernier.");
+return r}
+var ROLE_META={leader:{l:"Leader",i:"\ud83d\udc51",c:"var(--blue)",bg:"var(--blue-bg)"},challenger:{l:"Challenger",i:"\ud83d\udcb0",c:"var(--accent)",bg:"var(--accent-bg)"},autre:{l:"Autre marque",i:"\u2796",c:"var(--text3)",bg:"var(--bg3)"}};
+/* Petit nuage de points : volume vendu (horizontal) et marge par boite (vertical) */
+function NuageDuel(props){
+var L=props.liste.filter(function(b){return b.q>0});if(L.length<2)return null;
+var W=560,H=240,pl=52,pr=16,pt=34,pb=34;
+var maxQ=0,maxM=0,minM=0;L.forEach(function(b){maxQ=Math.max(maxQ,b.part);maxM=Math.max(maxM,b.mu);minM=Math.min(minM,b.mu)});
+maxQ=Math.min(1,maxQ*1.15||1);maxM=maxM>0?maxM*1.2:0;if(maxM<=minM)maxM=minM+1;
+function x(v){return pl+v/maxQ*(W-pl-pr)}function y(v){return H-pb-(v-minM)/(maxM-minM)*(H-pt-pb)}
+var ticksY=[minM,(minM+maxM)/2,maxM];
+return React.createElement("svg",{viewBox:"0 0 "+W+" "+H,style:{width:"100%",maxWidth:W,height:"auto",display:"block"}},
+React.createElement("line",{x1:pl,y1:H-pb,x2:W-pr,y2:H-pb,stroke:"var(--border)"}),
+React.createElement("line",{x1:pl,y1:pt,x2:pl,y2:H-pb,stroke:"var(--border)"}),
+ticksY.map(function(t,i){return React.createElement("text",{key:i,x:pl-6,y:y(t)+4,textAnchor:"end",fontSize:10,fill:"var(--text3)"},t.toFixed(2).replace(".",",")+" \u20ac")}),
+React.createElement("text",{x:(pl+W-pr)/2,y:H-6,textAnchor:"middle",fontSize:11,fill:"var(--text3)"},"Part des bo\u00eetes vendues \u2192 (notori\u00e9t\u00e9 chez vous)"),
+React.createElement("text",{x:4,y:14,fontSize:11,fill:"var(--text3)"},"\u2191 Marge par bo\u00eete"),
+L.map(function(b){var m=ROLE_META[b.role];var r=Math.max(6,Math.min(18,Math.sqrt(b.ca)/4));
+return React.createElement("g",{key:b.cle},
+React.createElement("circle",{cx:x(b.part),cy:y(b.mu),r:r,fill:m.c,fillOpacity:0.25,stroke:m.c,strokeWidth:2}),
+React.createElement("text",{x:x(b.part),y:y(b.mu)-r-4,textAnchor:"middle",fontSize:11,fontWeight:700,fill:"var(--text)"},b.nom))}))}
+
+function DuelsPage(props){
+var pd=props.pd;var cats=props.cats||[];var setCats=props.setCats;
+var selS=useState(null);var sel=selS[0];var setSel=selS[1];
+var nvS=useState("");var nv=nvS[0];var setNv=nvS[1];
+var ouvS=useState(null);var ouvert=ouvS[0];var setOuvert=ouvS[1];
+var trS=useState(20);var transfert=trS[0];var setTransfert=trS[1];
+var cat=null;cats.forEach(function(c){if(c.id===sel)cat=c});if(!cat&&cats.length)cat=cats[0];
+var entete=React.createElement(EnTeteOutil,{titre:"\ud83e\udd4a Leader & challenger",sous:"Pour chaque cat\u00e9gorie de produits similaires, gardez deux marques : le leader (celle que les clients demandent) et le challenger (celle qui vous fait le plus de marge par bo\u00eete, \u00e0 conseiller). PharmaScope compare vos ventes, la notori\u00e9t\u00e9 et la marge r\u00e9elle, et dit quoi d\u00e9velopper ou arr\u00eater."});
+if(!pd||!pd.P||!pd.M)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\ud83d\udcca",titre:"Pas encore de ventes",texte:"Importez vos ventes Winpharma pour comparer vos produits.",action:props.setPage?function(){props.setPage("import")}:null}));
+function maj(ch){setCats(cats.map(function(c){return c.id===cat.id?Object.assign({},c,ch):c}))}
+function ajouter(p){var id="d"+Date.now();var c={id:id,nom:p.nom,mots:p.mots||"",excl:p.excl||"",notor:{},rfa:{},leader:null,chall:null};setCats(cats.concat([c]));setSel(id);setOuvert(null)}
+function supprimer(){if(!window.confirm("Supprimer la cat\u00e9gorie \u00ab "+cat.nom+" \u00bb ?"))return;var r=cats.filter(function(c){return c.id!==cat.id});setCats(r);setSel(r.length?r[0].id:null)}
+var inp={padding:"7px 9px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:14,width:"100%",boxSizing:"border-box"};
+var carte={background:"var(--bg2)",borderRadius:"var(--radius)",padding:16,border:"1px solid var(--border)",marginBottom:14};
+var lab={fontSize:12,color:"var(--text3)",marginBottom:4,display:"block"};
+var aide={fontSize:11,color:"var(--text3)",marginTop:3,lineHeight:1.4};
+/* suggestions : categories toutes faites qui existent dans vos ventes */
+var dejaNoms={};cats.forEach(function(c){dejaNoms[c.nom]=1});
+var sugg=DUEL_PRESETS.filter(function(p){return !dejaNoms[p.nom]}).map(function(p){var a=analyseDuel(pd,p);return{p:p,n:a?a.liste.filter(function(b){return b.q>0}).length:0}}).filter(function(s){return s.n>=2});
+var barre=React.createElement("div",{style:{marginBottom:16}},
+React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",marginBottom:10}},
+cats.map(function(c){var on=cat&&c.id===cat.id;return React.createElement("button",{key:c.id,onClick:function(){setSel(c.id);setOuvert(null)},style:{padding:"7px 12px",borderRadius:20,fontSize:13,fontWeight:600,background:on?"var(--accent)":"var(--bg2)",color:on?"#fff":"var(--text2)",border:"1px solid "+(on?"var(--accent)":"var(--border)")}},c.nom)}),
+React.createElement("div",{style:{display:"flex",gap:6,flex:"1 1 240px",maxWidth:380}},
+React.createElement("input",{value:nv,placeholder:"Nouvelle cat\u00e9gorie (ex. Cicatrisants)",onChange:function(e){setNv(e.target.value)},onKeyDown:function(e){if(e.key==="Enter"&&nv.trim()){ajouter({nom:nv.trim()});setNv("")}},style:inp}),
+React.createElement("button",{onClick:function(){if(nv.trim()){ajouter({nom:nv.trim()});setNv("")}},style:{padding:"7px 14px",borderRadius:8,background:"var(--accent)",color:"#fff",fontWeight:700,fontSize:13,whiteSpace:"nowrap"}},"+ Cr\u00e9er"))),
+sugg.length?React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",fontSize:12}},
+React.createElement("span",{style:{color:"var(--text3)"}},"Suggestions trouv\u00e9es dans vos ventes :"),
+sugg.map(function(s){return React.createElement("button",{key:s.p.nom,onClick:function(){ajouter(s.p)},style:{padding:"4px 10px",borderRadius:14,fontSize:12,border:"1px dashed var(--accent)",color:"var(--accent)",background:"transparent"}},"+ "+s.p.nom+" ("+s.n+" marques)")})):null);
+if(!cat)return React.createElement("div",null,entete,barre,React.createElement(VideOutil,{icone:"\ud83e\udd4a",titre:"Aucune cat\u00e9gorie",texte:"Cliquez sur une suggestion ci-dessus (ex. Maux de gorge) ou cr\u00e9ez votre propre cat\u00e9gorie en listant les marques \u00e0 comparer."}));
+var an=analyseDuel(pd,cat);
+var reglages=React.createElement("div",{style:carte},
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:10}},
+React.createElement("div",{style:{fontSize:15,fontWeight:700}},"Cat\u00e9gorie : "+cat.nom),
+React.createElement("button",{onClick:supprimer,style:{fontSize:12,color:"var(--red)",padding:"4px 8px"}},"Supprimer la cat\u00e9gorie")),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}},
+React.createElement("div",null,React.createElement("label",{style:lab},"Marques \u00e0 comparer"),
+React.createElement("input",{value:cat.mots||"",onChange:function(e){maj({mots:e.target.value})},placeholder:"STREPSILS, DRILL, LYSOPAINE",style:inp}),
+React.createElement("div",{style:aide},"S\u00e9par\u00e9es par des virgules, telles qu'\u00e9crites dans Winpharma.")),
+React.createElement("div",null,React.createElement("label",{style:lab},"Mots \u00e0 exclure"),
+React.createElement("input",{value:cat.excl||"",onChange:function(e){maj({excl:e.target.value})},placeholder:"TOUX",style:inp}),
+React.createElement("div",{style:aide},"Pour \u00e9carter les produits d'une autre cat\u00e9gorie (ex. Drill toux)."))));
+if(!an||!an.liste.length)return React.createElement("div",null,entete,barre,reglages,React.createElement(VideOutil,{icone:"\ud83d\udd0d",titre:"Aucun produit trouv\u00e9",texte:"Aucune vente pour ces marques sur 12 mois. V\u00e9rifiez l'orthographe des marques (comme dans Winpharma)."}));
+var Ld=an.leader,Ch=an.chall;
+/* synthese */
+var gainTr=Ld&&Ch&&!an.leaderMargeMieux?Ld.q*transfert/100*(Ch.mu-Ld.mu):0;
+var synthese=React.createElement("div",{style:{background:"var(--bg2)",borderRadius:"var(--radius)",padding:18,border:"2px solid var(--accent)",marginBottom:14}},
+React.createElement("div",{style:{fontSize:15,fontWeight:800,marginBottom:10}},"\ud83e\udded Le duo recommand\u00e9"),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:10,marginBottom:12}},
+[["leader",Ld],["challenger",Ch]].map(function(x){var m=ROLE_META[x[0]];var b=x[1];
+return React.createElement("div",{key:x[0],style:{padding:12,borderRadius:10,background:m.bg}},
+React.createElement("div",{style:{fontSize:12,fontWeight:700,color:m.c,textTransform:"uppercase"}},m.i+" "+m.l),
+b?React.createElement("div",null,React.createElement("div",{style:{fontSize:18,fontWeight:800,margin:"2px 0"}},b.nom),
+React.createElement("div",{style:{fontSize:12,color:"var(--text2)"}},Math.round(b.part*100)+" % des bo\u00eetes \u00b7 "+fmtE(b.mu)+" de marge/bo\u00eete \u00b7 taux "+b.tx.toFixed(0)+" %")):
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Aucune autre marque ne se vend : ajoutez-en une \u00e0 tester."))})),
+an.leaderMargeMieux?React.createElement("div",{style:{fontSize:13,color:"var(--text2)",lineHeight:1.5}},"Bonne nouvelle : le leader "+Ld.nom+" est aussi la marque qui vous rapporte le plus par bo\u00eete. Le challenger sert seulement \u00e0 offrir un choix ; les autres marques peuvent \u00eatre r\u00e9duites."):
+(Ld&&Ch?React.createElement("div",null,
+React.createElement("div",{style:{fontSize:13,lineHeight:1.5,marginBottom:8}},"Si l'\u00e9quipe oriente ",
+React.createElement("select",{value:transfert,onChange:function(e){setTransfert(parseInt(e.target.value,10))},style:{padding:"2px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13}},[10,20,30,50].map(function(v){return React.createElement("option",{key:v,value:v},v+" %")})),
+" des clients de "+Ld.nom+" vers "+Ch.nom+" (ceux qui n'ont pas de pr\u00e9f\u00e9rence), vous gagnez environ ",
+React.createElement("b",{style:{color:"var(--accent)"}},fmtE(Math.round(gainTr))+" de marge en plus par an"),
+" ("+Math.round(Ld.q*transfert/100)+" bo\u00eetes \u00d7 "+fmtE(Ch.mu-Ld.mu)+" de marge en plus chacune)."),
+React.createElement("div",{style:aide},"Calcul sur les "+an.nbM+" derniers mois complets, marge par bo\u00eete = marge r\u00e9elle (prix de vente HT \u2212 prix d'achat) + remises arri\u00e8re saisies.")):null));
+/* tableau des marques */
+var roleOpts=an.liste.filter(function(b){return b.q>0});
+var tableau=React.createElement("div",{style:carte},
+React.createElement("div",{style:{fontSize:15,fontWeight:700,marginBottom:10}},"Marque par marque"),
+React.createElement(NuageDuel,{liste:an.liste}),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",margin:"4px 0 12px"}},"Id\u00e9al : un leader \u00e0 droite (tr\u00e8s vendu) et un challenger en haut (tr\u00e8s rentable). La taille du rond = le chiffre d'affaires."),
+React.createElement("div",{style:{display:"flex",flexDirection:"column",gap:10}},an.liste.map(function(b){var m=ROLE_META[b.role];var am=AVIS_META[b.reco.v]||AVIS_META.maintien;var open=ouvert===b.cle;
+return React.createElement("div",{key:b.cle,style:{border:"1px solid var(--border)",borderLeft:"4px solid "+am.c,borderRadius:10,padding:12}},
+React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:8}},
+React.createElement("span",{style:{fontSize:16,fontWeight:800}},b.nom),
+React.createElement("span",{style:{padding:"2px 9px",borderRadius:12,fontSize:11,fontWeight:700,background:m.bg,color:m.c}},m.i+" "+m.l),
+React.createElement("span",{style:{padding:"2px 9px",borderRadius:12,fontSize:12,fontWeight:700,background:am.bg,color:am.c}},am.i+" "+b.reco.t)),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8,fontSize:12,marginBottom:8}},
+[["Bo\u00eetes vendues",Math.round(b.q)+" ("+Math.round(b.part*100)+" %)"],["CA HT",fmtE(Math.round(b.ca))],["Prix moyen HT",fmtE(b.pu)],["Marge/bo\u00eete",fmtE(b.mu)],["Taux de marge",b.tx.toFixed(1)+" %"],["\u00c9volution "+(an.cmp?an.cmp.lib:""),b.evo===null?"-":(b.evo>=0?"+":"")+Math.round(b.evo)+" %"],["Stock",b.stkQ?Math.round(b.stkQ)+" bo\u00eetes ("+fmtE(Math.round(b.stkV))+")":"-"]].map(function(k){
+return React.createElement("div",{key:k[0]},React.createElement("div",{style:{color:"var(--text3)",fontSize:11}},k[0]),React.createElement("div",{style:{fontWeight:700}},k[1]))})),
+React.createElement("ul",{style:{margin:"0 0 8px 18px",fontSize:12,lineHeight:1.55,color:"var(--text2)"}},b.reco.pourquoi.map(function(x,i){return React.createElement("li",{key:i},x)})),
+React.createElement("div",{style:{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",fontSize:12}},
+React.createElement("label",{style:{display:"flex",alignItems:"center",gap:4}},"Notori\u00e9t\u00e9",
+React.createElement("select",{value:b.notorManuel?b.notor:"",onChange:function(e){var n=Object.assign({},cat.notor||{});if(e.target.value)n[b.cle]=e.target.value;else delete n[b.cle];maj({notor:n})},style:{padding:"3px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:12}},
+React.createElement("option",{value:""},"Auto ("+NOTOR_LIB[b.notorAuto].toLowerCase()+")"),["forte","moyenne","faible"].map(function(v){return React.createElement("option",{key:v,value:v},NOTOR_LIB[v])}))),
+React.createElement("label",{style:{display:"flex",alignItems:"center",gap:4}},"Remises arri\u00e8re",
+React.createElement("input",{type:"number",min:0,step:0.5,value:cat.rfa&&cat.rfa[b.cle]!==undefined?cat.rfa[b.cle]:"",placeholder:"0",onChange:function(e){var r=Object.assign({},cat.rfa||{});var v=parseFloat(e.target.value);if(v>0)r[b.cle]=v;else delete r[b.cle];maj({rfa:r})},style:{width:60,padding:"3px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:12}}),"% du CA"),
+React.createElement("button",{onClick:function(){setOuvert(open?null:b.cle)},style:{marginLeft:"auto",fontSize:12,color:"var(--accent)",fontWeight:600}},(open?"Masquer":"Voir")+" les "+b.refs.length+" r\u00e9f\u00e9rences")),
+open?React.createElement("div",{style:{overflowX:"auto",marginTop:8}},React.createElement("table",{style:{width:"100%",fontSize:12,borderCollapse:"collapse",minWidth:460}},
+React.createElement("thead",null,React.createElement("tr",{style:{color:"var(--text3)"}},["R\u00e9f\u00e9rence","Bo\u00eetes","CA HT","Marge/bo\u00eete","Stock","Derni\u00e8re vente"].map(function(t,i){return React.createElement("th",{key:t,style:{padding:"4px 6px",textAlign:i?"right":"left",fontWeight:600}},t)}))),
+React.createElement("tbody",null,b.refs.map(function(r){var morte=r.stk>0&&r.q===0;
+return React.createElement("tr",{key:r.c,style:{borderTop:"1px solid var(--border)",color:morte?"var(--red)":"inherit"}},
+React.createElement("td",{style:{padding:"4px 6px"}},r.n+(morte?" \u2014 \u00e0 retirer":"")),
+React.createElement("td",{style:{padding:"4px 6px",textAlign:"right"}},Math.round(r.q)),
+React.createElement("td",{style:{padding:"4px 6px",textAlign:"right"}},fmtE(Math.round(r.ca))),
+React.createElement("td",{style:{padding:"4px 6px",textAlign:"right"}},r.mu===null?"-":fmtE(r.mu)),
+React.createElement("td",{style:{padding:"4px 6px",textAlign:"right"}},r.stk||"-"),
+React.createElement("td",{style:{padding:"4px 6px",textAlign:"right"}},r.der<0?"jamais":moisCourt(pd.M[r.der])))})))):null)})),
+roleOpts.length>=2?React.createElement("div",{style:{display:"flex",gap:12,flexWrap:"wrap",marginTop:14,fontSize:12,alignItems:"center"}},
+React.createElement("span",{style:{color:"var(--text3)"}},"Vous n'\u00eates pas d'accord ? Choisir vous-m\u00eame :"),
+React.createElement("label",{style:{display:"flex",gap:4,alignItems:"center"}},"Leader",React.createElement("select",{value:cat.leader||"",onChange:function(e){maj({leader:e.target.value||null})},style:{padding:"3px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:12}},React.createElement("option",{value:""},"Auto"),roleOpts.map(function(b){return React.createElement("option",{key:b.cle,value:b.cle},b.nom)}))),
+React.createElement("label",{style:{display:"flex",gap:4,alignItems:"center"}},"Challenger",React.createElement("select",{value:cat.chall||"",onChange:function(e){maj({chall:e.target.value||null})},style:{padding:"3px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:12}},React.createElement("option",{value:""},"Auto"),roleOpts.map(function(b){return React.createElement("option",{key:b.cle,value:b.cle},b.nom)})))):null);
+var note=React.createElement("div",{style:{fontSize:11,color:"var(--text3)",lineHeight:1.5,marginBottom:20}},"Notori\u00e9t\u00e9 \u00ab auto \u00bb = part des bo\u00eetes vendues chez vous (40 % et plus : forte ; 15 % et plus : moyenne). Corrigez-la si vous savez qu'une marque est tr\u00e8s connue (publicit\u00e9 TV) m\u00eame si elle se vend peu chez vous. La marge est la marge r\u00e9elle Winpharma ; ajoutez les remises arri\u00e8re n\u00e9goci\u00e9es pour avoir la marge vraiment encaiss\u00e9e.");
+return React.createElement("div",null,entete,barre,reglages,synthese,tableau,note)}
 
 var UNIV_SEL={v:null};
 function UniversPage(props){
@@ -8048,6 +8577,8 @@ var condS=useState({});var conditions=condS[0];var setConditions=condS[1];
 var promoAjS=useState([]);var promosAj=promoAjS[0];var setPromosAj=promoAjS[1];
 var ruptS=useState(null);var ruptures=ruptS[0];var setRuptures=ruptS[1];
 var metS=useState({});var metres=metS[0];var setMetres=metS[1];
+var pgS=useState([]);var projGammes=pgS[0];var setProjGammes=pgS[1];
+var dcS=useState([]);var duelCats=dcS[0];var setDuelCats=dcS[1];
 var uoS=useState({});var univOvr=uoS[0];var setUnivOvr=uoS[1];UNIV_OVR.o=univOvr;
 var aiS=useState({});var alIgn=aiS[0];var setAlIgn=aiS[1];
 var rgS=useState({});var reglG=rgS[0];var setReglG=rgS[1];
@@ -8225,7 +8756,7 @@ supaSave("challenges",challenges),supaSave("tasks",tasksApp),supaSave("tdgs",tdg
 supaSave("team",team),supaSave("decisions",decisions),supaSave("events",events),
 supaSave("cmd_hidden",cmdHidden),supaSave("favs",favs),supaSave("tips_state",tipsState),supaSave("widgets_config",widgets),
 supaSave("cmd_passed",cmdPassed),supaSave("voice_notes",voiceNotes),supaSave("ca_objectif",caObj),supaSave("crm_delegues",crm),
-supaSave("palmares",palmares),supaSave("conditions_labos",conditions),supaSave("promos_ajoutees",promosAj),supaSave("univers_metres",metres),supaSave("univers_labos",univOvr),supaSave("univers_codes",univCodes),supaSave("reglages_google",reglG),supaSave("alertes_ignorees",alIgn)];
+supaSave("palmares",palmares),supaSave("conditions_labos",conditions),supaSave("promos_ajoutees",promosAj),supaSave("univers_metres",metres),supaSave("univers_labos",univOvr),supaSave("univers_codes",univCodes),supaSave("reglages_google",reglG),supaSave("alertes_ignorees",alIgn),supaSave("projets_gammes",projGammes),supaSave("duels_categories",duelCats)];
 var salesJob=lireVentesLocal().then(function(sp){if(sp&&sp.M)return compressForCloud(sp).then(function(pk){return supaSave("sales_data",pk)})});
 Promise.all(jobs.concat([salesJob])).then(function(res){
 var ko=(res||[]).filter(function(x){return x&&x.ok===false}).length;
@@ -8240,7 +8771,7 @@ function exportUserData(){
 var data={
 challenges:challenges,tasks:tasksApp,tdgs:tdgsApp,team:team,decisions:decisions,
 events:events,cmd_hidden:cmdHidden,favs:favs,tips_state:tipsState,widgets_config:widgets,cmd_passed:cmdPassed,voice_notes:voiceNotes,
-ca_objectif:caObj,crm_delegues:crm,palmares:palmares,fiche_vendeur_exp:fvExp,conditions_labos:conditions,promos_ajoutees:promosAj,univers_metres:metres,univers_labos:univOvr,univers_codes:univCodes,reglages_google:reglG,alertes_ignorees:alIgn,
+ca_objectif:caObj,crm_delegues:crm,palmares:palmares,fiche_vendeur_exp:fvExp,conditions_labos:conditions,promos_ajoutees:promosAj,univers_metres:metres,univers_labos:univOvr,univers_codes:univCodes,reglages_google:reglG,alertes_ignorees:alIgn,projets_gammes:projGammes,duels_categories:duelCats,
 exportDate:new Date().toISOString(),version:APP_VERSION};
 var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
 var url=URL.createObjectURL(blob);
@@ -8259,7 +8790,7 @@ if(data.decisions)setDecisions(data.decisions);
 if(data.events)setEvents(data.events);if(data.cmd_hidden)setCmdHidden(data.cmd_hidden);if(data.favs)setFavs(data.favs);
 if(data.tips_state)setTipsState(data.tips_state);if(data.widgets_config)setWidgets(data.widgets_config);if(data.cmd_passed)setCmdPassed(data.cmd_passed);
 if(data.voice_notes)setVoiceNotes(data.voice_notes);if(data.ca_objectif)setCaObj(data.ca_objectif);if(data.crm_delegues)setCrm(data.crm_delegues);
-if(data.palmares)setPalmares(data.palmares);if(data.fiche_vendeur_exp)setFvExp(data.fiche_vendeur_exp);if(data.conditions_labos)setConditions(data.conditions_labos);if(data.promos_ajoutees)setPromosAj(data.promos_ajoutees);if(data.univers_metres)setMetres(data.univers_metres);if(data.univers_labos)setUnivOvr(data.univers_labos);if(data.univers_codes)setUnivCodes(data.univers_codes);if(data.reglages_google)setReglG(data.reglages_google);if(data.alertes_ignorees)setAlIgn(data.alertes_ignorees);
+if(data.palmares)setPalmares(data.palmares);if(data.fiche_vendeur_exp)setFvExp(data.fiche_vendeur_exp);if(data.conditions_labos)setConditions(data.conditions_labos);if(data.promos_ajoutees)setPromosAj(data.promos_ajoutees);if(data.univers_metres)setMetres(data.univers_metres);if(data.univers_labos)setUnivOvr(data.univers_labos);if(data.univers_codes)setUnivCodes(data.univers_codes);if(data.reglages_google)setReglG(data.reglages_google);if(data.alertes_ignorees)setAlIgn(data.alertes_ignorees);if(data.projets_gammes)setProjGammes(data.projets_gammes);if(data.duels_categories)setDuelCats(data.duels_categories);
 avertir("\u2705 Donn\u00e9es restaur\u00e9es (sauvegarde du "+new Date(data.exportDate).toLocaleDateString("fr-FR")+")")}
 catch(err){avertir("\u26a0\ufe0f Fichier de sauvegarde illisible")}};
 reader.readAsText(file)}
@@ -8269,7 +8800,7 @@ var supaLoadedS=useState(false);var supaLoaded=supaLoadedS[0];var setSupaLoaded=
 useEffect(function(){
 if(!supaClient){setSupaLoaded(true);return}
 Promise.all([supaLoad("challenges"),supaLoad("tasks"),supaLoad("tdgs"),supaLoad("team"),supaLoad("decisions"),supaLoad("events"),supaLoad("cmd_hidden"),supaLoad("favs"),supaLoad("tips_state"),supaLoad("widgets_config"),supaLoad("cmd_passed"),supaLoad("voice_notes"),supaLoad("ca_objectif"),supaLoad("crm_delegues"),supaLoad("palmares"),supaLoad("fiche_vendeur_exp"),
-supaClient.from("app_data").select("id,updated_at").then(function(r){return r&&r.data?r.data:[]}).catch(function(){return[]}),supaLoad("conditions_labos"),supaLoad("promos_ajoutees"),supaLoad("ruptures_ansm"),supaLoad("univers_metres"),supaLoad("univers_labos"),supaLoad("univers_codes"),supaLoad("reglages_google"),supaLoad("alertes_ignorees")])
+supaClient.from("app_data").select("id,updated_at").then(function(r){return r&&r.data?r.data:[]}).catch(function(){return[]}),supaLoad("conditions_labos"),supaLoad("promos_ajoutees"),supaLoad("ruptures_ansm"),supaLoad("univers_metres"),supaLoad("univers_labos"),supaLoad("univers_codes"),supaLoad("reglages_google"),supaLoad("alertes_ignorees"),supaLoad("projets_gammes"),supaLoad("duels_categories")])
 .then(function(results){
 (results[16]||[]).forEach(function(m){if(m&&m.id)SYNC_TS[m.id]=m.updated_at});
 function lsGet(k){try{var s=localStorage.getItem(k);return s?JSON.parse(s):null}catch(e){return null}}
@@ -8303,6 +8834,8 @@ pick(21,"univers_labos","ps_univ_labos",false,setUnivOvr);
 pick(22,"univers_codes","ps_univ_codes",false,setUnivCodes);
 pick(23,"reglages_google","ps_reglages_google",false,setReglG);
 pick(24,"alertes_ignorees","ps_alertes_ign",false,setAlIgn);
+pick(25,"projets_gammes","ps_projets_gammes",true,setProjGammes);
+pick(26,"duels_categories","ps_duels",true,setDuelCats);
 if(!SYNC_BASE.hasOwnProperty("ruptures_ansm")){var lr=lsGet("ps_ruptures");if(lr)SYNC_BASE["ruptures_ansm"]=lr}
 if(typeof results[15]==="string"){SYNC_BASE["fiche_vendeur_exp"]=results[15];setFvExp(results[15])}
 else if(results[15]&&results[15].exp){setFvExp(results[15].exp)}
@@ -8329,6 +8862,8 @@ useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_crm",JSO
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_conditions",JSON.stringify(conditions))}catch(e){};syncSave("conditions_labos",conditions,setConditions)},[conditions]);
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_promos_aj",JSON.stringify(promosAj))}catch(e){};syncSave("promos_ajoutees",promosAj,setPromosAj)},[promosAj]);
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_metres",JSON.stringify(metres))}catch(e){};syncSave("univers_metres",metres,setMetres)},[metres]);
+useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_projets_gammes",JSON.stringify(projGammes))}catch(e){};syncSave("projets_gammes",projGammes,setProjGammes)},[projGammes]);
+useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_duels",JSON.stringify(duelCats))}catch(e){};syncSave("duels_categories",duelCats,setDuelCats)},[duelCats]);
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_univ_labos",JSON.stringify(univOvr))}catch(e){};syncSave("univers_labos",univOvr,setUnivOvr)},[univOvr]);
 /* Reglages Google : completes par ceux deja presents sur cet appareil, puis recopies dans l'appareil */
 useEffect(function(){if(!supaLoaded)return;
@@ -8376,7 +8911,7 @@ useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_decision
 
 /* Mise a jour depuis les autres appareils */
 var syncLive=useRef({});
-syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn]};
+syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats]};
 var supaLoadedRef=useRef(false);supaLoadedRef.current=supaLoaded;
 useEffect(function(){
 if(!supaClient)return;
@@ -8486,7 +9021,7 @@ decompressGz(STOCK_GZ).then(function(data){if(data)setStock(data)});
 decompressGz(PD_GZ).then(function(data){if(data){pdOrig.current=data;setPd(data)}});
 },[]);
 
-var pdC=useMemo(function(){try{return completerMapLabos(consoliderFournisseurs(pd),ld)}catch(e){console.warn("consolidation:",e);return pd}},[pd,ld]);
+var pdC=useMemo(function(){try{return completerMapLabos(regrouperMarquesLabo(consoliderFournisseurs(pd)),ld)}catch(e){console.warn("consolidation:",e);return pd}},[pd,ld]);
 var ldLive=useMemo(function(){return refreshLdFromPd(ajouterLabosWinpharma(ld,pdC),pdC)},[ld,pdC]);
 var labTabInit=useRef(null);
 function toggleDark(){setDark(!dark)}
@@ -8573,6 +9108,10 @@ content=React.createElement(CommandesPage,{conditions:conditions,key:"cmd-"+(pd?
 content=React.createElement(ComparePage,{ld:ldLive,pd:pdCal});
 }else if(page==="avis"){
 content=React.createElement(AvisMarquesPage,{ld:ldLive,pd:pdCal,decisions:decisions,setLabDecision:setLabDecision,openLab:function(n,t){openLab(n);labTabInit.current=t||null}});
+}else if(page==="nouvgamme"){
+content=React.createElement(NouvelleGammePage,{pd:pdCal,projets:projGammes,setProjets:setProjGammes,metres:metres,setPage:setPage});
+}else if(page==="duels"){
+content=React.createElement(DuelsPage,{pd:pdCal,cats:duelCats,setCats:setDuelCats,setPage:setPage});
 }else if(page==="recos"){
 content=React.createElement(RecosPage,{ld:ldLive,pd:pdCal,decisions:decisions,openLab:openLab});
 }else if(page==="tasks"){
