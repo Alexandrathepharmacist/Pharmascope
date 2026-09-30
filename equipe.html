@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.3">
+<meta name="ps-version" content="e1.4">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -294,7 +294,7 @@ h("span",{style:{color:"var(--text3)",fontSize:13}},ouvert?"\u25b2":"\u25bc")),
 ouvert?h("div",{style:{padding:"0 12px 12px",display:"grid",gap:10}},
 t.notes?h("div",{style:{fontSize:14,lineHeight:1.45,background:"var(--bg2)",border:"1px dashed var(--border)",borderRadius:10,padding:"9px 11px",whiteSpace:"pre-wrap"}},"\ud83d\udcdd "+t.notes):null,
 t.facing?h("div",{style:{fontSize:13,color:"var(--text2)"}},"Facing pr\u00e9vu : "+t.facing):null,
-x.e!=="bientot"?h(ResultatTG,{t:t,vd:p.ventes}):null,
+x.e!=="bientot"?h(ResultatTG,{t:t,vd:p.ventes,moi:p.moi}):null,
 prods.length?h("div",null,h("div",{style:{fontSize:12,fontWeight:700,color:"var(--text3)",marginBottom:4,textTransform:"uppercase",letterSpacing:.4}},"Produits \u00e0 mettre en avant"),
 h("div",{style:{display:"flex",flexWrap:"wrap",gap:6}},prods.map(function(n,i){return h("span",{key:i,style:{fontSize:13,padding:"4px 9px",borderRadius:8,background:"var(--bg2)",border:"1px solid var(--border)"}},n)}))):null,
 checks.length?h("div",{style:{display:"grid",gap:6}},checks.map(function(c,i){
@@ -332,6 +332,8 @@ function styleNote(n){if(n>=8)return{c:"#047857",e:"\ud83d\ude0d",l:"Excellente"
 function nb1(x){return (Math.round(x*10)/10).toString().replace(".",",")}
 function ResultatTG(p){
 var r=analyseTG(p.t,p.vd);
+var codes=(p.t.produits||[]).map(function(x){return x.c?String(x.c).replace(/\s/g,""):""}).filter(function(c){return c&&p.vd&&p.vd.T&&p.vd.T[c]});
+var perso=!r.err&&p.vd&&p.vd.V?h(LignePerso,{moi:p.moi,r:ventesPerso(p.vd,codes,p.t.debut,p.t.fin,p.moi)}):null;
 if(r.err)return h("div",{style:{fontSize:13,color:"var(--text3)",background:"var(--bg3)",borderRadius:10,padding:"8px 11px"}},"\ud83d\udcca "+r.err);
 var st=styleNote(r.note);var pc=Math.round(r.lq*100);
 var avis=r.D<14?"Trop t\u00f4t pour juger : attendre au moins 14 jours ("+r.D+" pour l'instant).":r.fiab==="faible"?"Peu de bo\u00eetes vendues : r\u00e9sultat encore incertain.":r.note>=6?"Bons r\u00e9sultats : on garde la TG en place.":r.note>=4?"R\u00e9sultats moyens : essayer de changer l'emplacement, le facing ou l'\u00e9tiquette prix.":"R\u00e9sultats d\u00e9cevants : \u00e0 revoir avec Alexandra.";
@@ -345,9 +347,27 @@ h("span",{style:{fontSize:12,color:"var(--text3)"}},"fiabilit\u00e9 "+r.fiab)),
 h("div",{style:{height:8,borderRadius:5,background:"var(--bg3)",overflow:"hidden"}},h("div",{style:{height:"100%",width:Math.max(0,Math.min(100,r.note*10))+"%",background:st.c}})),
 h("div",{style:{fontSize:14,lineHeight:1.45}},"Avant la TG : ",h("b",null,nb1(r.bq)+" bo\u00eete"+(r.bq>=2?"s":"")+"/jour")," \u2192 pendant : ",h("b",null,nb1(r.dq)+"/jour"),
 h("span",{style:{fontWeight:800,color:pc>=0?"var(--accent)":"var(--red)",marginLeft:6}},(pc>0?"+":"")+pc+" %")),
-h("div",{style:{fontSize:13,color:"var(--text2)"}},r.q+" bo\u00eete"+(r.q>1?"s":"")+" vendue"+(r.q>1?"s":"")+" en "+r.D+" jour"+(r.D>1?"s":"")+" de TG \u00b7 "+avis))}
+h("div",{style:{fontSize:13,color:"var(--text2)"}},r.q+" bo\u00eete"+(r.q>1?"s":"")+" vendue"+(r.q>1?"s":"")+" en "+r.D+" jour"+(r.D>1?"s":"")+" de TG \u00b7 "+avis),perso)}
 
 /* ===== Challenges ===== */
+/* Ventes personnelles (en boites) de la personne choisie dans "Qui es-tu ?" */
+function nomCle(n){return normTxt(n).replace(/[^A-Z]/g,"")}
+function ventesPerso(vd,codes,d0,d1,moi){
+if(!vd||!vd.V||!moi||!codes.length||!d0)return null;var k=nomCle(moi);if(!k)return null;
+var fin=d1&&vd.cov&&vd.cov[1]&&d1<vd.cov[1]?d1:(vd.cov?vd.cov[1]:d1);var tot=0,vu=false;
+codes.forEach(function(c){var v=vd.V[c];if(!v)return;Object.keys(v).forEach(function(d){if(d<d0||d>fin)return;var j=v[d];Object.keys(j).forEach(function(n){if(nomCle(n)===k){tot+=j[n];vu=true}})})});
+return{q:Math.round(tot),jusqua:fin}}
+function codesChallenge(c,vd,cat){
+if(!vd||!vd.T)return[];
+if(c.eans&&c.eans.length)return c.eans.map(function(e){return String(e).replace(/\s/g,"")}).filter(function(e){return !!vd.T[e]});
+var lab=normTxt(c.lab).trim();if(!lab||!cat)return[];var vus={},out=[];
+cat.forEach(function(x){var l=normTxt(x.lab);if((l===lab||l.indexOf(lab)>=0||lab.indexOf(l)>=0)&&x.c&&vd.T[x.c]&&!vus[x.c]){vus[x.c]=1;out.push(x.c)}});
+return out}
+function LignePerso(p){
+if(!p.moi)return h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:6}},"\ud83d\udc64 Choisis ton pr\u00e9nom en haut de l'\u00e9cran pour voir tes ventes.");
+if(!p.r)return null;
+return h("div",{style:{fontSize:13,marginTop:6,padding:"6px 10px",borderRadius:8,background:"var(--accent-bg)",color:"var(--accent)",fontWeight:700}},
+"\ud83d\udc64 "+p.moi+" : "+p.r.q+" bo\u00eete"+(p.r.q>1?"s":"")+" vendue"+(p.r.q>1?"s":"")+(p.r.jusqua?" (ventes jusqu'au "+dateFr(p.r.jusqua)+")":""))}
 function ChiffresChallenge(p){
 var c=p.c;var auj=aujIso();var obj=Number(c.objectif)||0,pr=Number(c.progres)||0;
 if(!obj||!c.debut||c.debut>auj)return null;
@@ -357,7 +377,8 @@ if(c.fin&&c.fin>=auj&&pr<obj){var restent=joursEntre(auj,c.fin)+1;var besoin=(ob
 lignes.push(h("span",{key:"b"}," \u00b7 il en faut ",h("b",{style:{color:besoin>rythme*1.1?"var(--orange)":"var(--accent)"}},nb1(besoin)+"/jour")," pour l'objectif"));
 lignes.push(h("div",{key:"p",style:{marginTop:2}},"\u00c0 ce rythme : environ ",h("b",null,proj+" / "+obj)," \u00e0 la fin"+(proj>=obj?" \ud83c\udfaf":"")))}
 else if(pr>=obj){lignes.push(h("span",{key:"o"}," \u00b7 objectif d\u00e9pass\u00e9 de ",h("b",null,(pr-obj)+" bo\u00eete"+(pr-obj>1?"s":""))))}
-return h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:8,lineHeight:1.5}},lignes)}
+var perso=p.vd?ventesPerso(p.vd,codesChallenge(c,p.vd,p.cat),c.debut,c.fin,p.moi):null;
+return h("div",null,h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:8,lineHeight:1.5}},lignes),p.vd&&p.vd.V?h(LignePerso,{moi:p.moi,r:perso}):null)}
 function Challenges(p){
 var auj=aujIso();
 var liste=(p.challenges||[]).filter(function(c){
@@ -391,7 +412,7 @@ h("div",{style:{height:"100%",width:pct+"%",background:couleur,borderRadius:6,tr
 h("div",{style:{display:"flex",justifyContent:"space-between",gap:8,marginTop:7,fontSize:13,flexWrap:"wrap"}},
 h("span",{style:{color:reste!==null&&reste<=3&&!gagne?"var(--orange)":"var(--text2)",fontWeight:600}},gagne?"Objectif atteint, bravo !":txtReste),
 c.assignee?h("span",{style:{color:"var(--text3)"}},"\ud83d\udc64 "+c.assignee):null),
-h(ChiffresChallenge,{c:c}))})),
+h(ChiffresChallenge,{c:c,vd:p.ventes,cat:p.cat,moi:p.moi}))})),
 p.onGerer?h(BoutonLien,{onClick:p.onGerer},"\u270f\ufe0f Tous les challenges, ajouter ou modifier"):null)}
 
 /* ===== Formulaires de modification (taches, TG, challenges) ===== */
@@ -575,7 +596,7 @@ t.facing?h(Pastille,{bg:"var(--blue-bg)",c:"var(--blue)"},t.facing+" facing"):nu
 checks.length?h(Pastille,{bg:nOk===checks.length?"var(--accent-bg)":"var(--bg3)",c:nOk===checks.length?"var(--accent)":"var(--text2)"},"\u2713 "+nOk+"/"+checks.length):null)),
 h(BtnModif,{onClick:function(){setEdit(t)}})),
 t.notes?h("div",{style:{fontSize:14,lineHeight:1.45,background:"var(--bg)",borderRadius:10,padding:"9px 11px",whiteSpace:"pre-wrap"}},"\ud83d\udcdd "+t.notes):null,
-groupe(t)!=="avenir"?h(ResultatTG,{t:t,vd:p.ventes}):null,
+groupe(t)!=="avenir"?h(ResultatTG,{t:t,vd:p.ventes,moi:p.moi}):null,
 prods.length?h("details",null,h("summary",{style:{fontSize:13,fontWeight:700,color:"var(--text2)",cursor:"pointer"}},prods.length+" produit"+(prods.length>1?"s":"")+" mis en avant"),h("div",{style:{display:"flex",flexWrap:"wrap",gap:6,marginTop:8}},prods.map(function(x,i){return h("span",{key:i,style:{fontSize:13,padding:"4px 9px",borderRadius:8,background:"var(--bg)",border:"1px solid var(--border)"}},x)}))):null,
 checks.length&&t.statut!=="termine"?h("div",{style:{display:"grid",gap:6}},checks.map(function(c,i){
 return h("button",{key:i,onClick:function(){p.onCheck(t.id,i)},style:{display:"flex",gap:10,alignItems:"center",textAlign:"left",padding:"8px 10px",borderRadius:10,background:"var(--bg)",border:"1px solid var(--border)"}},
@@ -622,7 +643,7 @@ h("div",{style:{height:10,borderRadius:6,background:"var(--bg3)",marginTop:10,ov
 h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:10,flexWrap:"wrap"}},
 h("span",{style:{fontSize:13,fontWeight:600,color:"var(--text2)"}},gagne?"Objectif atteint, bravo !":ong==="fini"?"Termin\u00e9":ong==="avenir"?"Commence le "+dateFr(c.debut):reste===null?"Sans date de fin":reste<=0?"Dernier jour !":"Encore "+reste+" jour"+(reste>1?"s":"")),
 h(BtnModif,{onClick:function(){setEdit(c)}})),
-ong!=="avenir"?h(ChiffresChallenge,{c:c}):null)})),
+ong!=="avenir"?h(ChiffresChallenge,{c:c,vd:p.ventes,cat:p.cat,moi:p.moi}):null)})),
 edit?h(FormChallenge,{ch:edit.id?edit:null,noms:p.noms,cat:p.cat,onFermer:function(){setEdit(null)},
 onEnregistrer:function(c){p.onEnregistrer(c);setEdit(null)},onSupprimer:function(){p.onSupprimer(edit);setEdit(null)}}):null)}
 
@@ -746,7 +767,7 @@ if(r){setRea(r);tsRef.current.sales_data=tsm.sales_data}})}).catch(function(){})
 else setReaCharge(false);
 if(tsm.tdg_ventes&&tsm.tdg_ventes!==tsRef.current.tdg_ventes){
 lireLignes(["tdg_ventes"],true).then(function(rows){var v=rows[0]&&rows[0].data;
-if(v&&v.S){setVentes({S:v.S,T:v.T||{},cov:v.cov||[]});tsRef.current.tdg_ventes=tsm.tdg_ventes}}).catch(function(){})}
+if(v&&v.S){setVentes({S:v.S,T:v.T||{},V:v.V||{},cov:v.cov||[]});tsRef.current.tdg_ventes=tsm.tdg_ventes}}).catch(function(){})}
 if(tsm.tdg_photos&&tsm.tdg_photos!==tsRef.current.tdg_photos){
 lireLignes(["tdg_photos"],true).then(function(rows){var v=rows[0]&&rows[0].data;
 if(v&&typeof v==="object"){var ids={};(dRef.current.tdgs||[]).forEach(function(t){ids[t.id]=1});
@@ -831,7 +852,7 @@ var cat=rea&&rea.CAT?rea.CAT:null;
 var blocs={
 taches:h(Taches,Object.assign({key:"t",tasks:d.tasks,onFait:function(t){tacheFaite(t,true)},onRefaire:function(t){tacheFaite(t,false)},onGerer:function(){aller("taches")}},props)),
 tg:h(TetesGondole,Object.assign({key:"g",tdgs:d.tdgs,photos:photos,ventes:ventes,onCheck:cocherTG,onGerer:function(){aller("tg")}},props)),
-challenges:h(Challenges,Object.assign({key:"c",challenges:d.challenges,onGerer:function(){aller("challenges")}},props)),
+challenges:h(Challenges,Object.assign({key:"c",challenges:d.challenges,ventes:ventes,cat:cat,onGerer:function(){aller("challenges")}},props)),
 reassort:h(Reassort,Object.assign({key:"r",rea:rea,reaCharge:reaCharge,faits:faits,onFait:reassortFait},props))};
 
 var heureTxt=new Date().getHours()<12?"Bonjour":new Date().getHours()<18?"Bon apr\u00e8s-midi":"Bonsoir";
@@ -862,7 +883,7 @@ vue==="accueil"?h("div",{className:"grille"},blocs.taches,blocs.reassort,blocs.t
 h("div",{style:{maxWidth:820}},
 vue==="taches"?h(PageTaches,{tasks:d.tasks,noms:noms,moi:moi,onFait:tacheFaite,onEnregistrer:function(t){enregistrerEl("tasks",t)},onSupprimer:function(t){supprimerEl("tasks",t)}}):
 vue==="tg"?h(PageTG,{tdgs:d.tdgs,photos:photos,ventes:ventes,noms:noms,moi:moi,cat:cat,montrer:montrer,onCheck:cocherTG,onStatut:statutTG,onPhoto:photoTG,onEnregistrer:function(t){enregistrerEl("tdgs",t)},onSupprimer:function(t){supprimerEl("tdgs",t)}}):
-vue==="challenges"?h(PageChallenges,{challenges:d.challenges,noms:noms,cat:cat,onEnregistrer:function(c){enregistrerEl("challenges",c)},onSupprimer:function(c){supprimerEl("challenges",c)}}):
+vue==="challenges"?h(PageChallenges,{challenges:d.challenges,ventes:ventes,moi:moi,noms:noms,cat:cat,onEnregistrer:function(c){enregistrerEl("challenges",c)},onSupprimer:function(c){supprimerEl("challenges",c)}}):
 blocs[vue]),
 rea&&rea.LABS?h("datalist",{id:"pse-labs"},rea.LABS.map(function(l){return h("option",{key:l,value:l})})):null,
 h("footer",{style:{marginTop:28,textAlign:"center",fontSize:12,color:"var(--text3)"}},
