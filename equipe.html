@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.1">
+<meta name="ps-version" content="e1.2">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -122,7 +122,17 @@ var out={REC:{},RECD:(v.RECD||[]).slice().sort(),STKU:{},STKG:{},UPD:v.UPD||""};
 Object.keys(v.REC).forEach(function(c){var e=v.REC[c];out.REC[c]={n:e.n,d:e.d};
 if(v.STKU&&v.STKU.hasOwnProperty(c))out.STKU[c]=v.STKU[c];
 if(v.STKG&&v.STKG[c])out.STKG[c]=v.STKG[c]});
+/* Catalogue pour choisir les produits d'une TG ou d'un challenge : nom, code, labo. Aucun montant. */
+out.CAT=[];out.LABS=[];
+if(v.P)Object.keys(v.P).forEach(function(lab){out.LABS.push(lab);(v.P[lab]||[]).forEach(function(p){if(p&&p.n)out.CAT.push({n:p.n,c:p.c||"",lab:lab,k:normTxt(p.n+" "+lab)})})});
+out.LABS.sort();
 return out}
+function normTxt(s){return String(s||"").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+function chercherProduits(cat,q,max){
+var t=normTxt(q).trim();if(t.length<2||!cat)return[];
+var mots=t.split(/\s+/);var res=[];
+for(var i=0;i<cat.length&&res.length<max;i++){var ok=true;for(var j=0;j<mots.length;j++){if(cat[i].k.indexOf(mots[j])<0){ok=false;break}}if(ok)res.push(cat[i])}
+return res}
 
 /* Fusion "a trois" identique a PharmaScope : les modifications faites en meme
    temps sur un autre appareil ne sont jamais ecrasees. */
@@ -236,6 +246,7 @@ h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap",alignItems:"cen
 t.priority==="urgent"?h(Pastille,{bg:pr.bg,c:pr.c},"\u26a1 Urgent"):null,
 t.assignee?h(Pastille,{bg:pourMoi?"var(--accent)":"var(--bg3)",c:pourMoi?"#fff":"var(--text2)"},"\ud83d\udc64 "+t.assignee):null)))})),
 aFaire.length>vis.length?h(BoutonLien,{onClick:function(){setToutes(true)}},"Voir les "+(aFaire.length-vis.length)+" autres t\u00e2ches"):null,
+p.onGerer?h(BoutonLien,{onClick:p.onGerer},"\u270f\ufe0f Ajouter ou modifier des t\u00e2ches"):null,
 faitesAuj.length?h("details",{style:{marginTop:12}},
 h("summary",{style:{fontSize:13,color:"var(--text3)",cursor:"pointer",fontWeight:600}},"Faites aujourd'hui ("+faitesAuj.length+")"),
 h("div",{style:{display:"grid",gap:6,marginTop:8}},faitesAuj.map(function(t){
@@ -289,6 +300,7 @@ checks.length?h("div",{style:{display:"grid",gap:6}},checks.map(function(c,i){
 return h("button",{key:i,onClick:function(){p.onCheck(t.id,i)},style:{display:"flex",gap:10,alignItems:"center",textAlign:"left",padding:"8px 10px",borderRadius:10,background:"var(--bg2)",border:"1px solid var(--border)"}},
 h(Case,{on:!!c.done}),h("span",{style:{fontSize:14,fontWeight:600,textDecoration:c.done?"line-through":"none",color:c.done?"var(--text3)":"var(--text)"}},c.label))})):null,
 photo?h("button",{onClick:function(){setGrand(photo)},style:{fontSize:13,fontWeight:700,color:"var(--accent)",textAlign:"left"}},"\ud83d\udd0d Voir la photo en grand"):null):null)})),
+p.onGerer?h(BoutonLien,{onClick:p.onGerer},"\u270f\ufe0f Toutes les TG, ajouter ou modifier"):null,
 grand?h("div",{onClick:function(){setGrand(null)},style:{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}},
 h("img",{src:grand,alt:"Photo de la t\u00eate de gondole",style:{maxWidth:"100%",maxHeight:"100%",objectFit:"contain",borderRadius:8}})):null)}
 
@@ -325,7 +337,247 @@ h("div",{style:{height:10,borderRadius:6,background:"var(--bg3)",marginTop:10,ov
 h("div",{style:{height:"100%",width:pct+"%",background:couleur,borderRadius:6,transition:"width .6s"}})),
 h("div",{style:{display:"flex",justifyContent:"space-between",gap:8,marginTop:7,fontSize:13,flexWrap:"wrap"}},
 h("span",{style:{color:reste!==null&&reste<=3&&!gagne?"var(--orange)":"var(--text2)",fontWeight:600}},gagne?"Objectif atteint, bravo !":txtReste),
-c.assignee?h("span",{style:{color:"var(--text3)"}},"\ud83d\udc64 "+c.assignee):null))})))}
+c.assignee?h("span",{style:{color:"var(--text3)"}},"\ud83d\udc64 "+c.assignee):null))})),
+p.onGerer?h(BoutonLien,{onClick:p.onGerer},"\u270f\ufe0f Tous les challenges, ajouter ou modifier"):null)}
+
+/* ===== Formulaires de modification (taches, TG, challenges) ===== */
+var CHECKLIST=["ILV en place","Balisage prix","Facing correct","Stock suffisant","\u00c9tiquette promo","Formation \u00e9quipe"];
+var chp={display:"block",width:"100%",minWidth:0,boxSizing:"border-box",minHeight:42,padding:"9px 12px",borderRadius:10,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:15,outline:"none",fontFamily:"inherit"};
+function Champ(p){return h("div",{style:{display:"block",fontSize:13,fontWeight:700,color:"var(--text2)",minWidth:0}},p.l,h("div",{style:{marginTop:4}},p.children))}
+function Grille(p){return h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax("+(p.min||140)+"px,1fr))",gap:10}},p.children)}
+function Bouton(p){
+var st={primaire:{background:"#059669",color:"#fff"},danger:{background:"var(--red-bg)",color:"var(--red)"},neutre:{background:"var(--bg3)",color:"var(--text2)"}}[p.type||"neutre"];
+return h("button",{type:"button",onClick:p.onClick,disabled:p.disabled,style:Object.assign({padding:"10px 16px",borderRadius:10,fontWeight:700,fontSize:14,opacity:p.disabled?.5:1},st,p.style||{})},p.children)}
+function Fenetre(p){
+useEffect(function(){var o=document.body.style.overflow;document.body.style.overflow="hidden";return function(){document.body.style.overflow=o}},[]);
+return h("div",{style:{position:"fixed",inset:0,background:"rgba(15,23,42,.55)",zIndex:8000,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:"calc(env(safe-area-inset-top,0px) + 12px) 12px 12px",overflowY:"auto"}},
+h("div",{role:"dialog","aria-label":p.titre,style:{background:"var(--bg2)",borderRadius:16,width:"100%",maxWidth:620,boxShadow:"0 20px 60px rgba(0,0,0,.3)",animation:"up .2s",margin:"auto 0"}},
+h("div",{style:{display:"flex",alignItems:"center",gap:10,padding:"14px 16px",borderBottom:"1px solid var(--border)"}},
+h("h2",{style:{fontSize:18,fontWeight:800,flex:1}},p.titre),
+h("button",{onClick:p.onFermer,"aria-label":"Fermer",style:{fontSize:20,padding:"2px 8px",color:"var(--text3)"}},"\u2715")),
+h("div",{style:{padding:16,display:"grid",gap:12}},p.children),
+h("div",{style:{display:"flex",gap:8,padding:"12px 16px",borderTop:"1px solid var(--border)",flexWrap:"wrap"}},p.pied)))}
+function ChoixNom(p){
+var noms=p.noms||[];var v=p.value||"";
+var liste=noms.slice();if(v&&liste.indexOf(v)<0)liste.unshift(v);
+return h("select",{value:v,onChange:function(e){p.onChange(e.target.value)},style:chp},
+h("option",{value:""},p.vide||"Toute l'\u00e9quipe"),liste.map(function(n){return h("option",{key:n,value:n},n)}))}
+function ChoixProduits(p){
+var qs=useState("");var q=qs[0],setQ=qs[1];
+var sel=p.value||[];
+var res=useMemo(function(){return chercherProduits(p.cat,q,12)},[p.cat,q]);
+function ajouter(x){if(sel.some(function(s){return s.c&&s.c===x.c}))return;p.onChange(sel.concat([{n:x.n,c:x.c,lab:x.lab}]));setQ("")}
+function retirer(i){p.onChange(sel.filter(function(s,j){return j!==i}))}
+return h("div",null,
+sel.length?h("div",{style:{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}},sel.map(function(s,i){
+return h("span",{key:i,style:{display:"inline-flex",alignItems:"center",gap:6,fontSize:13,padding:"4px 6px 4px 10px",borderRadius:8,background:s.c?"var(--accent-bg)":"var(--orange-bg)",color:s.c?"var(--accent)":"var(--orange)",fontWeight:600}},s.n,
+h("button",{type:"button",onClick:function(){retirer(i)},"aria-label":"Retirer",style:{fontSize:14,padding:"0 4px",color:"inherit"}},"\u2715"))})):null,
+p.cat&&p.cat.length?h("div",null,
+h("input",{value:q,onChange:function(e){setQ(e.target.value)},placeholder:"Chercher un produit \u00e0 ajouter (nom ou labo)\u2026",style:chp}),
+res.length?h("div",{style:{border:"1px solid var(--border)",borderRadius:10,marginTop:6,maxHeight:220,overflowY:"auto",background:"var(--bg)"}},res.map(function(x){
+return h("button",{key:x.c+x.lab+x.n,type:"button",onClick:function(){ajouter(x)},style:{display:"block",width:"100%",textAlign:"left",padding:"9px 12px",borderBottom:"1px solid var(--border)",fontSize:14}},x.n,h("span",{style:{fontSize:12,color:"var(--text3)",marginLeft:6}},x.lab))})):null):
+h("div",{style:{fontSize:13,color:"var(--text3)"}},"Liste des produits en cours de chargement\u2026"))}
+
+function FormTache(p){
+var t0=p.tache||{};
+var s=useState({title:t0.title||"",desc:t0.desc||"",assignee:t0.assignee||p.moi||"",priority:t0.priority||"normal"});var f=s[0],setF=s[1];
+function maj(k,v){var n=Object.assign({},f);n[k]=v;setF(n)}
+var ok=f.title.trim().length>0;
+return h(Fenetre,{titre:p.tache?"Modifier la t\u00e2che":"Nouvelle t\u00e2che",onFermer:p.onFermer,
+pied:[h(Bouton,{key:"ok",type:"primaire",disabled:!ok,onClick:function(){if(ok)p.onEnregistrer(Object.assign({},t0,{title:f.title.trim(),desc:f.desc.trim(),assignee:f.assignee,priority:f.priority}))}},"Enregistrer"),
+h(Bouton,{key:"an",onClick:p.onFermer},"Annuler"),
+p.tache?h(Bouton,{key:"su",type:"danger",style:{marginLeft:"auto"},onClick:p.onSupprimer},"Supprimer"):null]},
+h(Champ,{l:"T\u00e2che"},h("input",{value:f.title,autoFocus:!p.tache,onChange:function(e){maj("title",e.target.value)},placeholder:"Ex. : ranger la r\u00e9ception CERP",style:chp})),
+h(Champ,{l:"Pr\u00e9cisions (facultatif)"},h("textarea",{value:f.desc,rows:3,onChange:function(e){maj("desc",e.target.value)},style:Object.assign({},chp,{resize:"vertical"})})),
+h(Grille,null,
+h(Champ,{l:"Pour qui"},h(ChoixNom,{noms:p.noms,value:f.assignee,onChange:function(v){maj("assignee",v)}})),
+h(Champ,{l:"Priorit\u00e9"},h("select",{value:f.priority,onChange:function(e){maj("priority",e.target.value)},style:chp},
+h("option",{value:"urgent"},"Urgent"),h("option",{value:"normal"},"Normal"),h("option",{value:"basse"},"Quand possible")))))}
+
+function FormTG(p){
+var t0=p.tg||{};
+var s=useState({lab:t0.lab||"",produit:t0.produit||"",responsable:t0.responsable||p.moi||"",debut:t0.debut||aujIso(),fin:t0.fin||"",facing:t0.facing?String(t0.facing):"",notes:t0.notes||"",statut:t0.statut||"a_venir",produits:(t0.produits||[]).slice(),checks:(t0.checks||CHECKLIST.map(function(c){return{label:c,done:false}})).slice(),photoLieu:t0.photoLieu||""});
+var f=s[0],setF=s[1];
+var ns=useState("");var nouv=ns[0],setNouv=ns[1];
+function maj(k,v){var n=Object.assign({},f);n[k]=v;setF(n)}
+var ok=(f.lab.trim()||f.produits.length)&&!(f.fin&&f.debut&&f.fin<f.debut);
+function enreg(){if(!ok)return;
+var lab=f.lab.trim()||(f.produits[0]&&f.produits[0].lab)||"Multi-labos";
+p.onEnregistrer(Object.assign({},t0,{lab:lab,produit:f.produit.trim(),responsable:f.responsable,debut:f.debut,fin:f.fin,facing:Number(f.facing)||0,notes:f.notes,statut:f.statut,produits:f.produits,checks:f.checks,photoLieu:f.photoLieu,photoFaite:!!t0.photoFaite}))}
+return h(Fenetre,{titre:p.tg?"Modifier la t\u00eate de gondole":"Nouvelle t\u00eate de gondole",onFermer:p.onFermer,
+pied:[h(Bouton,{key:"ok",type:"primaire",disabled:!ok,onClick:enreg},"Enregistrer"),h(Bouton,{key:"an",onClick:p.onFermer},"Annuler"),
+p.tg?h(Bouton,{key:"su",type:"danger",style:{marginLeft:"auto"},onClick:p.onSupprimer},"Supprimer"):null]},
+h(Grille,{min:180},
+h(Champ,{l:"Laboratoire"},h("input",{value:f.lab,list:"pse-labs",onChange:function(e){maj("lab",e.target.value)},placeholder:"Ex. : Av\u00e8ne",style:chp})),
+h(Champ,{l:"Produit phare / th\u00e8me"},h("input",{value:f.produit,onChange:function(e){maj("produit",e.target.value)},placeholder:"Ex. : solaires",style:chp}))),
+h(Grille,null,
+h(Champ,{l:"Mise en place"},h("input",{type:"date",value:f.debut,onChange:function(e){maj("debut",e.target.value)},style:chp})),
+h(Champ,{l:"Fin"},h("input",{type:"date",value:f.fin,onChange:function(e){maj("fin",e.target.value)},style:chp})),
+h(Champ,{l:"Facing"},h("input",{type:"number",inputMode:"numeric",min:0,value:f.facing,onChange:function(e){maj("facing",e.target.value)},placeholder:"ex. 4",style:chp})),
+h(Champ,{l:"Responsable"},h(ChoixNom,{noms:p.noms,value:f.responsable,vide:"\u2014",onChange:function(v){maj("responsable",v)}}))),
+f.fin&&f.debut&&f.fin<f.debut?h("div",{style:{fontSize:13,color:"var(--red)"}},"La date de fin est avant la mise en place."):null,
+h(Champ,{l:"Statut"},h("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},[["a_venir","\u00c0 venir"],["en_cours","En cours"],["termine","Termin\u00e9e"]].map(function(o){return h(Puce,{key:o[0],on:f.statut===o[0],onClick:function(){maj("statut",o[0])}},o[1])}))),
+h(Champ,{l:"Consignes (emplacement, balisage\u2026)"},h("textarea",{value:f.notes,rows:3,onChange:function(e){maj("notes",e.target.value)},style:Object.assign({},chp,{resize:"vertical"})})),
+h(Champ,{l:"Produits mis en avant"},h(ChoixProduits,{cat:p.cat,value:f.produits,onChange:function(v){maj("produits",v)}})),
+h(Champ,{l:"Points \u00e0 v\u00e9rifier"},
+h("div",{style:{display:"grid",gap:6}},f.checks.map(function(c,i){
+return h("div",{key:i,style:{display:"flex",gap:8,alignItems:"center"}},
+h("button",{type:"button",onClick:function(){var n=f.checks.slice();n[i]=Object.assign({},c,{done:!c.done});maj("checks",n)}},h(Case,{on:!!c.done})),
+h("span",{style:{flex:1,fontSize:14,fontWeight:500}},c.label),
+h("button",{type:"button","aria-label":"Retirer",onClick:function(){maj("checks",f.checks.filter(function(x,j){return j!==i}))},style:{color:"var(--text3)",fontSize:15,padding:"2px 6px"}},"\u2715"))}),
+h("div",{style:{display:"flex",gap:6}},
+h("input",{value:nouv,onChange:function(e){setNouv(e.target.value)},placeholder:"Ajouter un point (ex. \ud83d\udcf7 photo pour le labo)",style:chp}),
+h(Bouton,{onClick:function(){if(!nouv.trim())return;maj("checks",f.checks.concat([{label:nouv.trim(),done:false}]));setNouv("")}},"Ajouter")))),
+h(Champ,{l:"Photo \u00e0 envoyer \u00e0 (facultatif)"},h("input",{value:f.photoLieu,onChange:function(e){maj("photoLieu",e.target.value)},placeholder:"Ex. : d\u00e9l\u00e9gu\u00e9 Av\u00e8ne, Instagram\u2026",style:chp})))}
+
+function FormChallenge(p){
+var c0=p.ch||{};
+var s=useState({lab:c0.lab||"",produit:c0.produit||"",produits:(c0.eans||[]).map(function(e){var x=(p.cat||[]).filter(function(q){return q.c===e})[0];return{n:x?x.n:("EAN "+e),c:e,lab:x?x.lab:""}}),objectif:c0.objectif!=null?String(c0.objectif):"",progres:c0.progres!=null?String(c0.progres):"0",assignee:c0.assignee||"",debut:c0.debut||aujIso(),fin:c0.fin||""});
+var f=s[0],setF=s[1];
+function maj(k,v){var n=Object.assign({},f);n[k]=v;setF(n)}
+var ok=f.lab.trim()&&Number(f.objectif)>0&&!(f.fin&&f.debut&&f.fin<f.debut);
+function enreg(){if(!ok)return;
+var prod=f.produit.trim();if(!prod&&f.produits.length)prod=f.produits.length+" produit(s) cible(s)";
+p.onEnregistrer(Object.assign({active:true},c0,{lab:f.lab.trim(),produit:prod,eans:f.produits.map(function(x){return x.c}).filter(function(x){return !!x}),objectif:Number(f.objectif),progres:Math.max(0,Number(f.progres)||0),assignee:f.assignee,debut:f.debut,fin:f.fin}))}
+return h(Fenetre,{titre:p.ch?"Modifier le challenge":"Nouveau challenge",onFermer:p.onFermer,
+pied:[h(Bouton,{key:"ok",type:"primaire",disabled:!ok,onClick:enreg},"Enregistrer"),h(Bouton,{key:"an",onClick:p.onFermer},"Annuler"),
+p.ch?h(Bouton,{key:"su",type:"danger",style:{marginLeft:"auto"},onClick:p.onSupprimer},"Supprimer"):null]},
+h(Grille,{min:180},
+h(Champ,{l:"Laboratoire"},h("input",{value:f.lab,list:"pse-labs",onChange:function(e){maj("lab",e.target.value)},placeholder:"Ex. : PILEJE",style:chp})),
+h(Champ,{l:"Produit / intitul\u00e9"},h("input",{value:f.produit,onChange:function(e){maj("produit",e.target.value)},placeholder:"Ex. : Lactibiane Voyage",style:chp}))),
+h(Champ,{l:"Produits compt\u00e9s (facultatif : sinon toute la marque)"},h(ChoixProduits,{cat:p.cat,value:f.produits,onChange:function(v){maj("produits",v)}})),
+h(Grille,null,
+h(Champ,{l:"Objectif (bo\u00eetes)"},h("input",{type:"number",inputMode:"numeric",min:1,value:f.objectif,onChange:function(e){maj("objectif",e.target.value)},style:chp})),
+h(Champ,{l:"D\u00e9j\u00e0 vendues"},h("input",{type:"number",inputMode:"numeric",min:0,value:f.progres,onChange:function(e){maj("progres",e.target.value)},style:chp})),
+h(Champ,{l:"D\u00e9but"},h("input",{type:"date",value:f.debut,onChange:function(e){maj("debut",e.target.value)},style:chp})),
+h(Champ,{l:"Fin"},h("input",{type:"date",value:f.fin,onChange:function(e){maj("fin",e.target.value)},style:chp}))),
+h(Champ,{l:"Pour qui"},h(ChoixNom,{noms:p.noms,value:f.assignee,onChange:function(v){maj("assignee",v)}})),
+h("div",{style:{fontSize:12,color:"var(--text3)",lineHeight:1.45}},"Les bo\u00eetes vendues se mettent \u00e0 jour toutes seules quand les ventes sont import\u00e9es dans PharmaScope. Le chiffre saisi ici sert en attendant."))}
+
+/* ===== Pages completes (consultation + modification) ===== */
+function Onglets(p){return h("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}},p.items.map(function(o){return h(Puce,{key:o[0],on:p.value===o[0],onClick:function(){p.onChange(o[0])}},o[1]+(o[2]!=null?" ("+o[2]+")":""))}))}
+function EnTetePage(p){return h("div",{style:{display:"flex",alignItems:"center",gap:10,marginBottom:12,flexWrap:"wrap"}},h("span",{style:{fontSize:24}},p.icone),h("h2",{style:{fontSize:22,fontWeight:800,flex:1,minWidth:0}},p.titre),h(Bouton,{type:"primaire",onClick:p.onNouveau},p.nouveau))}
+function BtnModif(p){return h("button",{type:"button",onClick:p.onClick,"aria-label":"Modifier",title:"Modifier",style:{flexShrink:0,padding:"6px 10px",borderRadius:8,background:"var(--bg3)",color:"var(--text2)",fontSize:13,fontWeight:700}},"\u270f\ufe0f Modifier")}
+
+function PageTaches(p){
+var os=useState("todo");var ong=os[0],setOng=os[1];
+var es=useState(null);var edit=es[0],setEdit=es[1];
+var tout=p.tasks||[];var moi=p.moi;
+var nTodo=tout.filter(function(t){return !t.done}).length;
+var liste=tout.filter(function(t){return ong==="todo"?!t.done:ong==="done"?t.done:true});
+liste.sort(function(a,b){if(!!a.done!==!!b.done)return a.done?1:-1;var pa=(PRIO[a.priority]||PRIO.normal).o,pb=(PRIO[b.priority]||PRIO.normal).o;
+var ma=moi&&a.assignee===moi?0:1,mb=moi&&b.assignee===moi?0:1;return ma-mb||pa-pb||(b.id||0)-(a.id||0)});
+return h("div",null,
+h(EnTetePage,{icone:"\u2705",titre:"T\u00e2ches",nouveau:"+ Nouvelle t\u00e2che",onNouveau:function(){setEdit({})}}),
+h(Onglets,{value:ong,onChange:setOng,items:[["todo","\u00c0 faire",nTodo],["done","Faites",tout.length-nTodo],["all","Toutes",tout.length]]}),
+!liste.length?h(Vide,null,ong==="todo"?"\ud83c\udf89 Rien \u00e0 faire pour l'instant":"Aucune t\u00e2che"):
+h("div",{style:{display:"grid",gap:8}},liste.map(function(t){
+var pr=PRIO[t.priority]||PRIO.normal;var pourMoi=moi&&t.assignee===moi;
+return h("div",{key:t.id,style:{display:"flex",gap:10,alignItems:"flex-start",padding:12,borderRadius:12,background:pourMoi&&!t.done?"var(--accent-bg)":"var(--bg2)",border:"1px solid "+(t.priority==="urgent"&&!t.done?"var(--red)":"var(--border)"),opacity:t.done?.65:1}},
+h("button",{type:"button",onClick:function(){p.onFait(t,!t.done)},"aria-label":t.done?"Remettre \u00e0 faire":"Marquer comme faite"},h(Case,{on:!!t.done})),
+h("div",{style:{flex:1,minWidth:0}},
+h("div",{style:{fontWeight:700,fontSize:15,lineHeight:1.3,textDecoration:t.done?"line-through":"none"}},t.title),
+t.desc?h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:3,lineHeight:1.4,whiteSpace:"pre-wrap"}},t.desc):null,
+h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap",alignItems:"center"}},
+t.priority!=="normal"?h(Pastille,{bg:pr.bg,c:pr.c},t.priority==="urgent"?"\u26a1 Urgent":pr.l):null,
+h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udc64 "+(t.assignee||"Toute l'\u00e9quipe")),
+t.done&&t.doneBy?h("span",{style:{fontSize:12,color:"var(--text3)"}},"faite par "+t.doneBy+(t.doneAt?" le "+dateFr(t.doneAt):"")):null)),
+h(BtnModif,{onClick:function(){setEdit(t)}}))})),
+edit?h(FormTache,{tache:edit.id?edit:null,noms:p.noms,moi:moi,onFermer:function(){setEdit(null)},
+onEnregistrer:function(t){p.onEnregistrer(t);setEdit(null)},onSupprimer:function(){p.onSupprimer(edit);setEdit(null)}}):null)}
+
+function PageTG(p){
+var auj=aujIso();
+var os=useState("encours");var ong=os[0],setOng=os[1];
+var es=useState(null);var edit=es[0],setEdit=es[1];
+var gs=useState(null);var grand=gs[0],setGrand=gs[1];
+var bs=useState(null);var charge=bs[0],setCharge=bs[1];
+var tout=(p.tdgs||[]).filter(function(t){return !t.demo});
+function groupe(t){if(t.statut==="termine")return"fini";var e=tgEtat(t,auj);if(e==="encours"||e==="demonter")return"encours";return"avenir"}
+var n={encours:0,avenir:0,fini:0};tout.forEach(function(t){n[groupe(t)]++});
+var liste=tout.filter(function(t){return groupe(t)===ong});
+liste.sort(function(a,b){return ong==="fini"?String(b.debut||"").localeCompare(String(a.debut||"")):String(a.debut||"9").localeCompare(String(b.debut||"9"))});
+function photo(t,e){var fl=e.target.files&&e.target.files[0];e.target.value="";if(!fl)return;setCharge(t.id);
+compresserPhoto(fl,function(d){setCharge(null);if(d)p.onPhoto(t.id,d);else p.montrer("Photo illisible, essaie avec une autre image")})}
+return h("div",null,
+h(EnTetePage,{icone:"\ud83d\udecd\ufe0f",titre:"T\u00eates de gondole",nouveau:"+ Nouvelle TG",onNouveau:function(){setEdit({})}}),
+h(Onglets,{value:ong,onChange:setOng,items:[["encours","En place",n.encours],["avenir","\u00c0 venir",n.avenir],["fini","Termin\u00e9es",n.fini]]}),
+!liste.length?h(Vide,null,"Aucune t\u00eate de gondole ici"):
+h("div",{style:{display:"grid",gap:10}},liste.map(function(t){
+var e=tgEtat(t,auj);var checks=t.checks||[];var nOk=checks.filter(function(c){return c.done}).length;var ph=p.photos&&p.photos[t.id];
+var coul=t.statut==="termine"?"var(--text3)":e==="demonter"?"var(--red)":groupe(t)==="avenir"?"var(--blue)":"var(--orange)";
+var prods=(t.produits||[]).map(function(q){return q.n}).filter(function(x){return !!x});
+return h("div",{key:t.id,style:{background:"var(--bg2)",borderRadius:14,border:"1px solid var(--border)",borderLeft:"5px solid "+coul,padding:14,display:"grid",gap:10}},
+h("div",{style:{display:"flex",gap:12,alignItems:"flex-start"}},
+ph?h("img",{src:ph,alt:"",onClick:function(){setGrand(ph)},style:{width:64,height:64,objectFit:"cover",borderRadius:10,flexShrink:0,cursor:"zoom-in"}}):null,
+h("div",{style:{flex:1,minWidth:0}},
+h("div",{style:{fontWeight:800,fontSize:17}},t.lab||"T\u00eate de gondole"),
+t.produit?h("div",{style:{fontSize:13,color:"var(--text2)"}},t.produit):null,
+h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap"}},
+e==="demonter"&&t.statut!=="termine"?h(Pastille,{bg:"var(--red-bg)",c:"var(--red)"},"\u00c0 d\u00e9monter"):null,
+h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udcc5 "+(t.debut?dateFr(t.debut):"?")+(t.fin?" \u2192 "+dateFr(t.fin):"")),
+t.responsable?h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udc64 "+t.responsable):null,
+t.facing?h(Pastille,{bg:"var(--blue-bg)",c:"var(--blue)"},t.facing+" facing"):null,
+checks.length?h(Pastille,{bg:nOk===checks.length?"var(--accent-bg)":"var(--bg3)",c:nOk===checks.length?"var(--accent)":"var(--text2)"},"\u2713 "+nOk+"/"+checks.length):null)),
+h(BtnModif,{onClick:function(){setEdit(t)}})),
+t.notes?h("div",{style:{fontSize:14,lineHeight:1.45,background:"var(--bg)",borderRadius:10,padding:"9px 11px",whiteSpace:"pre-wrap"}},"\ud83d\udcdd "+t.notes):null,
+prods.length?h("div",{style:{display:"flex",flexWrap:"wrap",gap:6}},prods.map(function(x,i){return h("span",{key:i,style:{fontSize:13,padding:"4px 9px",borderRadius:8,background:"var(--bg)",border:"1px solid var(--border)"}},x)})):null,
+checks.length&&t.statut!=="termine"?h("div",{style:{display:"grid",gap:6}},checks.map(function(c,i){
+return h("button",{key:i,onClick:function(){p.onCheck(t.id,i)},style:{display:"flex",gap:10,alignItems:"center",textAlign:"left",padding:"8px 10px",borderRadius:10,background:"var(--bg)",border:"1px solid var(--border)"}},
+h(Case,{on:!!c.done}),h("span",{style:{fontSize:14,fontWeight:600,textDecoration:c.done?"line-through":"none",color:c.done?"var(--text3)":"var(--text)"}},c.label))})):null,
+h("div",{style:{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}},
+h("label",{style:{padding:"8px 12px",borderRadius:10,background:"var(--bg3)",color:"var(--text2)",fontWeight:700,fontSize:13,cursor:"pointer"}},charge===t.id?"Envoi de la photo\u2026":(ph?"\ud83d\udcf7 Changer la photo":"\ud83d\udcf7 Ajouter la photo"),
+h("input",{type:"file",accept:"image/*",onChange:function(ev){photo(t,ev)},style:{display:"none"}})),
+t.photoLieu?h("span",{style:{fontSize:12,color:"var(--text3)"}},"\u00e0 envoyer : "+t.photoLieu):null,
+h("span",{style:{flex:1}}),
+t.statut==="a_venir"?h(Bouton,{onClick:function(){p.onStatut(t,"en_cours")}},"\u2714 Mise en place faite"):null,
+t.statut!=="termine"?h(Bouton,{onClick:function(){p.onStatut(t,"termine")}},"D\u00e9mont\u00e9e / termin\u00e9e"):h(Bouton,{onClick:function(){p.onStatut(t,"en_cours")}},"Remettre en place")))})),
+grand?h("div",{onClick:function(){setGrand(null)},style:{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}},
+h("img",{src:grand,alt:"Photo de la t\u00eate de gondole",style:{maxWidth:"100%",maxHeight:"100%",objectFit:"contain",borderRadius:8}})):null,
+edit?h(FormTG,{tg:edit.id?edit:null,noms:p.noms,moi:p.moi,cat:p.cat,onFermer:function(){setEdit(null)},
+onEnregistrer:function(t){p.onEnregistrer(t);setEdit(null)},onSupprimer:function(){p.onSupprimer(edit);setEdit(null)}}):null)}
+
+function PageChallenges(p){
+var auj=aujIso();
+var os=useState("encours");var ong=os[0],setOng=os[1];
+var es=useState(null);var edit=es[0],setEdit=es[1];
+var tout=p.challenges||[];
+function groupe(c){if(c.active===false||(c.fin&&c.fin<auj))return"fini";if(c.debut&&c.debut>auj)return"avenir";return"encours"}
+var n={encours:0,avenir:0,fini:0};tout.forEach(function(c){n[groupe(c)]++});
+var liste=tout.filter(function(c){return groupe(c)===ong});
+liste.sort(function(a,b){return ong==="fini"?String(b.fin||"").localeCompare(String(a.fin||"")):String(a.fin||"9999").localeCompare(String(b.fin||"9999"))});
+return h("div",null,
+h(EnTetePage,{icone:"\ud83c\udfc6",titre:"Challenges",nouveau:"+ Nouveau challenge",onNouveau:function(){setEdit({})}}),
+h(Onglets,{value:ong,onChange:setOng,items:[["encours","En cours",n.encours],["avenir","\u00c0 venir",n.avenir],["fini","Termin\u00e9s",n.fini]]}),
+!liste.length?h(Vide,null,"Aucun challenge ici"):
+h("div",{style:{display:"grid",gap:10}},liste.map(function(c){
+var obj=Number(c.objectif)||0;var pr=Number(c.progres)||0;var pct=obj>0?Math.min(100,Math.round(pr/obj*100)):0;var gagne=obj>0&&pr>=obj;
+var reste=c.fin?joursEntre(auj,c.fin):null;
+var couleur=gagne?"var(--accent)":ong==="fini"?"var(--text3)":reste!==null&&reste<=3?"var(--orange)":"var(--violet)";
+return h("div",{key:c.id,style:{background:"var(--bg2)",borderRadius:14,border:"1px solid var(--border)",padding:14}},
+h("div",{style:{display:"flex",gap:10,alignItems:"flex-start"}},
+h("div",{style:{flex:1,minWidth:0}},
+h("div",{style:{fontWeight:800,fontSize:17}},c.lab),
+c.produit?h("div",{style:{fontSize:13,color:"var(--text2)"}},c.produit):null,
+h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap"}},
+h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udcc5 "+(c.debut?dateFr(c.debut):"?")+(c.fin?" \u2192 "+dateFr(c.fin):"")),
+c.assignee?h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udc64 "+c.assignee):null)),
+h("div",{style:{textAlign:"right",flexShrink:0}},h("div",{style:{fontSize:20,fontWeight:800,color:couleur,lineHeight:1}},gagne?"\ud83c\udf89":pct+"%"),h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:2}},pr+" / "+obj))),
+h("div",{style:{height:10,borderRadius:6,background:"var(--bg3)",marginTop:10,overflow:"hidden"}},h("div",{style:{height:"100%",width:pct+"%",background:couleur,borderRadius:6}})),
+h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:10,flexWrap:"wrap"}},
+h("span",{style:{fontSize:13,fontWeight:600,color:"var(--text2)"}},gagne?"Objectif atteint, bravo !":ong==="fini"?"Termin\u00e9":ong==="avenir"?"Commence le "+dateFr(c.debut):reste===null?"Sans date de fin":reste<=0?"Dernier jour !":"Encore "+reste+" jour"+(reste>1?"s":"")),
+h(BtnModif,{onClick:function(){setEdit(c)}})))})),
+edit?h(FormChallenge,{ch:edit.id?edit:null,noms:p.noms,cat:p.cat,onFermer:function(){setEdit(null)},
+onEnregistrer:function(c){p.onEnregistrer(c);setEdit(null)},onSupprimer:function(){p.onSupprimer(edit);setEdit(null)}}):null)}
+
+function compresserPhoto(file,cb){
+var fr=new FileReader();
+fr.onload=function(){var img=new Image();
+img.onload=function(){var mx=1000;var w=img.width,hh=img.height;var r=Math.min(1,mx/Math.max(w,hh));
+var cv=document.createElement("canvas");cv.width=Math.round(w*r);cv.height=Math.round(hh*r);
+var cx=cv.getContext("2d");cx.fillStyle="#fff";cx.fillRect(0,0,cv.width,cv.height);cx.drawImage(img,0,0,cv.width,cv.height);cb(cv.toDataURL("image/jpeg",0.6))};
+img.onerror=function(){cb(null)};img.src=fr.result};
+fr.onerror=function(){cb(null)};fr.readAsDataURL(file)}
 
 /* ===== Reassort rayon ===== */
 var FACING=5;
@@ -470,6 +722,33 @@ var row={date:aujIso(),c:c};setFaitsRow(row);fRef.current=row;
 if(SYNC_BASE.equipe_reassort_faits&&SYNC_BASE.equipe_reassort_faits.date!==row.date){SYNC_BASE.equipe_reassort_faits={date:row.date,c:{}}}
 enregistrer("equipe_reassort_faits",row,function(v){if(v&&v.date===aujIso())setFaitsRow(v)},horsLigne)}
 
+/* Creation / modification / suppression, au meme format que PharmaScope */
+var NOMS_EL={tasks:"T\u00e2che",tdgs:"T\u00eate de gondole",challenges:"Challenge"};var FEM={tasks:"e",tdgs:"e",challenges:""};
+function enregistrerEl(cle,obj){
+var liste=(dRef.current[cle]||[]).slice();var trace={majPar:moi||"\u00e9quipe",majLe:aujIso()};
+if(obj.id!==undefined&&obj.id!==null&&liste.some(function(x){return x.id===obj.id})){
+liste=liste.map(function(x){return x.id===obj.id?Object.assign({},obj,trace):x});montrer("\u2705 "+NOMS_EL[cle]+" modifi\u00e9"+FEM[cle])}
+else{var n=Object.assign({},obj,trace,{id:Date.now(),created:new Date().toLocaleDateString("fr-FR"),creePar:moi||"\u00e9quipe"});
+if(cle==="tasks")n.done=false;if(cle==="challenges")n.active=true;
+liste.push(n);montrer("\u2705 "+NOMS_EL[cle]+" ajout\u00e9"+FEM[cle])}
+majListe(cle,liste)}
+function supprimerEl(cle,obj){
+var avant=dRef.current[cle]||[];
+majListe(cle,avant.filter(function(x){return x.id!==obj.id}));
+montrer("\ud83d\uddd1\ufe0f "+NOMS_EL[cle]+" supprim\u00e9"+FEM[cle],function(){var cur=dRef.current[cle]||[];if(!cur.some(function(x){return x.id===obj.id}))majListe(cle,cur.concat([obj]))})}
+function statutTG(t,st){
+var liste=(dRef.current.tdgs||[]).map(function(x){return x.id===t.id?Object.assign({},x,{statut:st,majPar:moi||"\u00e9quipe",majLe:aujIso()}):x});
+majListe("tdgs",liste);montrer(st==="termine"?"TG marqu\u00e9e termin\u00e9e":st==="en_cours"?"TG marqu\u00e9e en place":"TG mise \u00e0 jour")}
+/* Photo : on relit la derniere version du cloud et on ne change que la photo de cette TG */
+function photoTG(id,data){
+var m=Object.assign({},photos);m[id]=data;setPhotos(m);
+if(!db){horsLigne();return}
+ENVOIS.n++;
+db.from("app_data").select("data").eq("id","tdg_photos").maybeSingle().then(function(r){if(r.error)throw r.error;
+var tout=Object.assign({},(r.data&&r.data.data)||{});tout[id]=data;
+return db.from("app_data").upsert({id:"tdg_photos",data:tout,updated_at:new Date().toISOString()}).then(function(r2){if(r2.error)throw r2.error;montrer("\ud83d\udcf7 Photo enregistr\u00e9e")})})
+.catch(function(){montrer("\u26a0\ufe0f La photo n'a pas pu \u00eatre envoy\u00e9e. R\u00e9essaie quand la connexion revient.")}).then(function(){ENVOIS.n=Math.max(0,ENVOIS.n-1)})}
+
 var faits=faitsRow.date===aujIso()?faitsRow.c||{}:{};
 var noms=(d.team||[]).map(function(m){return m.name}).filter(function(x){return !!x});
 if(!noms.length){var vus={};(d.tasks||[]).forEach(function(t){if(t.assignee&&!vus[t.assignee]){vus[t.assignee]=1;noms.push(t.assignee)}})}
@@ -487,10 +766,12 @@ h("span",{style:{fontSize:24,fontWeight:800,color:c,lineHeight:1}},n===null?"\u2
 h("div",{className:"coupe",style:{fontSize:13,fontWeight:700,color:"var(--text2)",marginTop:6}},lib))}
 
 var props={moi:moi,complet:vue!=="accueil"};
+function aller(v){setVue(v);window.scrollTo(0,0)}
+var cat=rea&&rea.CAT?rea.CAT:null;
 var blocs={
-taches:h(Taches,Object.assign({key:"t",tasks:d.tasks,onFait:function(t){tacheFaite(t,true)},onRefaire:function(t){tacheFaite(t,false)}},props)),
-tg:h(TetesGondole,Object.assign({key:"g",tdgs:d.tdgs,photos:photos,onCheck:cocherTG},props)),
-challenges:h(Challenges,Object.assign({key:"c",challenges:d.challenges},props)),
+taches:h(Taches,Object.assign({key:"t",tasks:d.tasks,onFait:function(t){tacheFaite(t,true)},onRefaire:function(t){tacheFaite(t,false)},onGerer:function(){aller("taches")}},props)),
+tg:h(TetesGondole,Object.assign({key:"g",tdgs:d.tdgs,photos:photos,onCheck:cocherTG,onGerer:function(){aller("tg")}},props)),
+challenges:h(Challenges,Object.assign({key:"c",challenges:d.challenges,onGerer:function(){aller("challenges")}},props)),
 reassort:h(Reassort,Object.assign({key:"r",rea:rea,reaCharge:reaCharge,faits:faits,onFait:reassortFait},props))};
 
 var heureTxt=new Date().getHours()<12?"Bonjour":new Date().getHours()<18?"Bon apr\u00e8s-midi":"Bonsoir";
@@ -518,7 +799,12 @@ vue!=="accueil"?h("button",{onClick:function(){setVue("accueil")},style:{marginB
 etat.ok===false&&!etat.maj?h("div",{style:{background:"var(--red-bg)",color:"var(--red)",padding:"10px 14px",borderRadius:12,fontSize:14,marginBottom:14}},"Impossible de joindre le serveur. V\u00e9rifie la connexion internet, puis touche \u00ab Hors ligne \u00bb pour r\u00e9essayer."):null,
 charge&&!etat.maj?h(Vide,null,"Chargement\u2026"):
 vue==="accueil"?h("div",{className:"grille"},blocs.taches,blocs.reassort,blocs.tg,blocs.challenges):
-h("div",{style:{maxWidth:760}},blocs[vue]),
+h("div",{style:{maxWidth:820}},
+vue==="taches"?h(PageTaches,{tasks:d.tasks,noms:noms,moi:moi,onFait:tacheFaite,onEnregistrer:function(t){enregistrerEl("tasks",t)},onSupprimer:function(t){supprimerEl("tasks",t)}}):
+vue==="tg"?h(PageTG,{tdgs:d.tdgs,photos:photos,noms:noms,moi:moi,cat:cat,montrer:montrer,onCheck:cocherTG,onStatut:statutTG,onPhoto:photoTG,onEnregistrer:function(t){enregistrerEl("tdgs",t)},onSupprimer:function(t){supprimerEl("tdgs",t)}}):
+vue==="challenges"?h(PageChallenges,{challenges:d.challenges,noms:noms,cat:cat,onEnregistrer:function(c){enregistrerEl("challenges",c)},onSupprimer:function(c){supprimerEl("challenges",c)}}):
+blocs[vue]),
+rea&&rea.LABS?h("datalist",{id:"pse-labs"},rea.LABS.map(function(l){return h("option",{key:l,value:l})})):null,
 h("footer",{style:{marginTop:28,textAlign:"center",fontSize:12,color:"var(--text3)"}},
 "PharmaScope \u00c9quipe \u00b7 ",
 h("button",{onClick:function(){try{localStorage.removeItem("pse_auth")}catch(e){}p.onSortir()},style:{fontSize:12,color:"var(--text3)",textDecoration:"underline"}},"Se d\u00e9connecter")),
