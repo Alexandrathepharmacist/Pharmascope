@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v8.14">
+<meta name="ps-version" content="v8.15">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -759,11 +759,12 @@ if(!TVAM2[tva])TVAM2[tva]={};TVAM2[tva][mo]=(TVAM2[tva][mo]||0)+marge}
 if(facture){if(!FACT[mo])FACT[mo]={};FACT[mo][facture]=1}
 /* Hors ordonnance : on exclut les lignes remboursables (TVA 2,1% et 0%) */
 var tvaF=parseFloat(tva)||0;
-if(tvaF!==2.1&&tvaF!==0){
+var dispoR=tvaF!==2.1&&tvaF!==0&&estDispoRemb(names[code]);
+if(tvaF!==2.1&&tvaF!==0&&!dispoR){
 CAHO[mo]=(CAHO[mo]||0)+ca;
 if(facture&&qte>0&&/^\d{7,14}$/.test(code)){var tkK=jour+"|"+facture;if(!TK[tkK]){TK[tkK]={};TKJ[tkK]=dp[2]+"-"+dp[1]+"-"+dp[0]}TK[tkK][code]=1}
 if(facture){if(!FACTHO[mo])FACTHO[mo]={};FACTHO[mo][facture]=1}}
-if(tvaF===2.1&&facture&&qte>0&&/^\d{7,14}$/.test(code)){var tkR=jour+"|"+facture;if(!TKR[tkR])TKR[tkR]={};TKR[tkR][code]=1;if(!TKJ[tkR])TKJ[tkR]=dp[2]+"-"+dp[1]+"-"+dp[0]}
+if((tvaF===2.1||dispoR)&&facture&&qte>0&&/^\d{7,14}$/.test(code)){var tkR=jour+"|"+facture;if(!TKR[tkR])TKR[tkR]={};TKR[tkR][code]=1;if(!TKJ[tkR])TKJ[tkR]=dp[2]+"-"+dp[1]+"-"+dp[0]}
 if(!JOURS[mo])JOURS[mo]={};JOURS[mo][jour]=1;
 var hh=parseInt(((r0.split(" ")[1])||"").split(":")[0],10);
 if(facture&&!isNaN(hh)&&hh>=0&&hh<24){var jkH=dp[2]+"-"+dp[1]+"-"+dp[0];
@@ -789,12 +790,12 @@ RECJ[code].d[jkey]=(RECJ[code].d[jkey]||0)+qte}
 var vn=r2.trim();var vsp=vn.split(" ");
 if(vsp.length>1&&/^\d+$/.test(vsp[0]))vn=vsp.slice(1).join(" ");
 vn=vn.trim();
-if(vn){
+if(vn&&!estHorsEquipe(vn)){
 vn=vn.split(" ").map(function(w){return w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():w}).join(" ");
 if(!VCA2[vn])VCA2[vn]={};VCA2[vn][mo]=(VCA2[vn][mo]||0)+ca;
 if(!VST2[vn])VST2[vn]={};if(!VST2[vn][mo])VST2[vn][mo]={t:{},h:{},ca:0,cah:0,mh:0,qh:0};var vs2=VST2[vn][mo];
 if(facture)vs2.t[jour+"|"+facture]=1;vs2.ca+=ca;
-if(tvaF!==2.1&&tvaF!==0){if(facture&&qte>0)vs2.h[jour+"|"+facture]=1;vs2.cah+=ca;vs2.mh+=marge;vs2.qh+=qte}
+if(tvaF!==2.1&&tvaF!==0&&!dispoR){if(facture&&qte>0)vs2.h[jour+"|"+facture]=1;vs2.cah+=ca;vs2.mh+=marge;vs2.qh+=qte}
 if(!V2[vn])V2[vn]={};if(!V2[vn][sup])V2[vn][sup]={};
 V2[vn][sup][mo]=(V2[vn][sup][mo]||0)+qte}
 cnt++;
@@ -1547,7 +1548,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.14";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.15";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 var NAVG=[
 {id:"pilotage",label:"Piloter",icon:"\ud83d\udcca",items:[
@@ -2603,6 +2604,15 @@ var PRODUITS_ORDO_MOTS=["WEGOVY","MOUNJARO","OZEMPIC","SAXENDA","VICTOZA","TRULI
 /* ...ou par leur labo : laboratoires de medicaments sur prescription et
    fabricants de dispositifs rembourses (pansements, contention, stomie). */
 var LABOS_ORDO=["NOVO NORDISK","LILLY","PFIZER","MSD","ASTRAZENECA","NOVARTIS PHARMA","AMGEN","JANSSEN","ABBVIE","BRISTOL","GILEAD","ALNYLAM","VERTEX","TAKEDA","ASTELLAS","SERVIER","COLOPLAST","HARTMANN","LOHMANN","B BRAUN","B.BRAUN","MOLNLYCKE","M\u00d6LNLYCKE","CONVATEC","SMITH NEPHEW","SMITH & NEPHEW","SIGVARIS","INNOTHERA","THUASNE","GIBAUD","HOLLISTER","DEXCOM"];
+/* Operateurs du logiciel qui ne font pas partie de l'equipe au comptoir
+   (ex. retraitement des dossiers de tiers payant) : exclus des statistiques vendeurs. */
+var HORS_EQUIPE=["JANSSENS"];
+function estHorsEquipe(n){var u=String(n||"").toUpperCase();for(var i=0;i<HORS_EQUIPE.length;i++){if(u.indexOf(HORS_EQUIPE[i])>=0)return true}return false}
+/* Dispositifs pris en charge (LPPR) vendus a 5,5/10/20 % de TVA : compresses, tulles,
+   sets de soins, sparadraps, bandes... Reconnus par leur nom pour ne pas les compter en conseil. */
+var DISPO_REMB_MOTS=["CPRES","COMPRESSE","COMP STER","COMPR STER","APOTULLE","TULLE","JELONET","ADAPTIC","MEDISET","SET DE SOIN","SET SOIN","SET PANS","APOTHIPORE","MICROPORE","TRANSPORE","DURAPORE","SPARADRAP","OMNIFIX","BANDE ","VELPEAU","TUBIFAST","MEPILEX","MEPITEL","BIATAIN","URGOTUL","URGOSTART","URGOCLEAN","ALGOSTERIL","AQUACEL","ALLEVYN","COMFEEL","CUTIMED","PERMAFOAM","HYDROCOLL","LANCETTE","SONDE ","POCHE COLLECT","ETUI PENIEN","BLENDERM","PANS STER","PANS NT ST","PANSEMENT STER"," BAND BT","BANDELETTE","ONETOUCH","ONE TOUCH","GLUCOFIX","CONTOUR XT","OPTIUM","SERINGUE","AIGUILLE","STYLO INJ"];
+function estDispoRemb(nom){var u=" "+String(nom||"").toUpperCase()+" ";for(var i=0;i<DISPO_REMB_MOTS.length;i++){if(u.indexOf(DISPO_REMB_MOTS[i])>=0)return true}
+for(var j=0;j<PRODUITS_ORDO_MOTS.length;j++){if(u.indexOf(PRODUITS_ORDO_MOTS[j])>=0)return true}return false}
 function estProduitOrdo(p,lab){
 var n=((p&&p.n)||"").toUpperCase();
 for(var i=0;i<PRODUITS_ORDO_MOTS.length;i++){if(n.indexOf(PRODUITS_ORDO_MOTS[i])>=0)return true}
@@ -2793,9 +2803,9 @@ var vendBlock=null;
 if(pd.V||pd.VCA){
 var vTot={};
 var enEuros=!!(pd.VCA&&Object.keys(pd.VCA).some(function(vn){return pd.VCA[vn]&&typeof pd.VCA[vn][mois]==="number"}));
-if(enEuros){Object.keys(pd.VCA).forEach(function(vn){var t=pd.VCA[vn][mois]||0;if(t>0)vTot[vn]=t})}
+if(enEuros){Object.keys(pd.VCA).forEach(function(vn){if(estHorsEquipe(vn))return;var t=pd.VCA[vn][mois]||0;if(t>0)vTot[vn]=t})}
 else{Object.entries(pd.V).forEach(function(ve){
-var vendeur=ve[0];var vData=ve[1];var t=0;
+var vendeur=ve[0];var vData=ve[1];var t=0;if(estHorsEquipe(vendeur))return;
 Object.keys(vData).forEach(function(s){var md=vData[s];if(md&&typeof md[mois]==="number")t+=md[mois]});
 if(t>0)vTot[vendeur]=t})}
 var vArr=Object.entries(vTot).sort(function(a,b){return b[1]-a[1]});
@@ -3634,7 +3644,8 @@ var src=typ==="r"?A.pairsR:(typ==="m"?A.pairsM:A.pairs);
 var onglets=React.createElement("div",{style:{marginBottom:10}},React.createElement(Pastilles,{val:typ,set:setTyp,options:[["h","Non rembours\u00e9s"],["r","Rembours\u00e9s"],["m","Rembours\u00e9 + non rembours\u00e9"]]}));
 var aide=typ==="m"?"Ce que les patients ach\u00e8tent en conseil avec un m\u00e9dicament rembours\u00e9 (ex. antibiotique + probiotique) : la base des conseils associ\u00e9s au comptoir.":(typ==="r"?"M\u00e9dicaments rembours\u00e9s souvent d\u00e9livr\u00e9s ensemble : utile pour anticiper le stock des traitements associ\u00e9s.":"Produits hors remboursement achet\u00e9s ensemble : implantation en rayon, t\u00eates de gondole, ventes additionnelles.");
 if(!src)return React.createElement("div",null,entete,onglets,React.createElement(VideOutil,{icone:"\ud83d\udd17",titre:"R\u00e9importez vos ventes",texte:"Cet onglet se calcule au prochain import des ventes d\u00e9taill\u00e9es.",action:props.setPage?function(){props.setPage("import")}:null}));
-var rows=src.map(function(x){var ca=A.cnt[x[0]]||1,cb=A.cnt[x[1]]||1;
+var srcF=typ==="r"?src:src.filter(function(x){var na=A.names[x[0]]||"",nb=A.names[x[1]]||"";return typ==="m"?!estDispoRemb(nb):!(estDispoRemb(na)||estDispoRemb(nb))});
+var rows=srcF.map(function(x){var ca=A.cnt[x[0]]||1,cb=A.cnt[x[1]]||1;
 return{a:A.names[x[0]]||x[0],b:A.names[x[1]]||x[1],n:x[2],lift:x[2]*T/(ca*cb),pa:x[2]/ca,pb:x[2]/cb}})
 .filter(function(r){if(mode==="croise"&&marque(r.a)===marque(r.b))return false;return !qU||r.a.toUpperCase().indexOf(qU)>=0||r.b.toUpperCase().indexOf(qU)>=0});
 rows.sort(function(x,y){return (y.n*Math.min(y.lift,20))-(x.n*Math.min(x.lift,20))});
@@ -3856,7 +3867,7 @@ var mSel=mS[0]||defM;var setM=mS[1];
 var iM=listeM.indexOf(mSel);var mPrec=iM>0?listeM[iM-1]:null;
 function stat(r){if(!r)return null;var t=r[0],th=r[1],ca=r[2],cah=r[3],mh=r[4],qh=r[5];return{t:t,th:th,part:t?th/t:0,panier:th?cah/th:0,upt:th?qh/th:0,cah:cah,ca:ca,tx:cah?mh/cah:0}}
 var lignes=[];var tot=[0,0,0,0,0,0];
-Object.keys(V).forEach(function(vn){var r=V[vn][mSel];if(!r)return;for(var k=0;k<6;k++)tot[k]+=r[k]||0;
+Object.keys(V).forEach(function(vn){if(estHorsEquipe(vn))return;var r=V[vn][mSel];if(!r)return;for(var k=0;k<6;k++)tot[k]+=r[k]||0;
 var s=stat(r);var sp=stat(mPrec?V[vn][mPrec]:null);s.vn=vn;s.evo=sp&&sp.th>=20&&sp.panier?(s.panier-sp.panier)/sp.panier:null;lignes.push(s)});
 var eq=stat(tot);
 var actifs=lignes.filter(function(l){return l.t>=30}).sort(function(a,b){return b.panier-a.panier});
@@ -4942,7 +4953,7 @@ var fileRef=useRef(null);
 var moisDispo=Object.keys(palmares).sort().reverse();
 var moisActif=moisSel||(moisDispo.length?moisDispo[0]:"");
 var data=moisActif?palmares[moisActif]:null;
-var liste=data&&data.operateurs?data.operateurs:[];
+var liste=(data&&data.operateurs?data.operateurs:[]).filter(function(o){return !estHorsEquipe(o&&(o.nom||o.name||o.op||""))});
 
 function enregistrer(res){
 if(!res||!res.operateurs||!res.operateurs.length){var msgErr="Le PDF a \u00e9t\u00e9 lu mais aucun op\u00e9rateur n'a \u00e9t\u00e9 reconnu.";if(res&&res.diagnostic)msgErr+=" Texte lu (\u00e0 me transmettre) : "+res.diagnostic;setSt(msgErr);return}
@@ -5150,7 +5161,7 @@ return Math.round(total)}
 /* Compute sales per operator for a lab since a date */
 function computeVendeurSales(labName,startDate,endDate,eans){
 var cj=chJour(labName,startDate,eans,endDate);
-if(cj&&cj.aVendeurs&&Object.keys(cj.parV).length)return Object.keys(cj.parV).map(function(n){return[n,Math.round(cj.parV[n])]}).filter(function(x){return x[1]>0}).sort(function(a,b){return b[1]-a[1]});
+if(cj&&cj.aVendeurs&&Object.keys(cj.parV).length)return Object.keys(cj.parV).map(function(n){return[n,Math.round(cj.parV[n])]}).filter(function(x){return x[1]>0&&!estHorsEquipe(x[0])}).sort(function(a,b){return b[1]-a[1]});
 if(!pd||!pd.V||!startDate)return[];
 var sups=resolveSups(pd,labName);
 if(!sups.length)return[];
@@ -5159,6 +5170,7 @@ var endM=endDate?endDate.substring(0,7):"9999-99";
 var result={};
 Object.entries(pd.V).forEach(function(ve){
 var vendeur=ve[0];var vData=ve[1];
+if(estHorsEquipe(vendeur))return;
 var total=0;
 sups.forEach(function(s){
 if(vData[s]){Object.entries(vData[s]).forEach(function(me){
@@ -5605,6 +5617,7 @@ function tdgNum(x){return (Math.round(x*10)/10).toString().replace(".",",")}
 function tdgPct(x){var v=Math.round(x*100);return (v>0?"+":"")+v+" %"}
 function nomVendeur(r2){var vn=String(r2||"").replace(/"/g,"").trim();var vsp=vn.split(" ");
 if(vsp.length>1&&/^\d+$/.test(vsp[0]))vn=vsp.slice(1).join(" ");vn=vn.trim();
+if(estHorsEquipe(vn))return "";
 return vn.split(" ").map(function(w){return w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():w}).join(" ")}
 function tdgParseVentes(text,tracked){
 var lines=text.split("\n");var S={};var VJ={};var mn=null;var mx=null;var nb=0;
