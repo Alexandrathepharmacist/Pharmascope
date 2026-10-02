@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v8.25">
+<meta name="ps-version" content="v8.26">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -359,7 +359,7 @@ return new Response(stream).text().then(function(t){return JSON.parse(t)})
 
 /* Etat de la derniere sauvegarde cloud, diffuse a l'ecran */
 var CLOUD_ETAT={ok:null,msg:""};
-var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
+var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
 function avertir(msg){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg}}))}catch(e){}}
 function proposerAnnulation(msg,annuler){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg,undo:annuler}}))}catch(e){}}
 function notifierCloud(ok,msg){CLOUD_ETAT={ok:ok,msg:msg||""};try{window.dispatchEvent(new CustomEvent("ps-cloud",{detail:CLOUD_ETAT}))}catch(e){}}
@@ -1550,7 +1550,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.25";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.26";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 var NAVG=[
 {id:"pilotage",label:"Piloter",icon:"\ud83d\udcca",items:[
@@ -1566,6 +1566,7 @@ var NAVG=[
 {id:"avis",label:"Avis par marque",icon:"\ud83e\udded"},
 {id:"duels",label:"Leader & challenger",icon:"\ud83e\udd4a"},
 {id:"nouvgamme",label:"Nouvelle gamme ?",icon:"\ud83e\uddea"},
+{id:"rattacher",label:"Rattacher \u00e0 un labo",icon:"\ud83e\uddf2"},
 {id:"memo",label:"Memo RDV",icon:"\ud83d\udcdd"},
 {id:"dormant",label:"Stock dormant",icon:"\ud83d\udca4"},
 {id:"prix",label:"Contr\u00f4le des prix",icon:"\ud83c\udff7"},
@@ -1674,9 +1675,13 @@ if(!items.length)return null;
 return React.createElement("div",null,
 React.createElement("div",{style:{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.5px",color:"var(--text3)",padding:"8px 12px 4px 12px"}},titre),
 items.map(function(r,i){
-return React.createElement("button",{key:titre+i,onClick:function(){go(r)},style:{display:"block",width:"100%",textAlign:"left",padding:"8px 12px",fontSize:13,background:"transparent",border:"none",borderBottom:"1px solid var(--border)",cursor:"pointer"}},
+var orph=r.t==="prod"&&props.onRattacher&&estFournOrphelin(r.lab);
+var btn=React.createElement("button",{key:titre+i,onClick:function(){go(r)},style:{display:"block",width:"100%",flex:orph?"1 1 auto":null,minWidth:0,textAlign:"left",padding:"8px 12px",fontSize:13,background:"transparent",border:"none",borderBottom:orph?"none":"1px solid var(--border)",cursor:"pointer"}},
 React.createElement("div",{style:{fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},(r.t==="prod"?"\ud83d\udc8a ":r.t==="outil"?(r.icon||"")+" ":"\ud83c\udfed ")+r.label),
-r.t==="prod"?React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},r.lab):null)}))}
+r.t==="prod"?React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},r.lab):null);
+if(!orph)return btn;
+return React.createElement("div",{key:titre+i,style:{display:"flex",alignItems:"center",borderBottom:"1px solid var(--border)"}},btn,
+React.createElement("button",{onClick:function(){setQ("");props.onRattacher(marqueDe(r.label)||motCle(r.label).split(" ")[0])},title:"Rattacher \u00e0 un labo",style:{flex:"0 0 auto",margin:"0 8px",padding:"5px 9px",borderRadius:8,border:"1px solid var(--accent)",color:"var(--accent)",background:"transparent",fontSize:11,fontWeight:700,whiteSpace:"nowrap"}},"\ud83e\uddf2 Labo ?"))}))}
 var isTop=props.variant==="top";
 if(isTop){
 return React.createElement("div",{style:{position:"relative",marginBottom:16,zIndex:60}},
@@ -4406,16 +4411,66 @@ return Object.assign({},pd,{P:P,L:L,CONSOL:moves})}
    grossiste, depot...). On les range toutes sous un meme labo, avec tout leur
    historique de ventes et leur stock. Exception possible par marque (ex. Erborian
    reste a part meme si c'est aussi de la cosmetique coreenne). */
-var REGROUPEMENTS_MARQUES=[{labo:"LAFFIN",marques:["MEDICUBE","BEAUTY OF JOSEON","JOSEON","COSRX","BIODANCE"],sauf:["ERBORIAN"]}];
-function laboRegroupe(nom){
-var N=nomNorm(nom);
-for(var g=0;g<REGROUPEMENTS_MARQUES.length;g++){var R=REGROUPEMENTS_MARQUES[g];
+var REGROUPEMENTS_MARQUES=[{labo:"LAFFIN",marques:["MEDICUBE","BEAUTY OF JOSEON","JOSEON","COSRX","BIODANCE"],sauf:["ERBORIAN"]},{labo:"LES 3 CHENES",marques:["LONGEVITY"]}];
+/* v8.26 : rattachements choisis dans l'ecran "Rattacher a un labo" (enregistres dans le cloud).
+   Ils passent avant les regles de base. Le nom du labo est rapproche du nom Winpharma (ex. "Les 3 Chenes" -> "LES 3 CHENES REF"). */
+function motCle(s){return nomNorm(s).trim()}
+function resoudreLabo(nom,pd){
+if(!nom)return nom;var src=Object.assign({},(pd&&pd.L)||{},(pd&&pd.P)||{});
+if(src[nom])return nom;
+function k(x){return nomNorm(x).replace(/ REF $/," ").trim()}
+var cible=k(nom);var res=null;
+Object.keys(src).forEach(function(x){if(!res&&k(x)===cible)res=x});
+return res||String(nom).toUpperCase().trim()}
+function compilerRegles(regles,pd){
+var out=[];
+(regles||[]).forEach(function(r){if(!r||r.ignore||!r.labo)return;var m=motCle(r.mot);if(m.length<3)return;out.push({labo:resoudreLabo(r.labo,pd),marques:[m],sauf:[]})});
+REGROUPEMENTS_MARQUES.forEach(function(R){out.push({labo:resoudreLabo(R.labo,pd),marques:R.marques,sauf:R.sauf||[]})});
+return out}
+function estFournOrphelin(s){var u=String(s||"").toUpperCase().trim();return !u||u==="DIVERS"||u==="INCONNU"||u==="(SANS FOURNISSEUR)"||u==="PHARMAZON"||/^PHARMACIE\b/.test(u)||estGrossisteNom(u)}
+var MOTS_ARTICLES={LE:1,LA:1,LES:1,L:1,DE:1,DU:1,DES:1,D:1,UN:1,UNE:1};
+var MOTS_GENERIQUES={};["CREME","CR","GEL","HUILE","SPRAY","SAVON","BAUME","LAIT","SERUM","MASQUE","BOUILLOTTE","BOUIL","CANNE","CANNES","COUSSIN","ATTELLE","BANDE","BANDES","COMPRESSE","COMPRESSES","PANSEMENT","PANSEMENTS","LUNETTE","LUNETTES","SHAMPOOING","SHP","EAU","SOLUTION","SOL","SIROP","COLLIER","BRACELET","BOITE","BTE","COFFRET","TROUSSE","SAC","POCHETTE","CHAUSSETTE","CHAUSSETTES","BAS","GANT","GANTS","THERMOMETRE","TEST","TESTS","KIT","LOT","PACK","DUO","TRIO","MINI","NEW","NOUVEAU","PROMO","OFFRE","STICK","BOUGIE","TISANE","THE","INFUSION","CAPTEUR","SET","PILULIER","BROSSE","FIL","DENTIFRICE","BAIN","DOUCHE","DEO","DEODORANT","PARFUM","VAPO","EMB","FL","FLACON","TUBE","POT","RECHARGE","ECHANTILLON","TESTEUR","PRESENTOIR","CARTE","CHEQUE","SACHET","SACHETS","AIGUILLE","AIGUILLES","SERINGUE","SERINGUES","SONDE","POCHE","ETUI","COUVERTURE","CEINTURE","GENOUILLERE","CHEVILLERE","ORTHESE","SEMELLE","SEMELLES","COTON","BATONNET","BATONNETS","LINGETTE","LINGETTES","CHANGE","CHANGES","ALESE","TETINE","BIBERON","BAVOIR","SUCETTE","TETERELLE","PILE","PILES","DIVERS","ARTICLE","PRODUIT","EAN","CODE","REF"].forEach(function(w){MOTS_GENERIQUES[w]=1});
+function marqueDe(n){var w=nomNorm(n).trim().split(" ");if(!w[0]||/^[0-9]/.test(w[0])||MOTS_GENERIQUES[w[0]])return null;
+var b=w[0];if((MOTS_ARTICLES[b]||b.length<=2)&&w[1])b=b+" "+w[1];
+if(b.length<3||!/[A-Z]/.test(b))return null;return b}
+/* tous les produits (vendus ou seulement en stock) avec leur fournisseur, CA 12 derniers mois et stock HT */
+function produitsTous(pd){
+var out=[];var vus={};if(!pd||!pd.P)return out;var n=(pd.M||[]).length;var d0=Math.max(0,n-12);
+Object.keys(pd.P).forEach(function(sup){(pd.P[sup]||[]).forEach(function(p){if(!p||!p.n)return;var ca=0;if(p.caM){for(var i=d0;i<n;i++)ca+=p.caM[i]||0}else ca=p.ca||0;
+var sv=pd.STKV?pd.STKV[p.c]:null;var st=typeof sv==="number"?sv:(Array.isArray(sv)?(sv[0]||0):0);
+out.push({c:p.c,n:p.n,sup:sup,ca:ca,stk:st,p:p});if(p.c)vus[p.c]=1})});
+if(pd.STKV)Object.keys(pd.STKV).forEach(function(c){var v=pd.STKV[c];if(!Array.isArray(v)||vus[c]||!v[1])return;out.push({c:c,n:v[1],sup:v[2]||"Divers",ca:0,stk:v[0]||0,p:{c:c,n:v[1]}})});
+return out}
+function produitsDuMot(pd,mot){var m=motCle(mot);if(m.length<3)return[];return produitsTous(pd).filter(function(x){return nomNorm(x.n).indexOf(" "+m+" ")>=0}).sort(function(a,b){return (b.ca+b.stk)-(a.ca+a.stk)})}
+/* gammes sans vrai labo (Divers, grossiste, confrere...) regroupables par marque */
+function suggererRattachements(pd,regles){
+var tous=produitsTous(pd);var ign={};(regles||[]).forEach(function(r){if(r&&r.ignore)ign[motCle(r.mot)]=1});
+var grp={},vers={};
+tous.forEach(function(x){var b=marqueDe(x.n);if(!b)return;
+if(!estFournOrphelin(x.sup)){if(!vers[b])vers[b]={};vers[b][x.sup]=(vers[b][x.sup]||0)+1;return}
+if(ign[b])return;
+var tv=x.p&&x.p.tva;var tvaConnue=tv!==null&&typeof tv!=="undefined";
+if(!tvaConnue&&estGrossisteNom(String(x.sup).toUpperCase()))return;
+var rb=false;try{rb=classeProduit(pd,x.p,x.sup)==="R"||estDispoRemb(x.n)}catch(e){}
+if(rb)return;
+(grp[b]=grp[b]||[]).push(x)});
+var out=[];
+Object.keys(grp).forEach(function(b){var l=grp[b];if(l.length<2)return;
+var ca=0,st=0,sups={};l.forEach(function(x){ca+=x.ca;st+=x.stk;sups[x.sup]=1});
+if(ca<=0&&st<=0)return;
+var best=null,bn=0;var v=vers[b]||{};Object.keys(v).forEach(function(x){var sc=v[x]+(nomNorm(x).indexOf(" "+b+" ")>=0?100:0);if(sc>bn){bn=sc;best=x}});
+l.sort(function(a,c){return (c.ca+c.stk)-(a.ca+a.stk)});
+out.push({marque:b,produits:l,ca:ca,stk:st,sups:Object.keys(sups),labo:best})});
+out.sort(function(a,b){return (b.ca+b.stk)-(a.ca+a.stk)});return out}
+function laboRegroupe(nom,regles){
+var N=nomNorm(nom);var RG=regles||REGROUPEMENTS_MARQUES;
+for(var g=0;g<RG.length;g++){var R=RG[g];
 if((R.sauf||[]).some(function(x){return N.indexOf(" "+x+" ")>=0}))continue;
 if(R.marques.some(function(x){return N.indexOf(" "+x+" ")>=0}))return R.labo}
 return null}
-function regrouperMarquesLabo(pd){
+function regrouperMarquesLabo(pd,regles){
 if(!pd||!pd.P||!pd.L||!pd.M||!pd.M.length)return pd;
-var n=pd.M.length;var P=null,L=null,STKL=null,STKV=null,cpP={},cpL={},cpS={},moves=0;
+var n=pd.M.length;var RG=compilerRegles(regles,pd);var P=null,L=null,STKL=null,STKV=null,cpP={},cpL={},cpS={},moves=0;
 function init(){if(P)return;P=Object.assign({},pd.P);L=Object.assign({},pd.L);STKL=pd.STKL?Object.assign({},pd.STKL):null;STKV=pd.STKV||null}
 function prepP(s){if(!cpP[s]){P[s]=(P[s]||[]).slice();cpP[s]=1}}
 function prepL(s){if(!cpL[s]){var src=L[s]||[];var a=[];for(var i=0;i<n;i++){var r=src[i];a.push(r?[r[0]||0,r[1]||0,r[2]||0]:[0,0,0])}L[s]=a;cpL[s]=1}}
@@ -4427,7 +4482,7 @@ STKL[de].total_ht-=val;STKL[de].total_qty-=q;STKL[de].nb_refs-=1;
 STKL[vers].total_ht+=val;STKL[vers].total_qty+=q;STKL[vers].nb_refs+=1}
 Object.keys(pd.P).forEach(function(sup){
 (pd.P[sup]||[]).forEach(function(p){
-if(!p||!p.c)return;var cible=laboRegroupe(p.n);if(!cible||cible===sup)return;
+if(!p||!p.c)return;var cible=laboRegroupe(p.n,RG);if(!cible||cible===sup)return;
 init();prepP(sup);prepP(cible);prepL(sup);prepL(cible);
 for(var i=0;i<n;i++){var a=(p.caM&&p.caM[i])||0,mg=(p.mM&&p.mM[i])||0,q=(p.qm&&p.qm[i])||0;if(!a&&!mg&&!q)continue;
 L[sup][i][0]-=a;L[sup][i][1]-=mg;L[sup][i][2]-=q;
@@ -4443,7 +4498,7 @@ bougerStock(p.c,sup,cible,val);
 moves++})});
 /* produits en stock mais jamais vendus */
 if(pd.STKV)Object.keys(pd.STKV).forEach(function(c){var v=pd.STKV[c];if(!Array.isArray(v))return;
-var cible=laboRegroupe(v[1]);if(!cible||v[2]===cible)return;
+var cible=laboRegroupe(v[1],RG);if(!cible||v[2]===cible)return;
 init();if(STKV===pd.STKV)STKV=Object.assign({},pd.STKV);
 STKV[c]=[v[0],v[1],cible];bougerStock(c,v[2]||"Divers",cible,v[0]||0);moves++});
 if(!moves)return pd;
@@ -7842,6 +7897,83 @@ return React.createElement("g",{key:b.cle},
 React.createElement("circle",{cx:x(b.part),cy:y(b.mu),r:r,fill:m.c,fillOpacity:0.25,stroke:m.c,strokeWidth:2}),
 React.createElement("text",{x:x(b.part),y:y(b.mu)-r-4,textAnchor:"middle",fontSize:11,fontWeight:700,fill:"var(--text)"},b.nom))}))}
 
+/* ===== RATTACHER DES PRODUITS A UN LABO (v8.26) ===== */
+function RattacherPage(props){
+var pd=props.pd;var regles=props.regles||[];var setRegles=props.setRegles;
+var motS=useState(props.prefill&&props.prefill.mot?props.prefill.mot:"");var mot=motS[0];var setMot=motS[1];
+var labS=useState("");var labo=labS[0];var setLabo=labS[1];
+var flS=useState("");var flash=flS[0];var setFlash=flS[1];
+var vS=useState(8);var voir=vS[0];var setVoir=vS[1];
+var oS=useState(null);var ouvert=oS[0];var setOuvert=oS[1];
+useEffect(function(){if(props.prefill&&props.prefill.mot){setMot(props.prefill.mot);setFlash("");try{window.scrollTo(0,0)}catch(e){}}},[props.prefill]);
+var entete=React.createElement(EnTeteOutil,{titre:"\ud83e\uddf2 Rattacher \u00e0 un labo",sous:"Certains produits arrivent sans vrai labo (\u00ab Divers \u00bb, grossiste, confr\u00e8re...). Donnez un mot du nom du produit (souvent la marque, ex. LONGEVITY) et le labo : tous les produits qui contiennent ce mot y sont rang\u00e9s, avec leurs ventes pass\u00e9es et leur stock. Les futurs produits de la marque suivront tout seuls. Rien n'est modifi\u00e9 dans Winpharma."});
+if(!pd||!pd.P)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\ud83d\udcca",titre:"Pas encore de ventes",texte:"Importez vos ventes Winpharma pour retrouver les produits sans labo.",action:props.setPage?function(){props.setPage("import")}:null}));
+var labos=Object.keys(pd.L||{}).filter(function(x){return !estFournOrphelin(x)}).sort();
+var inp={padding:"9px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:14,width:"100%",boxSizing:"border-box"};
+var carte={background:"var(--bg2)",borderRadius:"var(--radius)",padding:16,border:"1px solid var(--border)",marginBottom:14};
+var lab={fontSize:12,color:"var(--text3)",marginBottom:4,display:"block"};
+var petit={fontSize:12,color:"var(--text3)"};
+function ajouter(motX,laboX){var mm=motCle(motX);
+if(mm.length<3){setFlash("\u26a0\ufe0f Le mot doit faire au moins 3 lettres.");return}
+var lb=String(laboX||"").trim();if(!lb){setFlash("\u26a0\ufe0f Choisissez le labo.");return}
+var reste=regles.filter(function(r){return motCle(r.mot)!==mm});
+setRegles([{mot:mm,labo:lb,date:new Date().toISOString().slice(0,10)}].concat(reste));
+setMot("");setLabo("");setOuvert(null);
+setFlash("\u2705 Les produits \u00ab "+mm+" \u00bb sont maintenant rang\u00e9s chez "+lb+". Tous les \u00e9crans sont recalcul\u00e9s.")}
+function ignorer(b){setRegles(regles.concat([{mot:b,ignore:true}]))}
+function retirer(r){if(!window.confirm("Retirer le rattachement \u00ab "+r.mot+" \u2192 "+r.labo+" \u00bb ? Les produits retourneront chez leur fournisseur d'origine."))return;setRegles(regles.filter(function(x){return x!==r}))}
+var concern=produitsDuMot(pd,mot);
+var caC=0,stC=0;concern.forEach(function(x){caC+=x.ca;stC+=x.stk});
+var sugg=suggererRattachements(pd,regles);
+var vraies=regles.filter(function(r){return r&&!r.ignore});
+var ign=regles.filter(function(r){return r&&r.ignore});
+var liste=React.createElement("datalist",{id:"ps-labos-ratt"},labos.map(function(x){return React.createElement("option",{key:x,value:x})}));
+function ligneProduit(x,i){return React.createElement("div",{key:i,style:{display:"flex",justifyContent:"space-between",gap:8,padding:"6px 0",borderBottom:"1px solid var(--border)",fontSize:13,flexWrap:"wrap"}},
+React.createElement("span",{style:{fontWeight:600,flex:"1 1 200px",minWidth:0,overflow:"hidden",textOverflow:"ellipsis"}},x.n),
+React.createElement("span",{style:petit},x.sup+" \u00b7 "+fmtE(x.ca)+(x.stk>0?" \u00b7 stock "+fmtE(x.stk):"")))}
+var form=React.createElement("div",{style:carte},liste,
+React.createElement("div",{style:{fontSize:15,fontWeight:700,marginBottom:10}},"Nouveau rattachement"),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}},
+React.createElement("div",null,React.createElement("label",{style:lab},"Mot dans le nom du produit"),
+React.createElement("input",{value:mot,onChange:function(e){setMot(e.target.value);setFlash("")},placeholder:"ex. LONGEVITY",style:inp})),
+React.createElement("div",null,React.createElement("label",{style:lab},"Labo"),
+React.createElement("input",{value:labo,list:"ps-labos-ratt",onChange:function(e){setLabo(e.target.value);setFlash("")},placeholder:"Tapez puis choisissez dans la liste",style:inp}))),
+motCle(mot).length>=3?React.createElement("div",{style:{marginTop:12}},
+React.createElement("div",{style:{fontSize:13,marginBottom:6}},concern.length?(concern.length+" produit"+(concern.length>1?"s":"")+" concern\u00e9"+(concern.length>1?"s":"")+" \u00b7 CA 12 mois "+fmtE(caC)+(stC>0?" \u00b7 stock "+fmtE(stC):"")):"Aucun produit ne contient ce mot pour l'instant (la r\u00e8gle s'appliquera aux futurs produits)."),
+concern.slice(0,8).map(ligneProduit),
+concern.length>8?React.createElement("div",{style:Object.assign({},petit,{marginTop:4})},"+ "+(concern.length-8)+" autres"):null):null,
+React.createElement("div",{style:{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",marginTop:12}},
+React.createElement("button",{onClick:function(){ajouter(mot,labo)},style:{padding:"9px 16px",borderRadius:8,background:"var(--accent)",color:"#fff",fontWeight:700,fontSize:14}},"\ud83e\uddf2 Rattacher"),
+flash?React.createElement("span",{style:{fontSize:13}},flash):null));
+var blocSugg=React.createElement("div",{style:carte},
+React.createElement("div",{style:{fontSize:15,fontWeight:700,marginBottom:4}},"Gammes sans labo trouv\u00e9es dans vos ventes ("+sugg.length+")"),
+React.createElement("div",{style:Object.assign({},petit,{marginBottom:10})},"Produits non rembours\u00e9s rang\u00e9s en Divers, chez un grossiste ou un confr\u00e8re, regroup\u00e9s par le premier mot de leur nom. Quand la marque existe d\u00e9j\u00e0 chez un vrai labo, il est propos\u00e9."),
+sugg.length?null:React.createElement("div",{style:{fontSize:13}},"\ud83c\udf89 Rien \u00e0 rattacher : toutes vos gammes ont un labo."),
+sugg.slice(0,voir).map(function(g){var o=ouvert===g.marque;
+return React.createElement("div",{key:g.marque,style:{padding:"10px 0",borderBottom:"1px solid var(--border)"}},
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap"}},
+React.createElement("button",{onClick:function(){setOuvert(o?null:g.marque)},style:{textAlign:"left",background:"transparent",padding:0,flex:"1 1 220px",minWidth:0}},
+React.createElement("div",{style:{fontWeight:700,fontSize:14}},(o?"\u25be ":"\u25b8 ")+g.marque),
+React.createElement("div",{style:petit},g.produits.length+" produits \u00b7 CA 12 mois "+fmtE(g.ca)+(g.stk>0?" \u00b7 stock "+fmtE(g.stk):"")+" \u00b7 actuellement : "+g.sups.join(", "))),
+React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},
+g.labo?React.createElement("button",{onClick:function(){ajouter(g.marque,g.labo)},style:{padding:"6px 10px",borderRadius:8,background:"var(--accent)",color:"#fff",fontWeight:700,fontSize:12}},"\u2192 "+g.labo):null,
+React.createElement("button",{onClick:function(){setMot(g.marque);setLabo(g.labo||"");setFlash("");try{window.scrollTo({top:0,behavior:"smooth"})}catch(e){}},style:{padding:"6px 10px",borderRadius:8,border:"1px solid var(--accent)",color:"var(--accent)",background:"transparent",fontWeight:600,fontSize:12}},"Choisir le labo"),
+React.createElement("button",{onClick:function(){ignorer(g.marque)},style:{padding:"6px 8px",fontSize:12,color:"var(--text3)",background:"transparent"}},"Ignorer"))),
+o?React.createElement("div",{style:{marginTop:6}},g.produits.slice(0,12).map(ligneProduit)):null)}),
+sugg.length>voir?React.createElement("button",{onClick:function(){setVoir(voir+10)},style:{marginTop:10,fontSize:13,color:"var(--accent)",background:"transparent",fontWeight:600}},"Voir plus ("+(sugg.length-voir)+")"):null);
+var blocRegles=React.createElement("div",{style:carte},
+React.createElement("div",{style:{fontSize:15,fontWeight:700,marginBottom:8}},"Mes rattachements ("+vraies.length+")"),
+vraies.length?null:React.createElement("div",{style:{fontSize:13,marginBottom:8}},"Aucun pour l'instant."),
+vraies.map(function(r,i){var nb=produitsDuMot(pd,r.mot).length;
+return React.createElement("div",{key:r.mot+i,style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,padding:"8px 0",borderBottom:"1px solid var(--border)",flexWrap:"wrap"}},
+React.createElement("div",{style:{flex:"1 1 200px",minWidth:0}},
+React.createElement("div",{style:{fontWeight:700,fontSize:14}},r.mot+" \u2192 "+r.labo),
+React.createElement("div",{style:petit},nb+" produit"+(nb>1?"s":"")+(r.date?" \u00b7 depuis le "+r.date.split("-").reverse().join("/"):""))),
+React.createElement("button",{onClick:function(){retirer(r)},style:{fontSize:12,color:"var(--red)",padding:"4px 8px",background:"transparent"}},"Retirer"))}),
+React.createElement("div",{style:Object.assign({},petit,{marginTop:10,lineHeight:1.5})},"Toujours actifs : "+REGROUPEMENTS_MARQUES.map(function(R){return R.marques.join(", ")+" \u2192 "+R.labo+((R.sauf&&R.sauf.length)?" (sauf "+R.sauf.join(", ")+")":"")}).join(" \u00b7 ")),
+ign.length?React.createElement("div",{style:Object.assign({},petit,{marginTop:8})},"Suggestions masqu\u00e9es : "+ign.map(function(r){return r.mot}).join(", ")+" ",
+React.createElement("button",{onClick:function(){setRegles(regles.filter(function(r){return !r.ignore}))},style:{fontSize:12,color:"var(--accent)",background:"transparent",fontWeight:600}},"R\u00e9afficher")):null);
+return React.createElement("div",null,entete,form,blocSugg,blocRegles)}
 function DuelsPage(props){
 var pd=props.pd;var cats=props.cats||[];var setCats=props.setCats;
 var selS=useState(null);var sel=selS[0];var setSel=selS[1];
@@ -8579,6 +8711,8 @@ var ruptS=useState(null);var ruptures=ruptS[0];var setRuptures=ruptS[1];
 var metS=useState({});var metres=metS[0];var setMetres=metS[1];
 var pgS=useState([]);var projGammes=pgS[0];var setProjGammes=pgS[1];
 var dcS=useState([]);var duelCats=dcS[0];var setDuelCats=dcS[1];
+var rgS=useState([]);var regLabos=rgS[0];var setRegLabos=rgS[1];
+var rpS=useState(null);var rattPrefill=rpS[0];var setRattPrefill=rpS[1];
 var uoS=useState({});var univOvr=uoS[0];var setUnivOvr=uoS[1];UNIV_OVR.o=univOvr;
 var aiS=useState({});var alIgn=aiS[0];var setAlIgn=aiS[1];
 var rgS=useState({});var reglG=rgS[0];var setReglG=rgS[1];
@@ -8756,7 +8890,7 @@ supaSave("challenges",challenges),supaSave("tasks",tasksApp),supaSave("tdgs",tdg
 supaSave("team",team),supaSave("decisions",decisions),supaSave("events",events),
 supaSave("cmd_hidden",cmdHidden),supaSave("favs",favs),supaSave("tips_state",tipsState),supaSave("widgets_config",widgets),
 supaSave("cmd_passed",cmdPassed),supaSave("voice_notes",voiceNotes),supaSave("ca_objectif",caObj),supaSave("crm_delegues",crm),
-supaSave("palmares",palmares),supaSave("conditions_labos",conditions),supaSave("promos_ajoutees",promosAj),supaSave("univers_metres",metres),supaSave("univers_labos",univOvr),supaSave("univers_codes",univCodes),supaSave("reglages_google",reglG),supaSave("alertes_ignorees",alIgn),supaSave("projets_gammes",projGammes),supaSave("duels_categories",duelCats)];
+supaSave("palmares",palmares),supaSave("conditions_labos",conditions),supaSave("promos_ajoutees",promosAj),supaSave("univers_metres",metres),supaSave("univers_labos",univOvr),supaSave("univers_codes",univCodes),supaSave("reglages_google",reglG),supaSave("alertes_ignorees",alIgn),supaSave("projets_gammes",projGammes),supaSave("duels_categories",duelCats),supaSave("regroupements_labos",regLabos)];
 var salesJob=lireVentesLocal().then(function(sp){if(sp&&sp.M)return compressForCloud(sp).then(function(pk){return supaSave("sales_data",pk)})});
 Promise.all(jobs.concat([salesJob])).then(function(res){
 var ko=(res||[]).filter(function(x){return x&&x.ok===false}).length;
@@ -8771,7 +8905,7 @@ function exportUserData(){
 var data={
 challenges:challenges,tasks:tasksApp,tdgs:tdgsApp,team:team,decisions:decisions,
 events:events,cmd_hidden:cmdHidden,favs:favs,tips_state:tipsState,widgets_config:widgets,cmd_passed:cmdPassed,voice_notes:voiceNotes,
-ca_objectif:caObj,crm_delegues:crm,palmares:palmares,fiche_vendeur_exp:fvExp,conditions_labos:conditions,promos_ajoutees:promosAj,univers_metres:metres,univers_labos:univOvr,univers_codes:univCodes,reglages_google:reglG,alertes_ignorees:alIgn,projets_gammes:projGammes,duels_categories:duelCats,
+ca_objectif:caObj,crm_delegues:crm,palmares:palmares,fiche_vendeur_exp:fvExp,conditions_labos:conditions,promos_ajoutees:promosAj,univers_metres:metres,univers_labos:univOvr,univers_codes:univCodes,reglages_google:reglG,alertes_ignorees:alIgn,projets_gammes:projGammes,duels_categories:duelCats,regroupements_labos:regLabos,
 exportDate:new Date().toISOString(),version:APP_VERSION};
 var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
 var url=URL.createObjectURL(blob);
@@ -8790,7 +8924,7 @@ if(data.decisions)setDecisions(data.decisions);
 if(data.events)setEvents(data.events);if(data.cmd_hidden)setCmdHidden(data.cmd_hidden);if(data.favs)setFavs(data.favs);
 if(data.tips_state)setTipsState(data.tips_state);if(data.widgets_config)setWidgets(data.widgets_config);if(data.cmd_passed)setCmdPassed(data.cmd_passed);
 if(data.voice_notes)setVoiceNotes(data.voice_notes);if(data.ca_objectif)setCaObj(data.ca_objectif);if(data.crm_delegues)setCrm(data.crm_delegues);
-if(data.palmares)setPalmares(data.palmares);if(data.fiche_vendeur_exp)setFvExp(data.fiche_vendeur_exp);if(data.conditions_labos)setConditions(data.conditions_labos);if(data.promos_ajoutees)setPromosAj(data.promos_ajoutees);if(data.univers_metres)setMetres(data.univers_metres);if(data.univers_labos)setUnivOvr(data.univers_labos);if(data.univers_codes)setUnivCodes(data.univers_codes);if(data.reglages_google)setReglG(data.reglages_google);if(data.alertes_ignorees)setAlIgn(data.alertes_ignorees);if(data.projets_gammes)setProjGammes(data.projets_gammes);if(data.duels_categories)setDuelCats(data.duels_categories);
+if(data.palmares)setPalmares(data.palmares);if(data.fiche_vendeur_exp)setFvExp(data.fiche_vendeur_exp);if(data.conditions_labos)setConditions(data.conditions_labos);if(data.promos_ajoutees)setPromosAj(data.promos_ajoutees);if(data.univers_metres)setMetres(data.univers_metres);if(data.univers_labos)setUnivOvr(data.univers_labos);if(data.univers_codes)setUnivCodes(data.univers_codes);if(data.reglages_google)setReglG(data.reglages_google);if(data.alertes_ignorees)setAlIgn(data.alertes_ignorees);if(data.projets_gammes)setProjGammes(data.projets_gammes);if(data.duels_categories)setDuelCats(data.duels_categories);if(data.regroupements_labos)setRegLabos(data.regroupements_labos);
 avertir("\u2705 Donn\u00e9es restaur\u00e9es (sauvegarde du "+new Date(data.exportDate).toLocaleDateString("fr-FR")+")")}
 catch(err){avertir("\u26a0\ufe0f Fichier de sauvegarde illisible")}};
 reader.readAsText(file)}
@@ -8800,7 +8934,7 @@ var supaLoadedS=useState(false);var supaLoaded=supaLoadedS[0];var setSupaLoaded=
 useEffect(function(){
 if(!supaClient){setSupaLoaded(true);return}
 Promise.all([supaLoad("challenges"),supaLoad("tasks"),supaLoad("tdgs"),supaLoad("team"),supaLoad("decisions"),supaLoad("events"),supaLoad("cmd_hidden"),supaLoad("favs"),supaLoad("tips_state"),supaLoad("widgets_config"),supaLoad("cmd_passed"),supaLoad("voice_notes"),supaLoad("ca_objectif"),supaLoad("crm_delegues"),supaLoad("palmares"),supaLoad("fiche_vendeur_exp"),
-supaClient.from("app_data").select("id,updated_at").then(function(r){return r&&r.data?r.data:[]}).catch(function(){return[]}),supaLoad("conditions_labos"),supaLoad("promos_ajoutees"),supaLoad("ruptures_ansm"),supaLoad("univers_metres"),supaLoad("univers_labos"),supaLoad("univers_codes"),supaLoad("reglages_google"),supaLoad("alertes_ignorees"),supaLoad("projets_gammes"),supaLoad("duels_categories")])
+supaClient.from("app_data").select("id,updated_at").then(function(r){return r&&r.data?r.data:[]}).catch(function(){return[]}),supaLoad("conditions_labos"),supaLoad("promos_ajoutees"),supaLoad("ruptures_ansm"),supaLoad("univers_metres"),supaLoad("univers_labos"),supaLoad("univers_codes"),supaLoad("reglages_google"),supaLoad("alertes_ignorees"),supaLoad("projets_gammes"),supaLoad("duels_categories"),supaLoad("regroupements_labos")])
 .then(function(results){
 (results[16]||[]).forEach(function(m){if(m&&m.id)SYNC_TS[m.id]=m.updated_at});
 function lsGet(k){try{var s=localStorage.getItem(k);return s?JSON.parse(s):null}catch(e){return null}}
@@ -8836,6 +8970,7 @@ pick(23,"reglages_google","ps_reglages_google",false,setReglG);
 pick(24,"alertes_ignorees","ps_alertes_ign",false,setAlIgn);
 pick(25,"projets_gammes","ps_projets_gammes",true,setProjGammes);
 pick(26,"duels_categories","ps_duels",true,setDuelCats);
+pick(27,"regroupements_labos","ps_regroupements",true,setRegLabos);
 if(!SYNC_BASE.hasOwnProperty("ruptures_ansm")){var lr=lsGet("ps_ruptures");if(lr)SYNC_BASE["ruptures_ansm"]=lr}
 if(typeof results[15]==="string"){SYNC_BASE["fiche_vendeur_exp"]=results[15];setFvExp(results[15])}
 else if(results[15]&&results[15].exp){setFvExp(results[15].exp)}
@@ -8864,6 +8999,7 @@ useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_promos_a
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_metres",JSON.stringify(metres))}catch(e){};syncSave("univers_metres",metres,setMetres)},[metres]);
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_projets_gammes",JSON.stringify(projGammes))}catch(e){};syncSave("projets_gammes",projGammes,setProjGammes)},[projGammes]);
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_duels",JSON.stringify(duelCats))}catch(e){};syncSave("duels_categories",duelCats,setDuelCats)},[duelCats]);
+useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_regroupements",JSON.stringify(regLabos))}catch(e){};syncSave("regroupements_labos",regLabos,setRegLabos)},[regLabos]);
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_univ_labos",JSON.stringify(univOvr))}catch(e){};syncSave("univers_labos",univOvr,setUnivOvr)},[univOvr]);
 /* Reglages Google : completes par ceux deja presents sur cet appareil, puis recopies dans l'appareil */
 useEffect(function(){if(!supaLoaded)return;
@@ -8911,7 +9047,7 @@ useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_decision
 
 /* Mise a jour depuis les autres appareils */
 var syncLive=useRef({});
-syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats]};
+syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos]};
 var supaLoadedRef=useRef(false);supaLoadedRef.current=supaLoaded;
 useEffect(function(){
 if(!supaClient)return;
@@ -9021,7 +9157,7 @@ decompressGz(STOCK_GZ).then(function(data){if(data)setStock(data)});
 decompressGz(PD_GZ).then(function(data){if(data){pdOrig.current=data;setPd(data)}});
 },[]);
 
-var pdC=useMemo(function(){try{return completerMapLabos(regrouperMarquesLabo(consoliderFournisseurs(pd)),ld)}catch(e){console.warn("consolidation:",e);return pd}},[pd,ld]);
+var pdC=useMemo(function(){try{return completerMapLabos(regrouperMarquesLabo(consoliderFournisseurs(pd),regLabos),ld)}catch(e){console.warn("consolidation:",e);return pd}},[pd,ld,regLabos]);
 var ldLive=useMemo(function(){return refreshLdFromPd(ajouterLabosWinpharma(ld,pdC),pdC)},[ld,pdC]);
 var labTabInit=useRef(null);
 function toggleDark(){setDark(!dark)}
@@ -9110,6 +9246,8 @@ content=React.createElement(ComparePage,{ld:ldLive,pd:pdCal});
 content=React.createElement(AvisMarquesPage,{ld:ldLive,pd:pdCal,decisions:decisions,setLabDecision:setLabDecision,openLab:function(n,t){openLab(n);labTabInit.current=t||null}});
 }else if(page==="nouvgamme"){
 content=React.createElement(NouvelleGammePage,{pd:pdCal,projets:projGammes,setProjets:setProjGammes,metres:metres,setPage:setPage});
+}else if(page==="rattacher"){
+content=React.createElement(RattacherPage,{pd:pdCal,regles:regLabos,setRegles:setRegLabos,prefill:rattPrefill,setPage:setPage});
 }else if(page==="duels"){
 content=React.createElement(DuelsPage,{pd:pdCal,cats:duelCats,setCats:setDuelCats,setPage:setPage});
 }else if(page==="recos"){
@@ -9163,7 +9301,7 @@ cloudMsg?React.createElement("div",{style:{display:"flex",gap:10,alignItems:"cen
 React.createElement("span",{style:{flex:1}},"\u26a0\ufe0f "+cloudMsg),
 React.createElement("button",{onClick:function(){setCloudMsg("")},style:{fontSize:16,color:"inherit"}},"\u00d7")):null,
 page!=="aujourdhui"?React.createElement(FraicheurDonnees,{pd:pd,setPage:setPage,court:isMobile}):null,
-isMobile&&!rechOuverte?null:React.createElement(GlobalSearch,{variant:"top",autoFocus:isMobile,onNavigate:isMobile?function(){setRechOuverte(false)}:null,ld:ldLive,pd:pdCal,openLab:openLab,setPage:setPage,tasks:tachesVis}),
+isMobile&&!rechOuverte?null:React.createElement(GlobalSearch,{variant:"top",autoFocus:isMobile,onNavigate:isMobile?function(){setRechOuverte(false)}:null,ld:ldLive,pd:pdCal,openLab:openLab,setPage:setPage,tasks:tachesVis,onRattacher:function(m){setRattPrefill({mot:m,t:Date.now()});setPage("rattacher");if(isMobile)setRechOuverte(false)}}),
 React.createElement(GardeEcran,{cle:page+"|"+(activeTab||"")},content)),
 montrerInstall&&!navOpen?React.createElement("div",{style:{position:"fixed",left:12,right:12,bottom:"calc(84px + env(safe-area-inset-bottom))",zIndex:180,background:"var(--bg2)",border:"1px solid var(--accent)",borderRadius:14,padding:"14px 16px",boxShadow:"0 8px 24px rgba(0,0,0,.18)",fontSize:14,lineHeight:1.5}},
 React.createElement("div",{style:{display:"flex",justifyContent:"space-between",gap:10}},React.createElement("b",null,"\ud83d\udcf2 Installer PharmaScope"),React.createElement("button",{onClick:fermerInstall,style:{fontSize:18,color:"var(--text3)",padding:0}},"\u00d7")),
