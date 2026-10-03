@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v8.44">
+<meta name="ps-version" content="v8.45">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -359,7 +359,7 @@ return new Response(stream).text().then(function(t){return JSON.parse(t)})
 
 /* Etat de la derniere sauvegarde cloud, diffuse a l'ecran */
 var CLOUD_ETAT={ok:null,msg:""};
-var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
+var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
 function avertir(msg){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg}}))}catch(e){}}
 function proposerAnnulation(msg,annuler){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg,undo:annuler}}))}catch(e){}}
 function notifierCloud(ok,msg){CLOUD_ETAT={ok:ok,msg:msg||""};try{window.dispatchEvent(new CustomEvent("ps-cloud",{detail:CLOUD_ETAT}))}catch(e){}}
@@ -1550,7 +1550,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.44";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.45";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 var NAVG=[
 {id:"pilotage",label:"Piloter",icon:"\ud83d\udcca",items:[
@@ -1566,6 +1566,7 @@ var NAVG=[
 {id:"avis",label:"Avis par marque",icon:"\ud83e\udded"},
 {id:"duels",label:"Leader & challenger",icon:"\ud83e\udd4a"},
 {id:"nouvgamme",label:"Nouvelle gamme ?",icon:"\ud83e\uddea"},
+{id:"potentiel",label:"Potentiel culottes",icon:"\ud83e\ude72"},
 {id:"rattacher",label:"Rattacher \u00e0 un labo",icon:"\ud83e\uddf2"},
 {id:"memo",label:"Memo RDV",icon:"\ud83d\udcdd"},
 {id:"dormant",label:"Stock dormant",icon:"\ud83d\udca4"},
@@ -7632,6 +7633,199 @@ var GAMME_META={go:{l:"Feu vert",i:"\ud83d\udfe2",c:"var(--accent)",bg:"var(--ac
 var GAMME_STATUTS=[["etude","\u00c0 l'\u00e9tude"],["essai","En essai"],["adoptee","Adopt\u00e9e"],["abandon","Abandonn\u00e9e"]];
 function libStatutGamme(s){var r="\u00c0 l'\u00e9tude";GAMME_STATUTS.forEach(function(x){if(x[0]===s)r=x[1]});return r}
 
+/* --- Potentiel culottes menstruelles (v8.45) : estimation a partir de la pyramide des ages Ospharm --- */
+var PCM_TRANCHES=[["De 0 \u00e0 3 ans",0,3],["De 4 \u00e0 9 ans",4,9],["De 10 \u00e0 20 ans",10,20],["De 21 \u00e0 34 ans",21,34],["De 35 \u00e0 44 ans",35,44],["De 45 \u00e0 59 ans",45,59],["De 60 \u00e0 69 ans",60,69],["De 70 \u00e0 79 ans",70,79],["De 80 \u00e0 120 ans",80,120]];
+var PCM_INIT={pyr:{v:[471,404,1086,2187,2020,4396,3834,4086,5451],dep:[2.9,2.5,5.6,11.4,11.4,20.1,15.8,16.7,13.8],pan:[2.4,2.2,5.2,10.1,9.7,19.2,17.1,19.0,15.3],src:"Ospharm, 6 derniers mois au 03/10/2026"},h:{}};
+var PCM_DEF={fem:55,vpp:2,ageReg:13,ageFin:50,c2s:3,adopt:20,nbAn:1.6,pv:19,tva:5.5,achat:11.6,reel:0,mots:"MENSTRUELLE, MENSTRUELLES, MENSTRUEL"};
+var PCM_SOURCES=[
+["Service-public.fr : remboursement des protections r\u00e9utilisables au 1er octobre 2026","https://www.service-public.gouv.fr/particuliers/actualites/A18883"],
+["Pharmapex : arr\u00eat\u00e9 du 6 ao\u00fbt 2026 (sans ordonnance, codes LPP, prix limites)","https://pharmapex.fr/actualites/protections-periodiques-arrete-6-aout-2026-entree-en-vigueur-1er-octobre"],
+["Vidal : 6,7 millions de personnes concern\u00e9es en France","https://www.vidal.fr/actualites/37794-protections-periodiques-reutilisables-un-remboursement-annonce-pour-septembre-2026.html"],
+["INED : \u00e2ge aux premi\u00e8res r\u00e8gles (m\u00e9diane 13,1 ans)","https://www.ined.fr/en/everything_about_population/demographic-facts-sheets/focus-on/age_menstruation"],
+["Ifop pour Eve & Co (2021) : 7 % d'utilisatrices r\u00e9guli\u00e8res, 69 % pr\u00eates \u00e0 essayer","https://eve-and-co.com/blogs/actualites/etude-ifop-pour-eve-co-les-francaises-la-precarite-menstruelle"],
+["Previssima : 7,2 millions de b\u00e9n\u00e9ficiaires de la C2S","https://www.previssima.fr/actualite/id-72-millions-de-francais-beneficient-de-la-complementaire-sante-solidaire-css.html"],
+["La F\u00e9d\u00e9ration : TVA \u00e0 5,5 % sur les culottes menstruelles","https://www.la-federation.com/fr/news-breves/tva-a-55-pour-les-culottes-menstruelles-1959.html"]];
+function pcmNum(x,d){var n=parseFloat(String(x===undefined||x===null?"":x).replace(",","."));return isNaN(n)?d:n}
+function pcmHyp(cfg){var h={};var src=(cfg&&cfg.h)||{};Object.keys(PCM_DEF).forEach(function(k){h[k]=k==="mots"?(src.mots||PCM_DEF.mots):pcmNum(src[k],PCM_DEF[k])});return h}
+function pcmPart(t,a,b){var x=Math.max(t[1],a),y=Math.min(t[2],b);if(y<x)return 0;return(y-x+1)/(t[2]-t[1]+1)}
+function pcmCalc(cfg,adopt,boost){
+var h=pcmHyp(cfg);var pyr=(cfg&&cfg.pyr)||PCM_INIT.pyr;
+var tot=0;PCM_TRANCHES.forEach(function(t,i){tot+=pcmNum(pyr.v[i],0)});
+var v1034=pcmNum(pyr.v[2],0)+pcmNum(pyr.v[3],0);
+var vJ=0,vC=0,gain=0,base=0;
+PCM_TRANCHES.forEach(function(t,i){var n=pcmNum(pyr.v[i],0);var pj=pcmPart(t,h.ageReg,25);var pc=pcmPart(t,26,h.ageFin);
+var r=1;var off=tot?n/tot*100:0;var dep=pcmNum(pyr.dep&&pyr.dep[i],0);if(boost&&pj>0&&off>0&&dep>off)r=dep/off;
+vJ+=n*pj*r;vC+=n*pc;if(pj>0){base+=n*pj;gain+=n*pj*(dep>off&&off>0?dep/off:1)}});
+var femJ=vJ*h.fem/100;
+var patJ=h.reel>0?h.reel*(boost&&base?gain/base:1):femJ/Math.max(0.5,h.vpp);
+var patC=vC*h.fem/100/Math.max(0.5,h.vpp)*h.c2s/100;
+var elig=patJ+patC;var ad=(adopt!==undefined&&adopt!==null?adopt:h.adopt)/100;
+var cli=elig*ad;var cul=cli*Math.min(2,Math.max(0,h.nbAn));
+var pvHT=h.pv/(1+h.tva/100);var mU=pvHT-h.achat;
+return{h:h,tot:tot,v1034:v1034,vJ:vJ,femJ:femJ,patJ:patJ,patC:patC,elig:elig,cli:cli,cul:cul,caTTC:cul*h.pv,caHT:cul*pvHT,marge:cul*mU,mU:mU,tx:pvHT?mU/pvHT*100:0,boostPct:base?(gain/base-1)*100:0}}
+function pcmSuivi(pd,mots){
+if(!pd||!pd.P||!pd.M)return null;var items=produitsDeGamme(pd,motsGamme(mots));
+var i0=-1;pd.M.forEach(function(mk,i){if(i0<0&&mk>="2026-10")i0=i});
+var refs=[];items.forEach(function(it){if(!it.stockSeul)refs.push(it.p)});
+var stk=0;items.forEach(function(it){stk+=pd.STKU&&pd.STKU[it.p.c]>0?pd.STKU[it.p.c]:0});
+var avant=0;var lf=dernierMoisComplet(pd);if(lf<0)lf=pd.M.length-1;
+for(var j=Math.max(0,(i0<0?pd.M.length:i0)-12);j<(i0<0?pd.M.length:i0);j++)refs.forEach(function(p){avant+=(p.qm&&p.qm[j])||0});
+var mois=[];if(i0>=0){var cum=0;for(var k=i0;k<pd.M.length;k++){var q=0;refs.forEach(function(p){q+=(p.qm&&p.qm[k])||0});cum+=q;mois.push({mk:pd.M[k],q:q,cum:cum,complet:k<=lf})}}
+return{items:items,nbRefs:refs.length,stk:stk,avant:avant,mois:mois}}
+function PcmPyramide(props){
+var pyr=props.pyr;var tot=0;pyr.v.forEach(function(x){tot+=pcmNum(x,0)});
+var W=640,rowH=34,pl=118,pr=56,top=26,H=top+rowH*PCM_TRANCHES.length+24;var mx=25;
+function X(p){return pl+(W-pl-pr)*Math.min(p,mx)/mx}
+var cols={off:"var(--accent)",dep:"#ca8a04",pan:"var(--blue)"};
+return React.createElement("svg",{viewBox:"0 0 "+W+" "+H,style:{width:"100%",height:"auto",display:"block"},role:"img","aria-label":"Pyramide des \u00e2ges : officine, d\u00e9partement, panel"},
+[0,5,10,15,20,25].map(function(g){return React.createElement("g",{key:"g"+g},
+React.createElement("line",{x1:X(g),x2:X(g),y1:top-6,y2:H-22,stroke:"var(--border)",strokeWidth:1}),
+React.createElement("text",{x:X(g),y:H-8,fontSize:11,textAnchor:"middle",fill:"var(--text3)"},g+" %"))}),
+PCM_TRANCHES.map(function(t,i){var y=top+rowH*i+rowH/2;var off=tot?pcmNum(pyr.v[i],0)/tot*100:0;var dep=pcmNum(pyr.dep[i],0);var pan=pcmNum(pyr.pan[i],0);
+var cible=i===2||i===3;
+var lo=Math.min(off,dep,pan),hi=Math.max(off,dep,pan);
+return React.createElement("g",{key:t[0]},
+cible?React.createElement("rect",{x:0,y:y-rowH/2+2,width:W,height:rowH-4,rx:8,fill:"#fce7f3",opacity:0.55}):null,
+React.createElement("text",{x:pl-10,y:y+4,fontSize:12,textAnchor:"end",fill:cible?"#be185d":"var(--text2)",fontWeight:cible?700:400},t[0].replace("De ","").replace(" ans"," ans")),
+React.createElement("line",{x1:X(lo),x2:X(hi),y1:y,y2:y,stroke:"var(--text3)",strokeWidth:2,opacity:0.5}),
+React.createElement("circle",{cx:X(pan),cy:y,r:5,fill:cols.pan,opacity:0.85}),
+React.createElement("circle",{cx:X(dep),cy:y,r:5,fill:cols.dep,opacity:0.85}),
+React.createElement("circle",{cx:X(off),cy:y,r:8,fill:cols.off,stroke:"var(--bg2)",strokeWidth:2}),
+React.createElement("text",{x:W-pr+8,y:y+4,fontSize:12,fill:off<dep-0.5?"var(--red)":"var(--text2)",fontWeight:600},off.toFixed(1)+" %"))}),
+React.createElement("g",null,
+React.createElement("circle",{cx:pl,cy:10,r:6,fill:cols.off}),React.createElement("text",{x:pl+10,y:14,fontSize:11,fill:"var(--text2)"},"Votre officine"),
+React.createElement("circle",{cx:pl+120,cy:10,r:5,fill:cols.dep}),React.createElement("text",{x:pl+130,y:14,fontSize:11,fill:"var(--text2)"},"D\u00e9partement"),
+React.createElement("circle",{cx:pl+230,cy:10,r:5,fill:cols.pan}),React.createElement("text",{x:pl+240,y:14,fontSize:11,fill:"var(--text2)"},"Panel")))}
+function PcmCourbe(props){
+var mois=props.mois;var cible=props.cible;if(!mois||!mois.length)return null;
+var n=12;var W=640,H=210,pl=40,pr=20,pt=14,pb=28;var mx=Math.max(cible,mois[mois.length-1].cum,5);mx=Math.ceil(mx/10)*10;
+function X(k){return pl+(W-pl-pr)*k/n}function Y(v){return pt+(H-pt-pb)*(1-v/mx)}
+var d="M"+X(0)+" "+Y(0)+" ";mois.forEach(function(m,k){if(k<n)d+="L"+X(k+1).toFixed(1)+" "+Y(m.cum).toFixed(1)+" "});
+var last=mois[Math.min(mois.length,n)-1];var kl=Math.min(mois.length,n);
+var grads=[0,mx/2,mx];
+return React.createElement("svg",{viewBox:"0 0 "+W+" "+H,style:{width:"100%",height:"auto",display:"block"},role:"img","aria-label":"Culottes vendues depuis octobre 2026 compar\u00e9es \u00e0 l'objectif"},
+grads.map(function(g){return React.createElement("g",{key:g},React.createElement("line",{x1:pl,x2:W-pr,y1:Y(g),y2:Y(g),stroke:"var(--border)"}),React.createElement("text",{x:pl-6,y:Y(g)+4,fontSize:11,textAnchor:"end",fill:"var(--text3)"},Math.round(g)))}),
+React.createElement("line",{x1:X(0),y1:Y(0),x2:X(n),y2:Y(cible),stroke:"#db2777",strokeWidth:2,strokeDasharray:"6 5"}),
+React.createElement("text",{x:X(n)-4,y:Y(cible)-6,fontSize:11,textAnchor:"end",fill:"#db2777",fontWeight:700},"objectif "+Math.round(cible)+" / an"),
+React.createElement("path",{d:d,fill:"none",stroke:"var(--accent)",strokeWidth:3,strokeLinejoin:"round",strokeLinecap:"round"}),
+React.createElement("circle",{cx:X(kl),cy:Y(last.cum),r:5,fill:"var(--accent)"}),
+React.createElement("text",{x:X(kl)+8,y:Y(last.cum)+4,fontSize:12,fill:"var(--accent)",fontWeight:700},last.cum+" vendues"),
+mois.slice(0,n).map(function(m,k){return k%2===0?React.createElement("text",{key:m.mk,x:X(k+1),y:H-8,fontSize:10,textAnchor:"middle",fill:"var(--text3)"},MOIS_COURT[parseInt(m.mk.split("-")[1],10)-1]):null}))}
+function PotentielCulottesPage(props){
+var cfg=props.cfg||PCM_INIT;var setCfg=props.setCfg;
+var voirS=useState(false);var voirPyr=voirS[0];var setVoirPyr=voirS[1];
+var pyr=cfg.pyr||PCM_INIT.pyr;var h=pcmHyp(cfg);
+function majH(k,v){var nh=Object.assign({},cfg.h||{});if(k==="mots")nh.mots=v;else{var x=parseFloat(String(v).replace(",","."));if(v===""||isNaN(x))delete nh[k];else nh[k]=x}setCfg(Object.assign({},cfg,{h:nh}))}
+function majPyr(champ,i,v){var p=Object.assign({},pyr);var a=(p[champ]||[]).slice();var x=parseFloat(String(v).replace(",","."));a[i]=isNaN(x)?0:x;p[champ]=a;setCfg(Object.assign({},cfg,{pyr:p}))}
+function majSrc(v){setCfg(Object.assign({},cfg,{pyr:Object.assign({},pyr,{src:v})}))}
+var c=pcmCalc(cfg);var prud=pcmCalc(cfg,10);var opti=pcmCalc(cfg,35);var conq=pcmCalc(cfg,null,true);
+var suivi=pcmSuivi(props.pd,h.mots);
+var fN=function(x){return Math.round(x).toLocaleString("fr-FR")};
+var carte={background:"var(--bg2)",borderRadius:"var(--radius)",padding:16,border:"1px solid var(--border)",marginBottom:14};
+var h3={fontSize:15,fontWeight:700,marginBottom:10};
+var lab={fontSize:12,color:"var(--text3)",marginBottom:4,display:"block"};
+var aide={fontSize:11,color:"var(--text3)",marginTop:3,lineHeight:1.4};
+var inp={padding:"7px 9px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:14,width:"100%",boxSizing:"border-box"};
+var entete=React.createElement(EnTeteOutil,{titre:"\ud83e\ude72 Potentiel culottes menstruelles",sous:"Depuis le 1er octobre 2026, l'Assurance maladie rembourse 2 culottes ou coupes menstruelles par an, sans ordonnance, aux moins de 26 ans (60 %) et aux b\u00e9n\u00e9ficiaires de la C2S (100 %). PharmaScope estime combien de vos patientes sont concern\u00e9es \u00e0 partir de la pyramide des \u00e2ges Ospharm, puis suit vos ventes r\u00e9elles."});
+/* 1. Le resultat en un coup d'oeil */
+var tuiles=[["\ud83d\ude4b\u200d\u2640\ufe0f","Patientes \u00e9ligibles",fN(c.elig),fN(c.patJ)+" de moins de 26 ans \u00b7 "+fN(c.patC)+" via la C2S"],["\ud83d\udecd\ufe0f","Clientes probables / an",fN(c.cli),"si "+h.adopt+" % des \u00e9ligibles franchissent le pas"],["\ud83e\ude72","Culottes / an",fN(c.cul),String(h.nbAn).replace(".",",")+" culotte"+(h.nbAn>=2?"s":"")+" par cliente en moyenne (max 2 rembours\u00e9es)"],["\ud83d\udcb6","Marge brute / an",fmtEur0(c.marge),"CA "+fmtEur0(c.caTTC)+" TTC \u00b7 "+c.mU.toFixed(2).replace(".",",")+" \u20ac de marge HT par culotte ("+Math.round(c.tx)+" %)"]];
+var bloc1=React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:10,marginBottom:14}},
+tuiles.map(function(t){return React.createElement("div",{key:t[1],style:{background:"linear-gradient(135deg,#fdf2f8,var(--bg2))",border:"1px solid #fbcfe8",borderRadius:"var(--radius)",padding:14}},
+React.createElement("div",{style:{fontSize:24}},t[0]),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:4}},t[1]),
+React.createElement("div",{style:{fontSize:26,fontWeight:700,color:"#be185d",margin:"2px 0"}},t[2]),
+React.createElement("div",{style:{fontSize:11,color:"var(--text2)",lineHeight:1.4}},t[3]))}));
+/* 2. L'entonnoir */
+var etapes=[["\ud83e\uddfe","Passages des 10-34 ans en 6 mois",c.v1034,"Pyramide Ospharm : tranches 10-20 et 21-34 ans"],
+["\ud83c\udf82","Dont "+h.ageReg+"-25 ans",c.vJ,"On garde les \u00e2ges r\u00e9gl\u00e9s et rembours\u00e9s, en supposant les \u00e2ges r\u00e9partis uniform\u00e9ment dans chaque tranche"],
+["\ud83d\udc69","Dont femmes",c.femJ,h.fem+" % (hypoth\u00e8se : la pyramide Ospharm ne distingue pas les sexes)"],
+["\ud83d\ude4b\u200d\u2640\ufe0f","Patientes diff\u00e9rentes",c.patJ,h.reel>0?"Nombre r\u00e9el saisi depuis Winpharma":"En moyenne "+h.vpp+" passages par patiente sur 6 mois"],
+["\ud83d\udecd\ufe0f","Clientes probables",c.patJ*h.adopt/100,h.adopt+" % d'adoption (sc\u00e9nario central)"]];
+var e0=Math.max(1,etapes[0][2]);
+var bloc2=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"Comment on arrive \u00e0 ce chiffre (moins de 26 ans)"),
+etapes.map(function(e,i){var w=55+45*Math.sqrt(Math.min(1,e[2]/e0));
+return React.createElement("div",{key:i,style:{marginBottom:8}},
+React.createElement("div",{style:{width:w+"%",margin:"0 auto",background:"hsl("+(330-i*8)+",70%,"+(93-i*7)+"%)",borderRadius:10,padding:"8px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,minWidth:0}},
+React.createElement("span",{style:{fontSize:13,fontWeight:600,color:"#831843",lineHeight:1.3}},e[0]+" "+e[1]),
+React.createElement("span",{style:{fontSize:16,fontWeight:700,color:"#831843"}},fN(e[2]))),
+React.createElement("div",{style:Object.assign({},aide,{textAlign:"center"})},e[3]))}),
+React.createElement("div",{style:Object.assign({},aide,{marginTop:8,fontSize:12})},"+ "+fN(c.patC)+" patientes de 26-"+h.ageFin+" ans b\u00e9n\u00e9ficiaires de la C2S (hypoth\u00e8se : "+h.c2s+" % ; moyenne nationale \u2248 10 %, sans doute moins dans votre secteur)."));
+/* 3. Scenarios */
+var scen=[["\ud83d\udc22","Prudent",prud,"10 % d'adoption"],["\ud83c\udfaf","Central",c,h.adopt+" % d'adoption"],["\ud83d\ude80","Optimiste",opti,"35 % d'adoption"]];
+var bloc3=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"Trois sc\u00e9narios"),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:10}},
+scen.map(function(s){var on=s[1]==="Central";return React.createElement("div",{key:s[1],style:{border:"1px solid "+(on?"#db2777":"var(--border)"),borderRadius:10,padding:12,background:on?"#fdf2f8":"var(--bg)"}},
+React.createElement("div",{style:{fontWeight:700,fontSize:14}},s[0]+" "+s[1]),
+React.createElement("div",{style:aide},s[3]),
+React.createElement("div",{style:{fontSize:13,marginTop:6,lineHeight:1.6}},fN(s[2].cli)+" clientes \u00b7 ",React.createElement("b",null,fN(s[2].cul)+" culottes"),React.createElement("br"),fmtEur0(s[2].caTTC)+" TTC \u00b7 ",React.createElement("b",{style:{color:"var(--accent)"}},fmtEur0(s[2].marge)+" de marge")))})),
+conq.boostPct>1?React.createElement("div",{style:{marginTop:12,padding:12,borderRadius:10,background:"var(--accent-bg)",fontSize:13,lineHeight:1.5}},
+"\ud83c\udf31 ",React.createElement("b",null,"Levier de conqu\u00eate : "),"vos 10-34 ans p\u00e8sent moins chez vous que dans le d\u00e9partement. Si vous attiriez autant de jeunes que la moyenne d\u00e9partementale (+"+Math.round(conq.boostPct)+" %), le potentiel passerait \u00e0 ",React.createElement("b",null,fN(conq.cli)+" clientes et "+fmtEur0(conq.marge)+" de marge")," par an (sc\u00e9nario central). La culotte rembours\u00e9e est une bonne porte d'entr\u00e9e pour fid\u00e9liser cette patient\u00e8le."):null);
+/* 4. Pyramide */
+var bloc4=React.createElement("div",{style:carte},
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,marginBottom:6}},
+React.createElement("div",{style:Object.assign({},h3,{marginBottom:0})},"Votre pyramide des \u00e2ges"),
+React.createElement("button",{onClick:function(){setVoirPyr(!voirPyr)},style:{fontSize:12,fontWeight:600,color:"var(--accent)",padding:"4px 8px"}},voirPyr?"Fermer":"\u270f\ufe0f Mettre \u00e0 jour")),
+React.createElement("div",{style:Object.assign({},aide,{marginBottom:8})},"Part des passages par \u00e2ge. Les lignes roses sont les \u00e2ges concern\u00e9s par le remboursement. Source : "+(pyr.src||"Ospharm")),
+React.createElement(PcmPyramide,{pyr:pyr}),
+voirPyr?React.createElement("div",{style:{marginTop:12}},
+React.createElement("div",{style:Object.assign({},aide,{fontSize:12,marginBottom:8})},"Tous les 6 mois, recopiez ici l'\u00e9cran Ospharm \u00ab Pyramide des \u00e2ges \u00bb (colonnes Ventes et D\u00e9partement %)."),
+React.createElement("input",{value:pyr.src||"",onChange:function(e){majSrc(e.target.value)},placeholder:"Source et date",style:Object.assign({},inp,{marginBottom:8})}),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:8}},
+PCM_TRANCHES.map(function(t,i){return React.createElement("div",{key:t[0],style:{border:"1px solid var(--border)",borderRadius:8,padding:8}},
+React.createElement("div",{style:{fontSize:12,fontWeight:600,marginBottom:4}},t[0]),
+React.createElement("label",{style:lab},"Ventes"),React.createElement("input",{type:"number",min:0,value:pyr.v[i],onChange:function(e){majPyr("v",i,e.target.value)},style:inp}),
+React.createElement("label",{style:Object.assign({},lab,{marginTop:4})},"D\u00e9partement %"),React.createElement("input",{type:"number",min:0,step:"any",value:pyr.dep[i],onChange:function(e){majPyr("dep",i,e.target.value)},style:inp}),
+React.createElement("label",{style:Object.assign({},lab,{marginTop:4})},"Panel %"),React.createElement("input",{type:"number",min:0,step:"any",value:pyr.pan[i],onChange:function(e){majPyr("pan",i,e.target.value)},style:inp}))}))):null);
+/* 5. Suivi reel */
+var cibleAn=c.cul;var bloc5;
+if(!suivi)bloc5=React.createElement("div",{style:carte},React.createElement("div",{style:h3},"Vos ventes r\u00e9elles"),React.createElement("div",{style:aide},"Importez vos ventes Winpharma pour suivre les culottes vendues."));
+else bloc5=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"Vos ventes r\u00e9elles depuis le 1er octobre 2026"),
+suivi.mois.length?React.createElement(PcmCourbe,{mois:suivi.mois,cible:cibleAn}):React.createElement("div",{style:{fontSize:13,color:"var(--text2)",padding:"10px 0"}},"\ud83d\udcc5 La courbe d\u00e9marrera d\u00e8s que vos ventes d'octobre 2026 seront import\u00e9es. Objectif du sc\u00e9nario central : environ ",React.createElement("b",null,fN(cibleAn/12)+" culottes par mois"),"."),
+React.createElement("div",{style:{fontSize:12,color:"var(--text2)",marginTop:8,lineHeight:1.5}},
+suivi.nbRefs+" r\u00e9f\u00e9rence"+(suivi.nbRefs>1?"s":"")+" reconnue"+(suivi.nbRefs>1?"s":"")+" dans vos ventes \u00b7 "+suivi.stk+" en stock \u00b7 "+suivi.avant+" vendue"+(suivi.avant>1?"s":"")+" sur les 12 mois pr\u00e9c\u00e9dant le remboursement."),
+suivi.items.length?React.createElement("div",{style:Object.assign({},aide,{marginTop:4})},"Produits suivis : "+suivi.items.slice(0,8).map(function(it){return it.p.n}).join(", ")+(suivi.items.length>8?"\u2026":"")):null,
+React.createElement("label",{style:Object.assign({},lab,{marginTop:10})},"Mots recherch\u00e9s dans le nom des produits"),
+React.createElement("input",{value:h.mots,onChange:function(e){majH("mots",e.target.value)},style:inp}),
+React.createElement("div",{style:aide},"S\u00e9parez par des virgules. Ajoutez les noms de marque si le mot \u00ab menstruelle \u00bb n'appara\u00eet pas dans le libell\u00e9 Winpharma. Attention : \u00ab CULOT \u00bb seul attraperait aussi les culottes b\u00e9b\u00e9 (Love Green, Joone) et les protections incontinence."));
+/* 6. Hypotheses */
+function champ(k,titre,unite,aideTxt,step){return React.createElement("div",{key:k},React.createElement("label",{style:lab},titre+(unite?" ("+unite+")":"")),
+React.createElement("input",{type:"number",min:0,step:step||"any",value:cfg.h&&cfg.h[k]!==undefined?cfg.h[k]:"",placeholder:String(PCM_DEF[k]),onChange:function(e){majH(k,e.target.value)},style:inp}),
+React.createElement("div",{style:aide},aideTxt))}
+var bloc6=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"Hypoth\u00e8ses (modifiables)"),
+React.createElement("div",{style:Object.assign({},aide,{fontSize:12,marginBottom:10})},"Laissez vide pour garder la valeur par d\u00e9faut (en gris). Chaque modification recalcule tout instantan\u00e9ment."),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:12}},
+champ("fem","Part de femmes parmi les 13-25 ans","%","Hypoth\u00e8se. La valeur exacte est dans votre fichier patients Winpharma."),
+champ("vpp","Passages par patiente en 6 mois","","Hypoth\u00e8se. Convertit les \u00ab ventes \u00bb Ospharm en personnes."),
+champ("reel","Nombre r\u00e9el de patientes de moins de 26 ans","","Facultatif : si vous l'extrayez de Winpharma, il remplace l'estimation.",1),
+champ("ageReg","\u00c2ge de d\u00e9but retenu","ans","\u00c2ge m\u00e9dian aux premi\u00e8res r\u00e8gles en France : 13,1 ans (INED).",1),
+champ("adopt","Taux d'adoption (sc\u00e9nario central)","%","7 % des femmes utilisaient la culotte en 2021, 69 % se disaient pr\u00eates \u00e0 essayer (Ifop). Le remboursement devrait faire monter ce taux."),
+champ("nbAn","Culottes par cliente et par an","","2 au maximum rembours\u00e9es par p\u00e9riode de 12 mois."),
+champ("c2s","Part de b\u00e9n\u00e9ficiaires C2S (26-"+h.ageFin+" ans)","%","Environ 10 % de la population en France (7,2 millions) ; probablement moins dans votre zone."),
+champ("ageFin","\u00c2ge maximal pris en compte (C2S)","ans","Approximation de la fin des r\u00e8gles.",1),
+champ("pv","Prix de vente","\u20ac TTC","Prix limite de vente : 19,00 \u20ac TTC (arr\u00eat\u00e9 du 6 ao\u00fbt 2026)."),
+champ("achat","Prix d'achat","\u20ac HT","11,60 \u20ac = votre culotte EASY en stock. Ajustez selon votre fournisseur."),
+champ("tva","TVA","%","Taux r\u00e9duit de 5,5 % pour les culottes menstruelles.")));
+/* 7. Comptoir */
+var rac=h.pv*0.4;
+var bloc7=React.createElement("div",{style:Object.assign({},carte,{background:"#fdf2f8",borderColor:"#fbcfe8"})},
+React.createElement("div",{style:h3},"\ud83d\udcac L'argumentaire comptoir"),
+React.createElement("div",{style:{fontSize:13,lineHeight:1.7,color:"var(--text)"}},
+"\u2022 Sans ordonnance, avec la carte Vitale.",React.createElement("br"),
+"\u2022 Moins de 26 ans : rembours\u00e9e \u00e0 60 %, il reste \u2248 "+rac.toFixed(2).replace(".",",")+" \u20ac \u00e0 payer (avant mutuelle).",React.createElement("br"),
+"\u2022 B\u00e9n\u00e9ficiaires de la C2S : gratuite, quel que soit l'\u00e2ge.",React.createElement("br"),
+"\u2022 2 produits par an (culottes et/ou coupe), compt\u00e9s de date \u00e0 date.",React.createElement("br"),
+"\u2022 Seules les r\u00e9f\u00e9rences inscrites sur la liste de remboursement (code LPP individuel) sont prises en charge : v\u00e9rifiez votre gamme."));
+/* 8. Sources */
+var bloc8=React.createElement("div",{style:carte},
+React.createElement("div",{style:h3},"\ud83d\udcda Sources"),
+React.createElement("ul",{style:{paddingLeft:18,fontSize:12,lineHeight:1.7}},PCM_SOURCES.map(function(s){return React.createElement("li",{key:s[1]},React.createElement("a",{href:s[1],target:"_blank",rel:"noopener noreferrer"},s[0]))})),
+React.createElement("div",{style:Object.assign({},aide,{marginTop:6})},"Les valeurs marqu\u00e9es \u00ab hypoth\u00e8se \u00bb ne viennent pas d'une source : ce sont des points de d\u00e9part \u00e0 affiner avec vos propres chiffres."));
+return React.createElement("div",null,entete,bloc1,bloc2,bloc3,bloc5,bloc4,bloc7,bloc6,bloc8)}
+
 function NouvelleGammePage(props){
 var pd=props.pd;var projets=props.projets||[];var setProjets=props.setProjets;
 var selS=useState(function(){return projets.length?projets[0].id:null});var sel=selS[0];var setSel=selS[1];
@@ -9508,6 +9702,7 @@ var promoAjS=useState([]);var promosAj=promoAjS[0];var setPromosAj=promoAjS[1];
 var ruptS=useState(null);var ruptures=ruptS[0];var setRuptures=ruptS[1];
 var metS=useState({});var metres=metS[0];var setMetres=metS[1];
 var pgS=useState([]);var projGammes=pgS[0];var setProjGammes=pgS[1];
+var pcmS=useState(PCM_INIT);var pcmCfg=pcmS[0];var setPcmCfg=pcmS[1];var pcmPret=useRef(false);
 var dcS=useState([]);var duelCats=dcS[0];var setDuelCats=dcS[1];
 var rgS=useState([]);var regLabos=rgS[0];var setRegLabos=rgS[1];
 var mdlS=useState(function(){var v=lsVal("ps_mdl_mode",null);if(v==="t5"||v==="brut")return v;return lsVal("ps_mdl_retraite",false)===true?"t5":"brut"});var mdlR=mdlS[0];var setMdlR=function(v){mdlS[1](v);try{localStorage.setItem("ps_mdl_mode",JSON.stringify(v))}catch(e){}};
@@ -9821,6 +10016,14 @@ var cf=r[1]&&typeof r[1]==="object"?r[1]:(lsJ("ps_campagne_cfg")||{});if(r[1]&&t
 setCampCS(function(cur){return cur&&cur.D&&cur.cov&&cs.cov&&cur.cov[1]>cs.cov[1]?cur:cs});setCampCf(cf);campPret.current=true})},[]);
 useEffect(function(){if(!campPret.current||!campCS||!auth||auth.role!=="admin")return;try{localStorage.setItem("ps_campagne",JSON.stringify(campCS))}catch(e){};syncSave("campagne_sante",campCS,setCampCS)},[campCS]);
 useEffect(function(){if(!campPret.current||!campCf||!auth||auth.role!=="admin")return;try{localStorage.setItem("ps_campagne_cfg",JSON.stringify(campCf))}catch(e){};syncSave("campagne_reglages",campCf,setCampCf)},[campCf]);
+/* Potentiel culottes menstruelles (v8.45) : chargement puis enregistrement (admin) */
+useEffect(function(){
+var p=supaClient?supaLoad("potentiel_culottes").catch(function(){return null}):Promise.resolve(null);
+p.then(function(r){var v=null;
+if(r&&typeof r==="object"&&r.pyr){v=r;SYNC_BASE["potentiel_culottes"]=r}
+else{try{var x=localStorage.getItem("ps_potentiel_culottes");if(x){x=JSON.parse(x);if(x&&x.pyr)v=x}}catch(e){}}
+if(v)setPcmCfg(v);pcmPret.current=true})},[]);
+useEffect(function(){if(!pcmPret.current||!pcmCfg||!auth||auth.role!=="admin")return;try{localStorage.setItem("ps_potentiel_culottes",JSON.stringify(pcmCfg))}catch(e){};syncSave("potentiel_culottes",pcmCfg,setPcmCfg)},[pcmCfg]);
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_univ_labos",JSON.stringify(univOvr))}catch(e){};syncSave("univers_labos",univOvr,setUnivOvr)},[univOvr]);
 /* Reglages Google : completes par ceux deja presents sur cet appareil, puis recopies dans l'appareil */
 useEffect(function(){if(!supaLoaded)return;
@@ -9868,7 +10071,7 @@ useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_decision
 
 /* Mise a jour depuis les autres appareils */
 var syncLive=useRef({});
-syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos],univers_regles:[univRegles,setUnivRegles],campagne_sante:[campCS,setCampCS],campagne_reglages:[campCf,setCampCf]};
+syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos],univers_regles:[univRegles,setUnivRegles],campagne_sante:[campCS,setCampCS],campagne_reglages:[campCf,setCampCf],potentiel_culottes:[pcmCfg,setPcmCfg]};
 var supaLoadedRef=useRef(false);supaLoadedRef.current=supaLoaded;
 useEffect(function(){
 if(!supaClient)return;
@@ -10066,6 +10269,8 @@ content=React.createElement(CommandesPage,{conditions:conditions,key:"cmd-"+(pd?
 content=React.createElement(ComparePage,{ld:ldLive,pd:pdCal});
 }else if(page==="avis"){
 content=React.createElement(AvisMarquesPage,{ld:ldLive,pd:pdCal,decisions:decisions,setLabDecision:setLabDecision,openLab:function(n,t){openLab(n);labTabInit.current=t||null}});
+}else if(page==="potentiel"){
+content=React.createElement(PotentielCulottesPage,{pd:pdCal,cfg:pcmCfg,setCfg:setPcmCfg,setPage:setPage});
 }else if(page==="nouvgamme"){
 content=React.createElement(NouvelleGammePage,{pd:pdCal,projets:projGammes,setProjets:setProjGammes,metres:metres,setPage:setPage});
 }else if(page==="vaccins"){
