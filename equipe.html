@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.12">
+<meta name="ps-version" content="e1.13">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -450,13 +450,17 @@ var d=(v.RECD||[]).slice().sort();if(d.length)out.fin=d[d.length-1];
 if(i0<0)return out;var vu={};
 Object.keys(v.P).forEach(function(s){(v.P[s]||[]).forEach(function(p){if(!p||!p.n||(p.c&&vu[p.c]))return;var q=[],t=0;
 for(var k=i0;k<v.M.length;k++){var x=(p.qm&&p.qm[k])||0;q.push(x);t+=x}
-if(t>0){if(p.c)vu[p.c]=1;out.R.push({n:p.n,q:q})}})});
+if(t>0){if(p.c)vu[p.c]=1;out.R.push({n:p.n,c:p.c||"",q:q})}})});
 return out}
-function culSuivi(ext,mots){
-var mt=motsGamme(mots);if(!ext||!mt.length)return null;
-function ok(nom){var N=nomNorm(nom);return mt.some(function(m){return N.indexOf(" "+m+" ")>=0})}
+function culCodes(cfg){return(cfg&&cfg.codes)||[]}
+function culNomOk(nom,mt){var N=nomNorm(nom);if(mt.some(function(m){return N.indexOf(" "+m+" ")>=0}))return true;
+/* abreviations Winpharma : MENSTR., MENST. */
+if(mt.some(function(m){return m.indexOf("MENSTRU")===0})&&(N.indexOf(" MENSTR ")>=0||N.indexOf(" MENST ")>=0))return true;return false}
+function culSuivi(ext,mots,codes){
+var mt=motsGamme(mots);var cs={};(codes||[]).forEach(function(c){cs[String(c).replace(/\s/g,"")]=1});if(!ext||(!mt.length&&!Object.keys(cs).length))return null;
+function ok(nom,c){return(c&&cs[c])||culNomOk(nom,mt)}
 var n=ext.M.length;var parMois=[];for(var k=0;k<n;k++)parMois.push(0);var refs=[];
-ext.R.forEach(function(r){if(!ok(r.n))return;var t=0;r.q.forEach(function(x,k){parMois[k]+=x;t+=x});if(t>0)refs.push({n:r.n,t:t})});
+ext.R.forEach(function(r){if(!ok(r.n,r.c))return;var t=0;r.q.forEach(function(x,k){parMois[k]+=x;t+=x});if(t>0)refs.push({n:r.n,t:t})});
 refs.sort(function(a,b){return b.t-a.t});
 var cum=0;var mois=parMois.map(function(q,k){cum+=q;return{mk:ext.M[k],q:Math.round(q),cum:Math.round(cum),complet:k<n-1}});
 return{mois:mois,tot:Math.round(cum),refs:refs,fin:ext.fin}}
@@ -499,7 +503,7 @@ React.createElement("div",{style:{fontSize:10,opacity:0.85}},MOIS_COURT[m])))}
 return React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(12,1fr)",gap:2,marginTop:10}},cases)}
 
 function CulottesEquipe(props){
-var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots);var me=culMoisEnCours(su,obj);
+var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots,culCodes(props.cfg));var me=culMoisEnCours(su,obj);
 var tot=su?su.tot:0;var hu=culHumeur(me.q,me.attendu,me.cible);
 var carte={background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:14,marginBottom:12};
 var pctAn=Math.min(100,tot/obj.an*100);
@@ -542,7 +546,7 @@ return React.createElement("div",null,hero,courbe,top,conseils)}
 
 /* bandeau compact pour l'accueil */
 function BandeauCulottes(props){
-var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots);var me=culMoisEnCours(su,obj);var hu=culHumeur(me.q,me.attendu,me.cible);
+var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots,culCodes(props.cfg));var me=culMoisEnCours(su,obj);var hu=culHumeur(me.q,me.attendu,me.cible);
 return React.createElement("button",{onClick:props.onClick,style:{display:"flex",alignItems:"center",gap:12,width:"100%",textAlign:"left",background:"linear-gradient(135deg,#be185d,#7c3aed)",color:"#fff",borderRadius:14,padding:"12px 14px",marginBottom:14,boxShadow:"0 4px 14px rgba(190,24,93,.22)"}},
 React.createElement("span",{style:{fontSize:30}},hu[0]),
 React.createElement("span",{style:{flex:1,minWidth:0}},React.createElement("span",{style:{display:"block",fontSize:20,fontWeight:800,lineHeight:1.15}},me.q+" / "+me.cible+" culottes"),React.createElement("span",{style:{display:"block",fontSize:13,opacity:0.92}},"objectif de "+me.lib+" \u00b7 culottes menstruelles")),
@@ -558,7 +562,7 @@ React.createElement(BandeauCampagne,{cs:props.cs,cfg:props.cfg,setPage:props.onC
 /* nombre affiche sur la tuile Vaccins : J-x avant la campagne, puis vaccinations grippe */
 function tuileVaccins(cs,cfg){try{var C=campCfg(cfg);var auj=aujIso();if(auj<C.debut)return "J-"+(tdgDayNum(C.debut)-tdgDayNum(auj));
 var fin=auj<C.fin?auj:C.fin;return campGrippe(campCompter(cs,C,C.debut,fin))}catch(e){return null}}
-function tuileCulottes(cfg,ext){try{var obj=culObjectif(cfg);var su=culSuivi(ext,obj.h.mots);return su?su.tot:0}catch(e){return null}}
+function tuileCulottes(cfg,ext){try{var obj=culObjectif(cfg);var su=culSuivi(ext,obj.h.mots,culCodes(cfg));return su?su.tot:0}catch(e){return null}}
 
 return{VaccinsEquipe:VaccinsEquipe,BandeauVaccins:BandeauVaccins,CulottesEquipe:CulottesEquipe,BandeauCulottes:BandeauCulottes,culExtraire:culExtraire,tuileVaccins:tuileVaccins,tuileCulottes:tuileCulottes};
 })();
