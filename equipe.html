@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.14">
+<meta name="ps-version" content="e1.15">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -456,11 +456,15 @@ function culCodes(cfg){return(cfg&&cfg.codes)||[]}
 function culNomOk(nom,mt){var N=nomNorm(nom);if(mt.some(function(m){return N.indexOf(" "+m+" ")>=0}))return true;
 /* abreviations Winpharma : MENSTR., MENST. */
 if(mt.some(function(m){return m.indexOf("MENSTRU")===0})&&(N.indexOf(" MENSTR ")>=0||N.indexOf(" MENST ")>=0))return true;return false}
+/* Codes LPP des culottes menstruelles remboursees (ligne generique 1724852 + codes individuels, liste SAP Sante) */
+var CUL_LPP=["1724852","6706971","6724578","6784014","6790121","6775452"];
+function culCodeLpp(c){c=String(c||"").replace(/\s/g,"");if(!c)return false;var c0=c.replace(/^0+/,"");
+return CUL_LPP.some(function(k){return c===k||c0===k||c.indexOf(k)>=0})}
 function culGarde(nom,tva,h){h=h||{};var N=nomNorm(nom);var ex=motsGamme(h.exclus);if(ex.some(function(m){return N.indexOf(" "+m+" ")>=0}))return false;
 var tr=pcmNum(h.tvaR,0);if(tr>0&&tva!==null&&tva!==undefined&&Math.abs(tva-tr)>0.01)return false;return true}
 function culSuivi(ext,mots,codes,h){
 var mt=motsGamme(mots);var cs={};(codes||[]).forEach(function(c){cs[String(c).replace(/\s/g,"")]=1});if(!ext||(!mt.length&&!Object.keys(cs).length))return null;
-function ok(nom,c,t){return(c&&cs[c])||(culNomOk(nom,mt)&&culGarde(nom,t,h))}
+function ok(nom,c,t){return(c&&(cs[c]||culCodeLpp(c)))||(culNomOk(nom,mt)&&culGarde(nom,t,h))}
 var n=ext.M.length;var parMois=[];for(var k=0;k<n;k++)parMois.push(0);var refs=[];
 ext.R.forEach(function(r){if(!ok(r.n,r.c,r.t))return;var t=0;r.q.forEach(function(x,k){parMois[k]+=x;t+=x});if(t>0)refs.push({n:r.n,t:t})});
 refs.sort(function(a,b){return b.t-a.t});
