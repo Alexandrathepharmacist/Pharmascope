@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.11">
+<meta name="ps-version" content="e1.12">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -624,6 +624,13 @@ if(v.STKG&&v.STKG[c])out.STKG[c]=v.STKG[c]});
 out.CAT=[];out.LABS=[];
 if(v.P)Object.keys(v.P).forEach(function(lab){out.LABS.push(lab);(v.P[lab]||[]).forEach(function(p){if(p&&p.n)out.CAT.push({n:p.n,c:p.c||"",lab:lab,k:normTxt(p.n+" "+lab)})})});
 out.LABS.sort();
+/* Labo de chaque produit vendu (pour classer le reassort par labo) : on prefere un vrai labo a un grossiste. */
+var GROS=["CERP","OCP","COPHAS","COPHASE","PHOENIX","ALLIANCE HEALTHCARE","ASTERA","MOVIANTO","ALLOGA"];
+function estGros(s){var u=String(s||"").toUpperCase().trim();return !u||u==="INCONNU"||u==="DIVERS"||GROS.some(function(g){return u===g||u.indexOf(g+" ")===0})}
+out.LAB={};
+if(v.P)Object.keys(v.P).forEach(function(lab){(v.P[lab]||[]).forEach(function(p){if(p&&p.c&&out.REC[p.c]&&(!out.LAB[p.c]||estGros(out.LAB[p.c])))out.LAB[p.c]=lab})});
+if(v.STKV)Object.keys(out.REC).forEach(function(c){var s=v.STKV[c];if(Array.isArray(s)&&s[2]&&(!out.LAB[c]||estGros(out.LAB[c])))out.LAB[c]=s[2]});
+Object.keys(out.LAB).forEach(function(c){if(estGros(out.LAB[c]))delete out.LAB[c];else out.LAB[c]=String(out.LAB[c]).replace(/ REF$/,"")});
 return out}
 function normTxt(s){return String(s||"").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
 function chercherProduits(cat,q,max){
@@ -1305,6 +1312,7 @@ fr.onerror=function(){cb(null)};fr.readAsDataURL(file)}
 
 /* ===== Reassort rayon ===== */
 var FACING=5;
+var LAB_AUTRES="Autres / grossistes";
 function calculReassort(rea,nbJours){
 if(!rea||!rea.REC)return{lignes:[],deb:"",fin:""};
 var dates=rea.RECD||[];var fen=dates.slice(Math.max(0,dates.length-nbJours));var fs={};fen.forEach(function(d){fs[d]=1});
@@ -1316,20 +1324,21 @@ if(vendu<=0)return;
 var dispo=rea.STKU.hasOwnProperty(code)?rea.STKU[code]:null;
 if(dispo!==null&&dispo<=0)return;
 var a=Math.min(Math.round(vendu),FACING);if(dispo!==null&&dispo<a)a=dispo;if(a<1)return;
-lignes.push({c:code,n:e.n||("EAN "+code),a:a,prio:vendu>=FACING,t:vendu,g:rea.STKG[code]||""})});
+lignes.push({c:code,n:e.n||("EAN "+code),a:a,prio:vendu>=FACING,t:vendu,g:rea.STKG[code]||"",lab:(rea.LAB&&rea.LAB[code])||LAB_AUTRES})});
 return{lignes:lignes,deb:fen[0]||"",fin:fen[fen.length-1]||""}}
 function Reassort(p){
 var js=useState(function(){return lsGet("pse_rea_jours",1)});var nbJ=js[0],setNbJ=js[1];
-var ts=useState(function(){return lsGet("pse_rea_tri","emplacement")});var tri=ts[0],setTri=ts[1];
+var ts=useState(function(){return lsGet("pse_rea_tri2","labo")});var tri=ts[0],setTri=ts[1];
 var ss=useState("");var cherche=ss[0],setCherche=ss[1];
 var vs=useState(false);var tout=vs[0],setTout=vs[1];
 useEffect(function(){lsSet("pse_rea_jours",nbJ)},[nbJ]);
-useEffect(function(){lsSet("pse_rea_tri",tri)},[tri]);
+useEffect(function(){lsSet("pse_rea_tri2",tri)},[tri]);
 var calc=useMemo(function(){return calculReassort(p.rea,nbJ)},[p.rea,nbJ]);
 var faits=p.faits||{};
 var lignes=calc.lignes.slice();
 var nGeo=lignes.filter(function(l){return !!l.g}).length;
-if(tri==="emplacement"&&nGeo)lignes.sort(function(a,b){if(!a.g&&b.g)return 1;if(a.g&&!b.g)return -1;return a.g.localeCompare(b.g,"fr",{numeric:true})||b.t-a.t});
+if(tri==="labo")lignes.sort(function(a,b){var o=(a.lab===LAB_AUTRES?1:0)-(b.lab===LAB_AUTRES?1:0);return o||a.lab.localeCompare(b.lab,"fr")||b.t-a.t});
+else if(tri==="emplacement"&&nGeo)lignes.sort(function(a,b){if(!a.g&&b.g)return 1;if(a.g&&!b.g)return -1;return a.g.localeCompare(b.g,"fr",{numeric:true})||b.t-a.t});
 else lignes.sort(function(a,b){return b.t-a.t});
 if(cherche){var q=cherche.toLowerCase();lignes=lignes.filter(function(l){return l.n.toLowerCase().indexOf(q)>=0||l.c.indexOf(cherche)>=0})}
 var restant=lignes.filter(function(l){return !faits[l.c]});
@@ -1351,19 +1360,26 @@ h("div",null,
 h("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10,alignItems:"center"}},
 [[1,"Dernier jour"],[3,"3 jours"],[7,"7 jours"]].map(function(o){return h(Puce,{key:o[0],on:nbJ===o[0],onClick:function(){setNbJ(o[0])}},o[1])}),
 h("span",{style:{flex:1}}),
+h(Puce,{on:tri==="labo",onClick:function(){setTri(tri==="labo"?"urgence":"labo")}},"\ud83c\udff7\ufe0f Par labo"),
 nGeo?h(Puce,{on:tri==="emplacement",onClick:function(){setTri(tri==="emplacement"?"urgence":"emplacement")}},"\ud83d\udccd Par rayon"):null,
 restant.length?h(Puce,{on:false,onClick:imprimer},"\ud83d\udda8\ufe0f"):null),
 h("input",{value:cherche,onChange:function(e){setCherche(e.target.value)},placeholder:"Chercher un produit\u2026",style:{width:"100%",padding:"10px 12px",borderRadius:10,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:15,marginBottom:10,outline:"none"}}),
 !restant.length?h(Vide,null,lignes.length?"\ud83c\udf89 Rayons remplis, tout est remont\u00e9 !":"Rien \u00e0 remonter sur cette p\u00e9riode"):
-h("div",{style:{display:"grid",gap:6}},vis.map(function(l){
-return h("button",{key:l.c,onClick:function(){p.onFait(l.c,true)},style:{display:"flex",gap:12,alignItems:"center",textAlign:"left",width:"100%",padding:"10px 12px",borderRadius:12,background:"var(--bg)",border:"1px solid "+(l.prio?"var(--orange)":"var(--border)")}},
+h("div",{style:{display:"grid",gap:6}},vis.map(function(l,i){
+var ent=tri==="labo"&&(i===0||vis[i-1].lab!==l.lab)?(function(){var codes=restant.filter(function(x){return x.lab===l.lab}).map(function(x){return x.c});
+return h("div",{key:"h-"+l.lab,style:{minWidth:0,display:"flex",alignItems:"center",gap:8,padding:i?"12px 2px 2px":"2px 2px 2px"}},
+h("div",{style:{flex:1,minWidth:0,fontSize:15,fontWeight:800},className:"coupe"},l.lab),
+h("span",{style:{fontSize:12,color:"var(--text3)",flexShrink:0}},codes.length+" produit"+(codes.length>1?"s":"")),
+p.onFaitLabo&&codes.length>1?h("button",{onClick:function(){p.onFaitLabo(codes)},style:{flexShrink:0,padding:"7px 11px",borderRadius:10,fontSize:12,fontWeight:700,border:"1px solid var(--accent)",color:"var(--accent)",background:"transparent"}},"\u2713 tout remont\u00e9"):null)})():null;
+var ligne=h("button",{key:l.c,onClick:function(){p.onFait(l.c,true)},style:{display:"flex",gap:12,alignItems:"center",textAlign:"left",width:"100%",padding:"10px 12px",borderRadius:12,background:"var(--bg)",border:"1px solid "+(l.prio?"var(--orange)":"var(--border)")}},
 h(Case,{on:false}),
 h("div",{style:{minWidth:40,textAlign:"center",flexShrink:0}},h("div",{style:{fontSize:22,fontWeight:800,color:"var(--accent)",lineHeight:1}},l.a),h("div",{style:{fontSize:11,color:"var(--text3)"}},l.a>1?"bo\u00eetes":"bo\u00eete")),
 h("div",{style:{flex:1,minWidth:0}},
 h("div",{style:{fontSize:14,fontWeight:700,lineHeight:1.3}},l.n),
 l.g||l.prio?h("div",{style:{display:"flex",gap:6,marginTop:4,flexWrap:"wrap"}},
 l.g?h("span",{style:{fontSize:12,color:"var(--text2)"}},"\ud83d\udccd "+l.g):null,
-l.prio?h(Pastille,{bg:"var(--orange-bg)",c:"var(--orange)"},"Rayon vide"):null):null))})),
+l.prio?h(Pastille,{bg:"var(--orange-bg)",c:"var(--orange)"},"Rayon vide"):null):null));
+return ent?h(React.Fragment,{key:"f-"+l.c},ent,ligne):ligne})),
 restant.length>vis.length?h(BoutonLien,{onClick:function(){setTout(true)}},"Voir les "+(restant.length-vis.length)+" autres produits"):null,
 faitsL.length?h("details",{style:{marginTop:12}},
 h("summary",{style:{fontSize:13,color:"var(--text3)",cursor:"pointer",fontWeight:600}},"D\u00e9j\u00e0 remont\u00e9s aujourd'hui ("+faitsL.length+")"),
@@ -1463,6 +1479,14 @@ var row={date:aujIso(),c:c};setFaitsRow(row);fRef.current=row;
 if(SYNC_BASE.equipe_reassort_faits&&SYNC_BASE.equipe_reassort_faits.date!==row.date){SYNC_BASE.equipe_reassort_faits={date:row.date,c:{}}}
 enregistrer("equipe_reassort_faits",row,function(v){if(v&&v.date===aujIso())setFaitsRow(v)},horsLigne)}
 
+function reassortFaitLabo(codes){
+var cur=fRef.current.date===aujIso()?fRef.current:{date:aujIso(),c:{}};
+var c=Object.assign({},cur.c);codes.forEach(function(code){c[code]=moi||1});
+var row={date:aujIso(),c:c};setFaitsRow(row);fRef.current=row;
+if(SYNC_BASE.equipe_reassort_faits&&SYNC_BASE.equipe_reassort_faits.date!==row.date){SYNC_BASE.equipe_reassort_faits={date:row.date,c:{}}}
+enregistrer("equipe_reassort_faits",row,function(v){if(v&&v.date===aujIso())setFaitsRow(v)},horsLigne);
+montrer("\u2713 "+codes.length+" produits remont\u00e9s",function(){var c2=Object.assign({},fRef.current.c);codes.forEach(function(k){delete c2[k]});var r2={date:aujIso(),c:c2};setFaitsRow(r2);fRef.current=r2;enregistrer("equipe_reassort_faits",r2,function(v){if(v&&v.date===aujIso())setFaitsRow(v)},horsLigne)})}
+
 /* Creation / modification / suppression, au meme format que PharmaScope */
 var NOMS_EL={tasks:"T\u00e2che",tdgs:"T\u00eate de gondole",challenges:"Challenge"};var FEM={tasks:"e",tdgs:"e",challenges:""};
 function enregistrerEl(cle,obj){
@@ -1515,7 +1539,7 @@ var blocs={
 taches:h(Taches,Object.assign({key:"t",tasks:d.tasks,onEtape:etapeFaite,onFait:function(t){tacheFaite(t,true)},onRefaire:function(t){tacheFaite(t,false)},onGerer:function(){aller("taches")}},props)),
 tg:h(TetesGondole,Object.assign({key:"g",tdgs:d.tdgs,photos:photos,ventes:ventes,onCheck:cocherTG,onGerer:function(){aller("tg")}},props)),
 challenges:h(Challenges,Object.assign({key:"c",challenges:d.challenges,ventes:ventes,cat:cat,onGerer:function(){aller("challenges")}},props)),
-reassort:h(Reassort,Object.assign({key:"r",rea:rea,reaCharge:reaCharge,faits:faits,onFait:reassortFait},props))};
+reassort:h(Reassort,Object.assign({key:"r",rea:rea,reaCharge:reaCharge,faits:faits,onFait:reassortFait,onFaitLabo:reassortFaitLabo},props))};
 
 var heureTxt=new Date().getHours()<12?"Bonjour":new Date().getHours()<18?"Bon apr\u00e8s-midi":"Bonsoir";
 return h("div",{style:{maxWidth:1200,margin:"0 auto",padding:"calc(env(safe-area-inset-top,0px) + 14px) 16px 90px"}},
