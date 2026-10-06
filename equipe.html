@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.13">
+<meta name="ps-version" content="e1.14">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -101,9 +101,9 @@ function sansNom(nom){return !nom||/^EAN /.test(nom)||/^[0-9 ]+$/.test(nom)}
 function motsGamme(txt){return String(txt||"").split(/[,;]+/).map(function(x){return nomNorm(x).trim()}).filter(function(x){return x.length>=3})}
 var PCM_TRANCHES=[["De 0 \u00e0 3 ans",0,3],["De 4 \u00e0 9 ans",4,9],["De 10 \u00e0 20 ans",10,20],["De 21 \u00e0 34 ans",21,34],["De 35 \u00e0 44 ans",35,44],["De 45 \u00e0 59 ans",45,59],["De 60 \u00e0 69 ans",60,69],["De 70 \u00e0 79 ans",70,79],["De 80 \u00e0 120 ans",80,120]];
 var PCM_INIT={pyr:{v:[471,404,1086,2187,2020,4396,3834,4086,5451],dep:[2.9,2.5,5.6,11.4,11.4,20.1,15.8,16.7,13.8],pan:[2.4,2.2,5.2,10.1,9.7,19.2,17.1,19.0,15.3],src:"Ospharm, 6 derniers mois au 03/10/2026"},h:{}};
-var PCM_DEF={fem:55,vpp:2,ageReg:13,ageFin:50,c2s:3,adopt:20,nbAn:1.6,pv:19,tva:5.5,achat:11.6,reel:0,mots:"MENSTRUELLE, MENSTRUELLES, MENSTRUEL"};
+var PCM_DEF={fem:55,vpp:2,ageReg:13,ageFin:50,c2s:3,adopt:20,nbAn:1.6,pv:19,tva:5.5,achat:11.6,reel:0,mots:"MENSTRUELLE, MENSTRUELLES, MENSTRUEL",exclus:"JOONE, LOVE GREEN, PETITES CHOSES, COUCHE, COUCHES, COUCH, BEBE",tvaR:0};
 function pcmNum(x,d){var n=parseFloat(String(x===undefined||x===null?"":x).replace(",","."));return isNaN(n)?d:n}
-function pcmHyp(cfg){var h={};var src=(cfg&&cfg.h)||{};Object.keys(PCM_DEF).forEach(function(k){h[k]=k==="mots"?(src.mots||PCM_DEF.mots):pcmNum(src[k],PCM_DEF[k])});return h}
+function pcmHyp(cfg){var h={};var src=(cfg&&cfg.h)||{};Object.keys(PCM_DEF).forEach(function(k){h[k]=k==="mots"?(src.mots||PCM_DEF.mots):(k==="exclus"?(src.exclus!==undefined?src.exclus:PCM_DEF.exclus):pcmNum(src[k],PCM_DEF[k]))});return h}
 function pcmPart(t,a,b){var x=Math.max(t[1],a),y=Math.min(t[2],b);if(y<x)return 0;return(y-x+1)/(t[2]-t[1]+1)}
 function pcmCalc(cfg,adopt,boost){
 var h=pcmHyp(cfg);var pyr=(cfg&&cfg.pyr)||PCM_INIT.pyr;
@@ -450,17 +450,19 @@ var d=(v.RECD||[]).slice().sort();if(d.length)out.fin=d[d.length-1];
 if(i0<0)return out;var vu={};
 Object.keys(v.P).forEach(function(s){(v.P[s]||[]).forEach(function(p){if(!p||!p.n||(p.c&&vu[p.c]))return;var q=[],t=0;
 for(var k=i0;k<v.M.length;k++){var x=(p.qm&&p.qm[k])||0;q.push(x);t+=x}
-if(t>0){if(p.c)vu[p.c]=1;out.R.push({n:p.n,c:p.c||"",q:q})}})});
+if(t>0){if(p.c)vu[p.c]=1;out.R.push({n:p.n,c:p.c||"",t:(typeof p.tva==="number"?p.tva:null),q:q})}})});
 return out}
 function culCodes(cfg){return(cfg&&cfg.codes)||[]}
 function culNomOk(nom,mt){var N=nomNorm(nom);if(mt.some(function(m){return N.indexOf(" "+m+" ")>=0}))return true;
 /* abreviations Winpharma : MENSTR., MENST. */
 if(mt.some(function(m){return m.indexOf("MENSTRU")===0})&&(N.indexOf(" MENSTR ")>=0||N.indexOf(" MENST ")>=0))return true;return false}
-function culSuivi(ext,mots,codes){
+function culGarde(nom,tva,h){h=h||{};var N=nomNorm(nom);var ex=motsGamme(h.exclus);if(ex.some(function(m){return N.indexOf(" "+m+" ")>=0}))return false;
+var tr=pcmNum(h.tvaR,0);if(tr>0&&tva!==null&&tva!==undefined&&Math.abs(tva-tr)>0.01)return false;return true}
+function culSuivi(ext,mots,codes,h){
 var mt=motsGamme(mots);var cs={};(codes||[]).forEach(function(c){cs[String(c).replace(/\s/g,"")]=1});if(!ext||(!mt.length&&!Object.keys(cs).length))return null;
-function ok(nom,c){return(c&&cs[c])||culNomOk(nom,mt)}
+function ok(nom,c,t){return(c&&cs[c])||(culNomOk(nom,mt)&&culGarde(nom,t,h))}
 var n=ext.M.length;var parMois=[];for(var k=0;k<n;k++)parMois.push(0);var refs=[];
-ext.R.forEach(function(r){if(!ok(r.n,r.c))return;var t=0;r.q.forEach(function(x,k){parMois[k]+=x;t+=x});if(t>0)refs.push({n:r.n,t:t})});
+ext.R.forEach(function(r){if(!ok(r.n,r.c,r.t))return;var t=0;r.q.forEach(function(x,k){parMois[k]+=x;t+=x});if(t>0)refs.push({n:r.n,t:t})});
 refs.sort(function(a,b){return b.t-a.t});
 var cum=0;var mois=parMois.map(function(q,k){cum+=q;return{mk:ext.M[k],q:Math.round(q),cum:Math.round(cum),complet:k<n-1}});
 return{mois:mois,tot:Math.round(cum),refs:refs,fin:ext.fin}}
@@ -503,7 +505,7 @@ React.createElement("div",{style:{fontSize:10,opacity:0.85}},MOIS_COURT[m])))}
 return React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(12,1fr)",gap:2,marginTop:10}},cases)}
 
 function CulottesEquipe(props){
-var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots,culCodes(props.cfg));var me=culMoisEnCours(su,obj);
+var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots,culCodes(props.cfg),obj.h);var me=culMoisEnCours(su,obj);
 var tot=su?su.tot:0;var hu=culHumeur(me.q,me.attendu,me.cible);
 var carte={background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:14,marginBottom:12};
 var pctAn=Math.min(100,tot/obj.an*100);
@@ -546,7 +548,7 @@ return React.createElement("div",null,hero,courbe,top,conseils)}
 
 /* bandeau compact pour l'accueil */
 function BandeauCulottes(props){
-var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots,culCodes(props.cfg));var me=culMoisEnCours(su,obj);var hu=culHumeur(me.q,me.attendu,me.cible);
+var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots,culCodes(props.cfg),obj.h);var me=culMoisEnCours(su,obj);var hu=culHumeur(me.q,me.attendu,me.cible);
 return React.createElement("button",{onClick:props.onClick,style:{display:"flex",alignItems:"center",gap:12,width:"100%",textAlign:"left",background:"linear-gradient(135deg,#be185d,#7c3aed)",color:"#fff",borderRadius:14,padding:"12px 14px",marginBottom:14,boxShadow:"0 4px 14px rgba(190,24,93,.22)"}},
 React.createElement("span",{style:{fontSize:30}},hu[0]),
 React.createElement("span",{style:{flex:1,minWidth:0}},React.createElement("span",{style:{display:"block",fontSize:20,fontWeight:800,lineHeight:1.15}},me.q+" / "+me.cible+" culottes"),React.createElement("span",{style:{display:"block",fontSize:13,opacity:0.92}},"objectif de "+me.lib+" \u00b7 culottes menstruelles")),
@@ -562,7 +564,7 @@ React.createElement(BandeauCampagne,{cs:props.cs,cfg:props.cfg,setPage:props.onC
 /* nombre affiche sur la tuile Vaccins : J-x avant la campagne, puis vaccinations grippe */
 function tuileVaccins(cs,cfg){try{var C=campCfg(cfg);var auj=aujIso();if(auj<C.debut)return "J-"+(tdgDayNum(C.debut)-tdgDayNum(auj));
 var fin=auj<C.fin?auj:C.fin;return campGrippe(campCompter(cs,C,C.debut,fin))}catch(e){return null}}
-function tuileCulottes(cfg,ext){try{var obj=culObjectif(cfg);var su=culSuivi(ext,obj.h.mots,culCodes(cfg));return su?su.tot:0}catch(e){return null}}
+function tuileCulottes(cfg,ext){try{var obj=culObjectif(cfg);var su=culSuivi(ext,obj.h.mots,culCodes(cfg),obj.h);return su?su.tot:0}catch(e){return null}}
 
 return{VaccinsEquipe:VaccinsEquipe,BandeauVaccins:BandeauVaccins,CulottesEquipe:CulottesEquipe,BandeauCulottes:BandeauCulottes,culExtraire:culExtraire,tuileVaccins:tuileVaccins,tuileCulottes:tuileCulottes};
 })();
