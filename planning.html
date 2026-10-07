@@ -332,7 +332,7 @@ table.wkt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
     <div class="card gridbox" style="margin-top:10px"><table class="hrs" id="hrs"></table></div>
     <h2 style="margin-top:18px">Points de vigilance</h2>
     <div class="alerts" id="alerts"></div>
-    <p class="src">Présence d'un pharmacien : contrôlée sur tous les créneaux d'ouverture, car les préparateurs exercent sous le contrôle effectif d'un pharmacien (<a href="https://www.ordre.pharmacien.fr/jurisprudence/37-controle-effectif-du-pharmacien-sur-les-actes-du-preparateur" target="_blank" rel="noopener">Ordre des pharmaciens</a>). Durée du travail, pour les salariés et extras : 10 h de travail par jour au maximum, amplitude de 12 h, 46 h par semaine au maximum (<a href="https://www.skello.io/blog/les-heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Skello</a>, <a href="https://www.swim.legal/blog/heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Swim Legal</a>). Heures au-delà de 39 h sur une semaine : comptées en heures sup même avec un cycle de plusieurs semaines (<a href="https://open.lefebvre-dalloz.fr/droit-social/duree-travail/amenager-temps-travail-plusieurs-semaines_t7028" target="_blank" rel="noopener">Lefebvre Dalloz</a>). À confirmer avec votre cabinet.</p>
+    <p class="src">Présence d'un pharmacien : contrôlée sur tous les créneaux d'ouverture, car les préparateurs exercent sous le contrôle effectif d'un pharmacien (<a href="https://www.ordre.pharmacien.fr/jurisprudence/37-controle-effectif-du-pharmacien-sur-les-actes-du-preparateur" target="_blank" rel="noopener">Ordre des pharmaciens</a>). Durée du travail, pour les salariés et extras : 10 h de travail par jour au maximum, amplitude de 12 h, 46 h par semaine au maximum (<a href="https://www.skello.io/blog/les-heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Skello</a>, <a href="https://www.swim.legal/blog/heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Swim Legal</a>). Une pause de 30 min maximum d'un pharmacien entre deux créneaux compte comme une présence sur place. Heures prévues au-delà de 39 h dans une semaine : ajoutées au solde récup / échanges, en remplacement du paiement en heures sup (possible sur décision de l'employeur sans délégué syndical, <a href="https://code.travail.gouv.fr/code-du-travail/l3121-37" target="_blank" rel="noopener">article L3121-37</a>). À confirmer avec votre cabinet.</p>
   </section>
 
   <section id="p-team" hidden>
@@ -469,15 +469,19 @@ function teamTotal(w){var t=0;S.people.forEach(function(p){t+=weekTotal(w,p.id);
 
 /* Compteurs */
 function weekStats(pid,mon){
-  var r={worked:0,paid:0,bal:0,abs:{}};
+  var r={worked:0,paid:0,bal:0,abs:{},trameH:0};
   for(var i=0;i<6;i++){var ds=dIso(dAdd(mon,i)),inf=dayInfo(pid,ds),a=dur(inf.act),e=dur(inf.exp);
     r.worked+=a;
     if(inf.t&&TYPES[inf.t].paid){r.paid+=e;}
     if(inf.t&&TYPES[inf.t].neutral){r.unpaid=(r.unpaid||0)+e;}
     if(inf.changed&&!(TYPES[inf.t]&&(TYPES[inf.t].paid||TYPES[inf.t].neutral)))r.bal+=a-e;
     if(inf.t&&!inf.act.length)r.abs[inf.t]=(r.abs[inf.t]||0)+e;
+    r.trameH+=e;
   }
-  r.counted=r.worked+r.paid+(r.unpaid||0);return r;
+  r.counted=r.worked+r.paid+(r.unpaid||0);
+  /* Heures prévues au-delà de 39 h dans la semaine : ajoutées au solde récup / échanges (pas d'heures sup) */
+  var pp=P(pid);r.bank=(pp&&pp.status==="salarie")?Math.max(0,r.trameH-2340):0;
+  return r;
 }
 function monthWeeks(ym){var y=+ym.slice(0,4),mo=+ym.slice(5,7)-1,out=[];var d=monOf(new Date(Date.UTC(y,mo,1)));
   for(var k=0;k<6;k++){var th=dAdd(d,3);if(th.getUTCMonth()===mo&&th.getUTCFullYear()===y)out.push(d);d=dAdd(d,7);}return out;}
@@ -485,10 +489,9 @@ function monthDaysWorked(pid,ym){var y=+ym.slice(0,4),mo=+ym.slice(5,7)-1,t=0,n=
   while(d.getUTCMonth()===mo){var inf=dayInfo(pid,dIso(d));var a=dur(inf.act);if(a){t+=a;n++;}d=dAdd(d,1);}return {t:t,n:n};}
 function personMonth(p,ym){
   var weeks=monthWeeks(ym),rows=weeks.map(function(mon){var s=weekStats(p.id,mon);s.mon=mon;return s;});
-  var r={rows:rows,counted:0,worked:0,paid:0,bal:0,over:0,over39:0,abs:{}};
-  rows.forEach(function(s){r.counted+=s.counted;r.worked+=s.worked;r.paid+=s.paid;r.bal+=s.bal;
-    for(var k in s.abs)r.abs[k]=(r.abs[k]||0)+s.abs[k];
-    if(p.contract){r.over+=Math.max(0,s.counted-p.contract);r.over39+=Math.max(0,s.counted-2340);}});
+  var r={rows:rows,counted:0,worked:0,paid:0,bal:0,chg:0,bank:0,abs:{}};
+  rows.forEach(function(s){r.counted+=s.counted;r.worked+=s.worked;r.paid+=s.paid;r.chg+=s.bal;r.bank+=s.bank;r.bal+=s.bal+s.bank;
+    for(var k in s.abs)r.abs[k]=(r.abs[k]||0)+s.abs[k];});
   if(p.contract){r.due=p.contract*rows.length;r.diff=r.counted-r.due;}
   return r;
 }
@@ -500,11 +503,17 @@ function dayIssues(p,bl){
   var amp=bl[bl.length-1][1]-bl[0][0];if(amp>720)out.push("amplitude de "+hm(amp)+" (maximum 12 h)");
   return out;
 }
+/* Un pharmacien en pause de 30 min maximum entre deux créneaux reste sur place */
+function phOnSite(bl,s,len){
+  for(var i=0;i<bl.length;i++){var b=bl[i];if(b[0]<=s&&b[1]>=s+len)return true;
+    var nx=bl[i+1];if(nx){var gap=nx[0]-b[1];if(gap>0&&gap<=30&&s>=b[1]&&s+len<=nx[0])return true;}}
+  return false;
+}
 function phGapsBlocks(get,d){
   var gaps=[],cur=null,any=S.people.some(function(p){return get(p.id).length>0;});
   if(!any)return gaps;
   for(var s=510;s<CLOSE[d];s+=30){
-    var ok=S.people.some(function(p){return p.ph&&get(p.id).some(function(b){return b[0]<=s&&b[1]>=s+30;});});
+    var ok=S.people.some(function(p){return p.ph&&phOnSite(get(p.id),s,30);});
     if(!ok){if(cur&&cur[1]===s)cur[1]=s+30;else{cur=[s,s+30];gaps.push(cur);}}
   }
   return gaps;
@@ -655,7 +664,7 @@ function covSegments(getBlocks,d){
   var close=CLOSE[d],segs=[],cur=null;
   for(var s=OPEN;s<close;s+=15){
     var n=0,ph=false;
-    S.people.forEach(function(p){if((getBlocks(p.id)||[]).some(function(b){return b[0]<=s&&b[1]>=s+15;})){n++;if(p.ph)ph=true;}});
+    S.people.forEach(function(p){var bl=getBlocks(p.id)||[];if(bl.some(function(b){return b[0]<=s&&b[1]>=s+15;}))n++;if(p.ph&&phOnSite(bl,s,15))ph=true;});
     var k=n===0?"c0":(!ph?"np":(n===1?"c1":(n===2?"c2":"c3")));
     if(cur&&cur.k===k&&cur.n===n)cur.e=s+15;else{cur={s:s,e:s+15,k:k,n:n};segs.push(cur);}
   }
@@ -890,7 +899,7 @@ function cardFor(p,open){
     var pct=r.due?Math.min(130,r.counted/r.due*100):0;
     body+="<div><div class='big num "+(r.diff>=0?"pos":"neg")+"'>"+sg(r.diff)+"</div><div class='lbl2'>par rapport au contrat ("+r.rows.length+" semaines)</div></div>";
     body+="<div class='meter' title='Heures comptées par rapport au contrat'><i style='width:"+(pct/130*100)+"%'></i><b style='left:"+(100/130*100)+"%'></b></div>";
-    body+="<div class='rows'><span>Heures travaillées</span><span>"+hm(r.worked)+"</span><span>Absences payées (CP, férié, maladie, formation…)</span><span>"+hm(r.paid)+"</span><span>Dû au contrat</span><span>"+hm(r.due)+"</span><span>Semaines au-delà du contrat</span><span>"+sg(r.over)+"</span>"+(p.contract>=2100?"<span>dont au-delà de 39 h (heures sup)</span><span>"+sg(r.over39)+"</span>":"")+"<span>Solde heures sup / récup (vs trame)</span><span class='"+(r.bal>=0?"pos":"neg")+"'>"+sg(r.bal)+"</span></div>";
+    body+="<div class='rows'><span>Heures travaillées</span><span>"+hm(r.worked)+"</span><span>Absences payées (CP, férié, maladie, formation…)</span><span>"+hm(r.paid)+"</span><span>Dû au contrat</span><span>"+hm(r.due)+"</span><span><b>Solde récup / échanges du mois</b></span><span class='"+(r.bal>=0?"pos":"neg")+"'>"+sg(r.bal)+"</span><span>· dont changements de planning</span><span>"+sg(r.chg)+"</span><span>· dont heures au-delà de 39 h</span><span>"+sg(r.bank)+"</span></div>";
   }else if(p.status==="facture"){
     var md=monthDaysWorked(p.id,S.month);
     body+="<div><div class='big num'>"+hm(md.t)+"</div><div class='lbl2'>à facturer en "+MOISL[+S.month.slice(5)-1].toLowerCase()+" ("+md.n+" jours)</div></div>";
@@ -904,8 +913,8 @@ function cardFor(p,open){
   }
   var absk=Object.keys(r.abs);if(absk.length)body+="<div class='lbl2'>Absences : "+absk.map(function(k){return TYPES[k].l.toLowerCase()+" "+hm(r.abs[k]);}).join(" · ")+"</div>";
   if(r.rows.length&&p.status!=="titulaire"){
-    var t="<details class='wk-detail'"+(open?" open":"")+"><summary>Détail par semaine</summary><table class='wkt'><tr><th>Semaine</th><th>Travaillé</th><th>Payé</th>"+(p.contract?"<th>Écart</th>":"")+"</tr>";
-    r.rows.forEach(function(s){t+="<tr><td>"+dShort(s.mon)+" ("+letterOf(s.mon)+")</td><td>"+hm(s.worked)+"</td><td>"+(s.paid?hm(s.paid):"–")+"</td>"+(p.contract?"<td class='"+(s.counted-p.contract>=0?"pos":"neg")+"'>"+sg(s.counted-p.contract)+"</td>":"")+"</tr>";});
+    var t="<details class='wk-detail'"+(open?" open":"")+"><summary>Détail par semaine</summary><table class='wkt'><tr><th>Semaine</th><th>Travaillé</th><th>Payé</th>"+(p.contract?"<th>Écart contrat</th><th>Récup</th>":"")+"</tr>";
+    r.rows.forEach(function(s){t+="<tr><td>"+dShort(s.mon)+" ("+letterOf(s.mon)+")</td><td>"+hm(s.worked)+"</td><td>"+(s.paid?hm(s.paid):"–")+"</td>"+(p.contract?"<td class='"+(s.counted-p.contract>=0?"pos":"neg")+"'>"+sg(s.counted-p.contract)+"</td><td class='"+(s.bal+s.bank>=0?"pos":"neg")+"'>"+(s.bal+s.bank?sg(s.bal+s.bank):"–")+"</td>":"")+"</tr>";});
     body+=t+"</table></details>";
   }
   c.innerHTML=head+body;return c;
