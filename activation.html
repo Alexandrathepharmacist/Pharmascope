@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>PharmaScope · Mon compte</title>
+<title>PharmaScope Planning · Mon compte</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 :root{--bg:#F3F7F6;--card:#FFFFFF;--ink:#14232A;--ink2:#56676D;--ink3:#8A989D;--line:#DCE3E5;--accent:#059669;--accent2:#0284c7;--ok:#047857;--okbg:#DCF5EA;--bad:#B42318;--badbg:#FDE8E6;--field:#FFFFFF}
@@ -48,7 +48,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outlin
 <main class="card">
   <div class="head">
     <img src="apple-touch-icon.png" alt="">
-    <h1>PharmaScope</h1>
+    <h1>PharmaScope Planning</h1>
     <p>Pharmacie de Veyrier-du-Lac</p>
   </div>
 
@@ -228,8 +228,8 @@ function route(session){
   if(linkError){show("expired");return;}
   if(session&&(linkType==="invite"||linkType==="recovery"||linkType==="signup"||linkType==="magiclink")){
     $("setEmail").value=session.user.email||"";
-    if(linkType==="recovery"){$("setTitle").textContent="Nouveau mot de passe";$("setSub").textContent="Choisissez un nouveau mot de passe pour votre espace PharmaScope.";}
-    else{$("setTitle").textContent="Bienvenue !";$("setSub").textContent="Choisissez votre mot de passe pour activer votre espace PharmaScope.";}
+    if(linkType==="recovery"){$("setTitle").textContent="Nouveau mot de passe";$("setSub").textContent="Choisissez un nouveau mot de passe pour votre espace PharmaScope Planning.";}
+    else{$("setTitle").textContent="Bienvenue !";$("setSub").textContent="Choisissez votre mot de passe pour activer votre espace PharmaScope Planning.";}
     show("set");$("pw1").focus();return;
   }
   if(session){$("inSub").textContent="Vous êtes connecté(e) en tant que "+session.user.email+".";show("in");return;}
