@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v8.71">
+<meta name="ps-version" content="v8.72">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -1422,6 +1422,35 @@ if(!n)return "0000-00 "+t;
 return m[2]+"-"+(n<10?"0"+n:""+n)}
 function triMoisDesc(a,b){var ka=cleTriMois(a),kb=cleTriMois(b);return ka<kb?1:(ka>kb?-1:0)}
 
+/* Moyenne mensuelle par operateur sur les nbMois mois les plus recents.
+   On moyenne sur les mois ou l operateur est reellement present (un arrivant
+   en cours d annee n est pas penalise par des mois a zero). Les paniers sont
+   recalcules (CA moyen / clients moyens) et non moyennes entre eux. */
+function moyennePalmares(palmares,nbMois){
+var cles=Object.keys(palmares||{}).sort(triMoisDesc).slice(0,nbMois);
+if(!cles.length)return null;
+var acc={};
+cles.forEach(function(k){
+var d=palmares[k];
+if(!d||!d.operateurs)return;
+d.operateurs.forEach(function(o){
+var nom=(o&&o.nom)||"";
+if(!nom)return;
+if(!acc[nom])acc[nom]={code:o.code,nom:nom,n:0,ca:0,clients:0,surCA:0,horsCA:0,horsCli:0};
+var a=acc[nom];
+a.n++;
+a.ca+=(o.ca||0);a.clients+=(o.clients||0);a.surCA+=(o.surCA||0);
+a.horsCA+=(o.horsCA||0);a.horsCli+=(o.horsCli||0)})});
+var liste=Object.keys(acc).map(function(nom){
+var a=acc[nom];var n=a.n||1;
+var ca=a.ca/n;var clients=a.clients/n;var horsCA=a.horsCA/n;var horsCli=a.horsCli/n;
+return{code:a.code,nom:nom,mois:a.n,ca:ca,clients:clients,
+panier:clients>0?ca/clients:null,
+surCA:a.surCA/n,horsCA:horsCA,horsCli:horsCli,
+horsPan:horsCli>0?horsCA/horsCli:null}});
+liste.sort(function(a,b){return (b.horsCA||0)-(a.horsCA||0)});
+return{mois:"Moyenne sur "+cles.length+" mois",operateurs:liste,moisInclus:cles}}
+
 /* Rapatrie TOUTES les fiches vendeur mensuelles presentes dans Gmail (et pas
    seulement la plus recente) : une passe par mail, lecture du PDF, puis on
    renvoie la liste des palmares lus. onProgres(i,total) suit l avancement. */
@@ -1614,7 +1643,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.71";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.72";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 var NAVG=[
 {id:"pilotage",label:"Piloter",icon:"\ud83d\udcca",items:[
@@ -5852,9 +5881,12 @@ var busyS=useState(false);var busy=busyS[0];var setBusy=busyS[1];
 var moisSelS=useState("");var moisSel=moisSelS[0];var setMoisSel=moisSelS[1];
 var fileRef=useRef(null);
 
+var MOY3="__moy3__";var MOY12="__moy12__";
 var moisDispo=Object.keys(palmares).sort(triMoisDesc);
 var moisActif=moisSel||(moisDispo.length?moisDispo[0]:"");
-var data=moisActif?palmares[moisActif]:null;
+var estMoyenne=(moisActif===MOY3||moisActif===MOY12);
+var data=estMoyenne?moyennePalmares(palmares,moisActif===MOY3?3:12):(moisActif?palmares[moisActif]:null);
+if(estMoyenne&&!data)data=null;
 var liste=(data&&data.operateurs?data.operateurs:[]).filter(function(o){return !estHorsEquipe(o&&(o.nom||o.name||o.op||""))});
 
 function enregistrer(res){
@@ -5936,9 +5968,11 @@ var maxCA=liste.length?(liste[0].horsCA||1):1;
 var enTete=React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12,marginBottom:16}},
 React.createElement("div",null,
 React.createElement("h2",{style:{fontSize:22,fontWeight:800}},"\ud83c\udfc6 Palmar\u00e8s \u00e9quipe"),
-React.createElement("div",{style:{fontSize:13,color:"var(--text3)",marginTop:2}},"Classement au CA hors ordonnance (conseil)")),
+React.createElement("div",{style:{fontSize:13,color:"var(--text3)",marginTop:2}},estMoyenne?"Moyenne mensuelle du CA hors ordonnance (conseil)":"Classement au CA hors ordonnance (conseil)")),
 moisDispo.length>1?React.createElement("select",{value:moisActif,onChange:function(e){setMoisSel(e.target.value)},style:{padding:"8px 12px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13}},
-moisDispo.map(function(m){return React.createElement("option",{key:m,value:m},m)})):null);
+[React.createElement("option",{key:MOY3,value:MOY3},"\ud83d\udcca Moyenne 3 derniers mois"),
+React.createElement("option",{key:MOY12,value:MOY12},"\ud83d\udcca Moyenne 12 derniers mois")].concat(
+moisDispo.map(function(m){return React.createElement("option",{key:m,value:m},m)}))):null);
 
 var boutons=React.createElement("div",{style:{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginBottom:14}},
 React.createElement("button",{onClick:viaGmail,disabled:busy,style:{padding:"10px 18px",borderRadius:10,background:"var(--accent)",color:"#fff",border:"none",fontSize:14,fontWeight:600,cursor:busy?"wait":"pointer",opacity:busy?0.6:1}},"\ud83d\udce7 Dernier mois"),
@@ -5965,7 +5999,8 @@ return React.createElement("div",{key:o.nom+i,style:{background:"var(--bg2)",bor
 React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap"}},
 React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10}},
 React.createElement("span",{style:{fontSize:20,minWidth:28}},med),
-React.createElement("span",{style:{fontSize:16,fontWeight:700}},o.nom)),
+React.createElement("span",{style:{fontSize:16,fontWeight:700}},o.nom),
+(estMoyenne&&o.mois?React.createElement("span",{style:{fontSize:11,color:"var(--text3)",fontWeight:500}},"sur "+o.mois+" mois"):null)),
 React.createElement("span",{style:{fontSize:19,fontWeight:800,color:"var(--accent)"}},fmtE(o.horsCA))),
 React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(90px,1fr))",gap:8,marginTop:10}},
 React.createElement("div",null,React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},"Clients hors ordo"),React.createElement("div",{style:{fontSize:15,fontWeight:600}},(o.horsCli!=null?o.horsCli.toLocaleString("fr-FR"):"\u2014"))),
@@ -5980,7 +6015,9 @@ React.createElement("div",{style:{fontSize:15,fontWeight:600,marginBottom:6}},"A
 React.createElement("div",{style:{fontSize:13}},"Cliquez sur \u00ab Tous les mois \u00bb pour rapatrier tout l'historique depuis Gmail, ou d\u00e9posez un PDF manuellement."));
 
 var pied=liste.length?React.createElement("div",{style:{marginTop:16,padding:"12px 16px",background:"var(--bg2)",borderRadius:10,border:"1px solid var(--border)",fontSize:13,color:"var(--text2)",textAlign:"center"}},
-"Total \u00e9quipe hors ordonnance : "+fmtE(totalCA)+(data&&data.fichier?(" \u2022 source : "+data.fichier):"")):null;
+(estMoyenne?"Moyenne mensuelle \u00e9quipe hors ordonnance : ":"Total \u00e9quipe hors ordonnance : ")+fmtE(totalCA)+
+(estMoyenne&&data&&data.moisInclus?(" \u2022 mois pris en compte : "+data.moisInclus.join(", ")):"")+
+(!estMoyenne&&data&&data.fichier?(" \u2022 source : "+data.fichier):"")):null;
 
 return React.createElement("div",{style:{maxWidth:760,margin:"0 auto"}},enTete,reglage,boutons,message,podium,vide,pied)}
 
