@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v8.73">
+<meta name="ps-version" content="v8.74">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -148,6 +148,31 @@ return !/[A-Z0-9]/.test(av)&&!/[A-Z0-9]/.test(ap)})}
 function echapHtml(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
 function conditionsDe(conds,lab,pd){if(!conds||!lab)return null;if(conds[lab])return conds[lab];
 var k=Object.keys(conds).filter(function(x){return memeLabo(x,lab)||(pd&&resolveSups(pd,x).indexOf(lab)>=0)})[0];return k?conds[k]:null}
+/* ===== IMPRESSION DES LISTINGS =====
+   o = {titre, sous, colonnes:[{t,d:"r"|"c",w}], groupes:[{titre,info,lignes:[[...]]}], cases:true, pied}
+   Une ligne = tableau de cellules (texte). Les groupes evitent d'etre coupes entre deux pages. */
+function imprimerListe(o){
+var w=window.open("","_blank");if(!w){avertir("Autorisez l'ouverture de fen\u00eatres pour imprimer");return}
+var cols=o.colonnes||[];var nL=0;
+var th=(o.cases?"<th class='cb'></th>":"")+cols.map(function(c){return "<th class='"+(c.d||"")+"'"+(c.w?" style='width:"+c.w+"'":"")+">"+echapHtml(c.t)+"</th>"}).join("");
+var corps=(o.groupes||[]).map(function(g){
+var lignes=(g.lignes||[]).map(function(l){nL++;return "<tr>"+(o.cases?"<td class='cb'><span class='case'></span></td>":"")+l.map(function(v,i){var c=cols[i]||{};return "<td class='"+(c.d||"")+"'>"+(i===0?"<b>"+echapHtml(v)+"</b>":echapHtml(v))+"</td>"}).join("")+"</tr>"}).join("");
+return "<section>"+(g.titre?"<h2>"+echapHtml(g.titre)+(g.info?"<span>"+echapHtml(g.info)+"</span>":"")+"</h2>":"")+"<table><thead><tr>"+th+"</tr></thead><tbody>"+lignes+"</tbody></table></section>"}).join("");
+var css="@page{size:A4;margin:12mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;padding:18px}"+
+"header{display:flex;align-items:center;gap:12px;border-bottom:2px solid #059669;padding-bottom:8px;margin-bottom:10px}header img{width:34px;height:34px;border-radius:8px}"+
+"h1{font-size:18px;margin:0}header .s{font-size:11px;color:#555;margin-top:2px}"+
+"section{break-inside:avoid;page-break-inside:avoid;margin-top:12px}h2{font-size:13px;margin:0 0 4px;padding:4px 8px;background:#ecfdf5;border-left:4px solid #059669;display:flex;justify-content:space-between}h2 span{font-weight:400;color:#555}"+
+"table{width:100%;border-collapse:collapse;font-size:11px}th{text-align:left;font-size:10px;color:#555;border-bottom:1px solid #999;padding:3px 6px}td{border-bottom:1px solid #ddd;padding:4px 6px;vertical-align:top}"+
+".r{text-align:right;white-space:nowrap}.c{text-align:center}.cb{width:22px}.case{display:inline-block;width:12px;height:12px;border:1.5px solid #333;border-radius:2px}"+
+"footer{margin-top:14px;font-size:10px;color:#777}@media screen{body{max-width:900px;margin:auto}}";
+w.document.write("<html><head><meta charset='utf-8'><title>"+echapHtml(o.titre)+"</title><style>"+css+"</style></head><body>"+
+"<header><img src='"+LOGO_URI+"'><div><h1>"+echapHtml(o.titre)+"</h1><div class='s'>Pharmacie de Veyrier-du-Lac \u2014 \u00e9dit\u00e9 le "+new Date().toLocaleDateString("fr-FR")+(o.sous?" \u2014 "+echapHtml(o.sous):"")+"</div></div></header>"+
+corps+"<footer>"+nL+" ligne"+(nL>1?"s":"")+(o.pied?" \u2014 "+echapHtml(o.pied):"")+" \u2014 PharmaScope</footer>"+
+"<script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>");
+w.document.close()}
+function BoutonImprimer(props){
+return React.createElement("button",{onClick:props.onClick,title:"Imprimer ou enregistrer en PDF",style:Object.assign({padding:"6px 14px",borderRadius:8,background:"var(--bg2)",color:"var(--text)",border:"1px solid var(--border)",fontSize:12,fontWeight:600,whiteSpace:"nowrap"},props.style||{})},"\ud83d\udda8 "+(props.label||"Imprimer"))}
+
 function imprimerBonCommande(c){
 var w=window.open("","_blank");if(!w){return}
 var lignes=(c.products||[]).map(function(q){return "<tr><td>"+echapHtml(q.n)+"</td><td style='text-align:right'>"+q.s+"</td><td style='text-align:right'><b>"+q.to+"</b></td></tr>"}).join("");
@@ -1643,7 +1668,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.73";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.74";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 var NAVG=[
 {id:"pilotage",label:"Piloter",icon:"\ud83d\udcca",items:[
@@ -3687,7 +3712,10 @@ function reafficherVues(){var o={};Object.keys(ign).forEach(function(k){if(k.ind
 return React.createElement("div",null,entete,
 expert?React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:10}},"P\u00e9riode observ\u00e9e : du "+dF(r.d1)+" au "+dF(r.d2)+" ("+r.nJ+" jours d'ouverture)."):null,
 expert&&jV!==null&&jV>20?React.createElement("div",{style:{background:"var(--orange-bg)",border:"1px solid var(--orange)",borderRadius:10,padding:"10px 12px",marginBottom:12,fontSize:13}},"\u26a0\ufe0f Ces ventes datent d'il y a "+jV+" jours : importez vos ventes r\u00e9centes pour des alertes \u00e0 jour."):null,
-React.createElement("div",{style:{marginBottom:12}},React.createElement(Pastilles,{val:fil,set:setFil,options:opts})),
+React.createElement("div",{style:{marginBottom:12,display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}},React.createElement("div",{style:{flex:1,minWidth:0}},React.createElement(Pastilles,{val:fil,set:setFil,options:opts})),
+vis.length?React.createElement(BoutonImprimer,{onClick:function(){var tout=vis.filter(function(a){return fil==="tous"||a.type===fil});var parL={};tout.forEach(function(a){var l=labAffiche(pd,a.c,a.sup)||"Labo non identifi\u00e9";(parL[l]=parL[l]||[]).push(a)});
+imprimerListe({titre:"Alertes de ventes",sous:fil==="tous"?"toutes les alertes":AL_TYPES[fil].lib,cases:true,colonnes:[{t:"Produit"},{t:"Alerte",w:"110px"},{t:"Constat"},{t:"En jeu",d:"r",w:"75px"}],
+groupes:Object.keys(parL).sort().map(function(l){return{titre:l,lignes:parL[l].map(function(a){return[a.n,AL_TYPES[a.type].lib,phraseAlerte(a),a.enjeu>0?"\u2248 "+Math.round(a.enjeu)+" \u20ac/mois":""]})}})})}}):null),
 liste.length?React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:"4px 14px"}},liste.map(function(a,i){return React.createElement(LigneAlerte,{key:alerteCle(a),a:a,pd:pd,first:i===0,openLab:props.openLab,vu:vu,supprimer:supprimer})}),liste.length<nTot?React.createElement("button",{onClick:function(){setVoirTout(true)},style:{display:"block",width:"100%",margin:"4px 0 10px",padding:"10px",borderRadius:10,fontSize:13,fontWeight:600,color:"var(--accent)",background:"transparent",border:"1px dashed var(--accent)"}},"Voir les "+(nTot-liste.length)+" autres alertes"):null):
 React.createElement(VideOutil,{icone:"\u2705",titre:"Aucune alerte",texte:"Rien d'anormal sur la p\u00e9riode observ\u00e9e."}),
 nIgn?React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:10}},nIgn+" alerte"+(nIgn>1?"s":"")+" marqu\u00e9e"+(nIgn>1?"s":"")+" \u00ab vu \u00bb (masqu\u00e9e"+(nIgn>1?"s":"")+" 30 jours). ",React.createElement("button",{onClick:reafficherVues,style:{fontSize:12,color:"var(--accent)",padding:0,textDecoration:"underline"}},"Les r\u00e9afficher")):null,
@@ -3755,7 +3783,11 @@ React.createElement("div",{style:{display:"flex",gap:16,flexWrap:"wrap",alignIte
 React.createElement("span",{style:{fontSize:12,color:"var(--text2)"}},"Sans vente depuis au moins :"),
 React.createElement(Pastilles,{val:seuil,set:setSeuil,options:[[3,"3 mois"],[6,"6 mois"],[9,"9 mois"],[12,"12 mois"]]}),
 React.createElement("label",{style:{fontSize:12,color:"var(--text2)",display:"flex",gap:6,alignItems:"center"}},
-React.createElement("input",{type:"checkbox",checked:horsRemb,onChange:function(e){setHorsRemb(e.target.checked)}}),"Hors m\u00e9dicaments rembours\u00e9s")),
+React.createElement("input",{type:"checkbox",checked:horsRemb,onChange:function(e){setHorsRemb(e.target.checked)}}),"Hors m\u00e9dicaments rembours\u00e9s"),
+liste.length?React.createElement(BoutonImprimer,{style:{marginLeft:"auto"},onClick:function(){imprimerListe({titre:"Stock dormant",sous:"sans vente depuis au moins "+seuil+" mois"+(horsRemb?", hors m\u00e9dicaments rembours\u00e9s":""),cases:true,
+colonnes:[{t:"Produit"},{t:"Stock",d:"r",w:"60px"},{t:"Valeur",d:"r",w:"80px"},{t:"Derni\u00e8re vente",d:"r",w:"130px"}],
+groupes:liste.map(function(l){return{titre:l.lab,info:fmtE(l.val)+" \u00b7 "+l.nb+" r\u00e9f.",lignes:l.items.map(function(it){return[it.n,String(it.q),fmtE(it.v),it.jamais?"aucune depuis "+debut:"il y a "+it.mois+" mois"]})}}),
+pied:"Valeur dormante totale "+fmtE(total)+" \u00b7 \u00e0 cocher une fois trait\u00e9 (retour, \u00e9change, mise en avant)"})}}):null),
 React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:12,marginBottom:16}},
 React.createElement(KPICard,{title:"Valeur dormante",value:fmtE(total),sub:valStock>0?pct(total/valStock*100)+" de la valeur du stock":null,subColor:"var(--orange)"}),
 React.createElement(KPICard,{title:"R\u00e9f\u00e9rences concern\u00e9es",value:String(nb),sub:"en stock, sans vente"}),
@@ -3809,7 +3841,9 @@ if(med!==null&&q.ca>=150){var tx=q.m/q.ca;if(tx>=0&&tx<med-0.15)marge.push({lab:
 var cats=[["perte","Vendus \u00e0 perte",perte,"perte estim\u00e9e"],["prix","Prix modifi\u00e9",prix,"\u00e9cart sur le mois"],["marge","Marge anormale",marge,"manque \u00e0 gagner / an"]];
 var cur=cats.filter(function(c){return c[0]===ong})[0];
 return React.createElement("div",null,entete,
-React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14}},cats.map(function(c){
+React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:14,alignItems:"center"}},cur[2].length?React.createElement(BoutonImprimer,{style:{order:2,marginLeft:"auto"},onClick:function(){var parL={};cur[2].slice(0,80).forEach(function(r){(parL[r.lab]=parL[r.lab]||[]).push(r)});
+imprimerListe({titre:"Contr\u00f4le des prix \u2014 "+cur[1],sous:"\u00e0 v\u00e9rifier dans Winpharma : prix de vente, remise, prix d'achat",cases:true,colonnes:[{t:"Produit"},{t:"Constat"},{t:cur[3],d:"r",w:"100px"}],
+groupes:Object.keys(parL).sort().map(function(l){return{titre:l,lignes:parL[l].map(function(r){return[r.n,r.det,fmtE(r.imp)]})}})})}}):null,cats.map(function(c){
 var on=c[0]===ong;return React.createElement("button",{key:c[0],onClick:function(){setOng(c[0])},style:{padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:600,background:on?"var(--accent)":"var(--bg2)",color:on?"#fff":"var(--text)",border:"1px solid "+(on?"var(--accent)":"var(--border)")}},c[1]+" ("+c[2].length+")")})),
 !cur[2].length?React.createElement(VideOutil,{icone:"\u2705",titre:"Rien \u00e0 signaler",texte:"Aucun produit dans cette cat\u00e9gorie."}):
 React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,overflow:"hidden"}},
@@ -5151,7 +5185,11 @@ Object.keys(pd.REC).forEach(function(c){if(!stk.hasOwnProperty(c))sansStock++});
 return React.createElement("div",null,
 React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6,flexWrap:"wrap",gap:8}},
 React.createElement("h2",{style:{fontSize:22,fontWeight:700}},"\ud83e\uddfa Reassort rayon"),
-React.createElement("button",{onClick:copier,style:{padding:"6px 14px",borderRadius:8,background:"var(--accent)",color:"#fff",fontSize:12,fontWeight:600}},"\ud83d\udccb Copier la liste")),
+React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},React.createElement(BoutonImprimer,{onClick:function(){var gr=[],cur=null;
+vis.forEach(function(l){if(faits[l.c])return;var t=tri==="labo"?l.lab:(tri==="emplacement"?(l.g||"Sans emplacement"):"");if(!cur||cur.titre!==t){cur={titre:t,lignes:[]};gr.push(cur)}cur.lignes.push([l.n,l.a+" u.",l.g||"",l.v>=facing?"facing vide":""])});
+gr.forEach(function(g){g.info=g.lignes.length+" r\u00e9f."});
+imprimerListe({titre:"R\u00e9assort rayon",sous:"ventes du "+String(deb).split("-").reverse().join("/")+" au "+String(fin).split("-").reverse().join("/"),cases:true,colonnes:[{t:"Produit"},{t:"\u00c0 remonter",d:"r",w:"75px"},{t:"Emplacement",w:"110px"},{t:"",w:"75px"}],groupes:gr,pied:uniTot+" unit\u00e9s \u00e0 remonter de la r\u00e9serve"})}}),
+React.createElement("button",{onClick:copier,style:{padding:"6px 14px",borderRadius:8,background:"var(--accent)",color:"#fff",fontSize:12,fontWeight:600}},"\ud83d\udccb Copier la liste"))),
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:14}},
 "Produits vendus du "+deb+" au "+fin+" (hors TVA 2,1%) \u2014 a remonter de la reserve"),
 
@@ -5302,7 +5340,10 @@ var totalValue=filtered.reduce(function(s,c){return s+c.estimatedValue},0);
 var totalProducts=filtered.reduce(function(s,c){return s+c.products.length},0);
 
 return React.createElement("div",null,
-React.createElement("h2",{style:{fontSize:22,fontWeight:700,marginBottom:4}},"\ud83d\udce6 Commandes directes"),
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}},React.createElement("h2",{style:{fontSize:22,fontWeight:700}},"\ud83d\udce6 Commandes directes"),
+filtered.length?React.createElement(BoutonImprimer,{label:"Imprimer les commandes",onClick:function(){var nomU={critique:"\u00e0 commander maintenant",urgent:"cette semaine",attention:"peut attendre"};
+imprimerListe({titre:"Commandes \u00e0 passer",sous:filter==="all"?"tous les fournisseurs \u00e0 surveiller":nomU[filter],cases:true,colonnes:[{t:"Produit"},{t:"Stock",d:"r",w:"55px"},{t:"Ventes/sem.",d:"r",w:"75px"},{t:"\u00c0 commander",d:"r",w:"85px"}],
+groupes:filtered.map(function(c){var v=0;(c.products||[]).forEach(function(q){v+=q.v||0});return{titre:c.lab,info:(nomU[c.urgency]||"")+" \u00b7 ~"+Math.round(v)+" \u20ac HT",lignes:(c.products||[]).map(function(q){return[q.n,String(q.s),(q.w||0).toFixed(1),String(q.to)]})}}),pied:"Quantit\u00e9s propos\u00e9es d'apr\u00e8s le rythme de vente r\u00e9el"})}}):null),
 React.createElement("p",{style:{fontSize:13,color:"var(--text2)",marginBottom:16}},"Fournisseurs directs uniquement \u2014 "+totalProducts+" produits \u00e0 surveiller"),
 
 expert?(React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:12,marginBottom:16}},
@@ -5541,18 +5582,9 @@ React.createElement("div",{style:{display:"flex",justifyContent:"space-between",
 React.createElement("h3",{style:{fontSize:15,fontWeight:700}},"\ud83d\udc8e P\u00e9pites dormantes ("+pepites.length+")"),
 React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8}},
 React.createElement("span",{style:{fontSize:12,color:"var(--text3)"}},"marge \u2265 25%, vendait puis plus rien depuis 3 mois"),
-React.createElement("button",{onClick:function(){
-var w2=window.open("","_blank");
-if(!w2)return;
-var lignes="";
-pepites.forEach(function(pp2,ii2){
-lignes+="<tr><td>"+(ii2+1)+"</td><td><b>"+pp2.n+"</b></td><td>"+pp2.lab+"</td><td style=\"text-align:right\">"+pp2.qAv+"</td><td style=\"text-align:right\">"+Math.round(pp2.caAv)+" \u20ac</td><td style=\"text-align:right\">"+pp2.txP+" %</td></tr>"});
-var html2="<html><head><title>P\u00e9pites dormantes</title><style>body{font-family:Arial,sans-serif;padding:24px;color:#111}h1{font-size:20px;margin-bottom:2px}p{color:#555;font-size:12px;margin-top:0}table{width:100%;border-collapse:collapse;margin-top:14px;font-size:12px}th,td{border:1px solid #ccc;padding:7px 9px;text-align:left}th{background:#f0f0f0}td:first-child,th:first-child{width:28px;text-align:center}@media print{button{display:none}}</style></head><body>"+
-"<h1>\ud83d\udc8e P\u00e9pites dormantes \u2014 Pharmacie de Veyrier-du-Lac</h1>"+
-"<p>Produits \u00e0 forte marge sans vente depuis 3 mois \u2014 \u00e0 dater, remettre en avant ou d\u00e9stocker. \u00c9dit\u00e9 le "+new Date().toLocaleDateString("fr-FR")+".</p>"+
-"<table><thead><tr><th>#</th><th>Produit</th><th>Laboratoire</th><th>Ventes (3 mois avant arr\u00eat)</th><th>CA (3 mois avant)</th><th>Marge</th></tr></thead><tbody>"+lignes+"</tbody></table>"+
-"<script>window.onload=function(){window.print()}<\/script></body></html>";
-w2.document.write(html2);w2.document.close()},
+React.createElement("button",{onClick:function(){var parL={};pepites.forEach(function(p){(parL[p.lab]=parL[p.lab]||[]).push(p)});
+imprimerListe({titre:"P\u00e9pites dormantes",sous:"forte marge, plus de vente depuis 3 mois",cases:true,colonnes:[{t:"Produit"},{t:"Ventes 3 mois avant",d:"r",w:"110px"},{t:"CA 3 mois avant",d:"r",w:"100px"},{t:"Marge",d:"r",w:"60px"}],
+groupes:Object.keys(parL).sort().map(function(l){return{titre:l,lignes:parL[l].map(function(p){return[p.n,p.qAv+" u.",Math.round(p.caAv)+" \u20ac",p.txP+" %"]})}}),pied:"\u00c0 dater, remettre en avant ou d\u00e9stocker"})},
 style:{padding:"5px 12px",borderRadius:8,fontSize:12,background:"var(--bg3)",border:"1px solid var(--border)",fontWeight:600,cursor:"pointer"}},"\ud83d\udda8 Imprimer"))),
 React.createElement("p",{style:{fontSize:12,color:"var(--text2)",marginBottom:10}},"De l argent qui dort en rayon : \u00e0 dater, remettre en avant ou d\u00e9stocker."),
 React.createElement("div",{style:{display:"grid",gap:3}},

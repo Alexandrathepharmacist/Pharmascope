@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.15">
+<meta name="ps-version" content="e1.16">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -1358,7 +1358,7 @@ var vis=restant.slice(0,limite);
 function imprimer(){
 var w=window.open("","_blank");if(!w)return;
 var esc=function(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")};
-var rows=restant.map(function(l){return "<tr><td style='width:28px'>&#9744;</td><td style='text-align:center;font-weight:700'>"+l.a+"</td><td>"+esc(l.n)+"</td><td>"+esc(l.g||"")+"</td></tr>"}).join("");
+var labP=null;var rows=restant.map(function(l){var h="";if(tri==="labo"&&l.lab!==labP){labP=l.lab;h="<tr><td colspan='4' style='padding-top:12px;font-weight:700;font-size:14px;border-bottom:2px solid #059669'>"+esc(l.lab)+"</td></tr>"}return h+"<tr><td style='width:28px'>&#9744;</td><td style='text-align:center;font-weight:700'>"+l.a+"</td><td>"+esc(l.n)+"</td><td>"+esc(l.g||"")+"</td></tr>"}).join("");
 w.document.write("<html><head><meta charset='utf-8'><title>R\u00e9assort</title><style>body{font-family:Arial,sans-serif;padding:20px}h1{font-size:18px}table{width:100%;border-collapse:collapse;font-size:13px}td,th{border-bottom:1px solid #ddd;padding:6px 4px;text-align:left}</style></head><body><h1>R\u00e9assort rayon \u2014 "+dateLongue()+"</h1><table><tr><th></th><th>Qt\u00e9</th><th>Produit</th><th>Emplacement</th></tr>"+rows+"</table><script>window.onload=function(){window.print()}<\/script></body></html>");
 w.document.close()}
 var periode=nbJ===1?"la derni\u00e8re journ\u00e9e":"les "+nbJ+" derniers jours";
