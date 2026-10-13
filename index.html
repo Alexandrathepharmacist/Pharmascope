@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v8.78">
+<meta name="ps-version" content="v8.80">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -33,6 +33,8 @@
 --red:#f87171;--red-bg:#450a0a;--orange:#fb923c;--orange-bg:#431407;
 --blue:#60a5fa;--blue-bg:#1e3a5f;--border:#334155;--shadow:0 1px 3px rgba(0,0,0,.3);
 }
+html.ps-shell,html.ps-shell body,html.ps-shell #root{height:100%;overflow:hidden;overscroll-behavior:none}
+@media print{html.ps-shell,html.ps-shell body,html.ps-shell #root{height:auto;overflow:visible}#ps-scroll{overflow:visible!important}}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
 input,select,textarea,button{font-family:var(--font)}
 button{cursor:pointer;border:none;background:none;color:inherit}
@@ -158,6 +160,12 @@ var k=Object.keys(conds).filter(function(x){return memeLabo(x,lab)||(pd&&resolve
 /* ===== IMPRESSION DES LISTINGS =====
    o = {titre, sous, colonnes:[{t,d:"r"|"c",w}], groupes:[{titre,info,lignes:[[...]]}], cases:true, pied}
    Une ligne = tableau de cellules (texte). Les groupes evitent d'etre coupes entre deux pages. */
+/* v8.79 : sur telephone, l'ecran est une "coque" fixe (en-tete + zone qui defile + barre du bas).
+   La page elle-meme ne bouge jamais : cela evite le bug d'iOS 26 ou la barre du bas
+   reste suspendue au milieu de l'ecran apres un menu deroulant ou le clavier. */
+function zoneDefil(){return document.getElementById("ps-scroll")}
+function shellActif(){return !!zoneDefil()}
+function scrollHaut(doux){try{var z=zoneDefil();if(z){if(z.scrollTo)z.scrollTo({top:0,behavior:doux?"smooth":"auto"});else z.scrollTop=0}else window.scrollTo(doux?{top:0,behavior:"smooth"}:0,0)}catch(e){}}
 function imprimerListe(o){
 var w=window.open("","_blank");if(!w){avertir("Autorisez l'ouverture de fen\u00eatres pour imprimer");return}
 var cols=o.colonnes||[];var nL=0;
@@ -1675,7 +1683,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.78";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v8.80";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 var NAVG=[
 {id:"pilotage",label:"Piloter",icon:"\ud83d\udcca",items:[
@@ -2911,7 +2919,7 @@ return classeLabo(pd,lab,ix)}
 
 /* ===== LIEN ESSENTIEL -> EXPERT (bas de page) ===== */
 function LienExpert(props){var th=useTheme();if(th.expert!==false||!th.setExpert)return null;
-return React.createElement("div",{style:{textAlign:"center",margin:"18px 0 6px"}},React.createElement("button",{onClick:function(){th.setExpert(true);try{window.scrollTo(0,0)}catch(e){}},style:{fontSize:13,color:"var(--text3)",padding:"8px 14px",borderRadius:20,border:"1px dashed var(--border)",background:"transparent"}},"Vous \u00eates en affichage Essentiel \u00b7 ",React.createElement("span",{style:{color:"var(--accent)",fontWeight:600}},"tout afficher (Expert)")))}
+return React.createElement("div",{style:{textAlign:"center",margin:"18px 0 6px"}},React.createElement("button",{onClick:function(){th.setExpert(true);try{scrollHaut()}catch(e){}},style:{fontSize:13,color:"var(--text3)",padding:"8px 14px",borderRadius:20,border:"1px dashed var(--border)",background:"transparent"}},"Vous \u00eates en affichage Essentiel \u00b7 ",React.createElement("span",{style:{color:"var(--accent)",fontWeight:600}},"tout afficher (Expert)")))}
 
 function BoutonVoirPlus(props){if(!(props.n>0))return null;
 return React.createElement("button",{onClick:props.onClick,style:{display:"block",width:"100%",marginTop:10,padding:"10px",borderRadius:10,fontSize:13,fontWeight:600,color:"var(--accent)",background:"transparent",border:"1px dashed var(--accent)"}},"Voir les "+props.n+" autres"+(props.quoi?" "+props.quoi:""))}
@@ -3555,7 +3563,7 @@ statusBadge(d.status||"stable")
 )):null,
 null,
 /* === MODE ESSENTIEL : acces au detail === */
-!expert&&props.setExpert?React.createElement("div",{style:{textAlign:"center",margin:"18px 0 6px"}},React.createElement("button",{onClick:function(){props.setExpert(true);try{window.scrollTo(0,0)}catch(e){}},style:{fontSize:13,color:"var(--text3)",padding:"8px 14px",borderRadius:20,border:"1px dashed var(--border)",background:"transparent"}},"Vous \u00eates en affichage Essentiel \u00b7 ",React.createElement("span",{style:{color:"var(--accent)",fontWeight:600}},"tout afficher (Expert)"))):null,
+!expert&&props.setExpert?React.createElement("div",{style:{textAlign:"center",margin:"18px 0 6px"}},React.createElement("button",{onClick:function(){props.setExpert(true);try{scrollHaut()}catch(e){}},style:{fontSize:13,color:"var(--text3)",padding:"8px 14px",borderRadius:20,border:"1px dashed var(--border)",background:"transparent"}},"Vous \u00eates en affichage Essentiel \u00b7 ",React.createElement("span",{style:{color:"var(--accent)",fontWeight:600}},"tout afficher (Expert)"))):null,
 expert&&props.setBlocs?React.createElement(PersoAccueil,{blocs:blocs,setBlocs:props.setBlocs}):null
 )
 }
@@ -5297,15 +5305,66 @@ _rsCache={p:pd.P,s:pd.STKV,m:m};return m}
 function labReassort(pd,code,sup){var l=null;try{l=labAffiche(pd,code,sup||"")}catch(e){l=sup}
 if(!l||l==="INCONNU"||l==="Divers"||estGrossisteNom(l))return LAB_R_AUTRES;return String(l).replace(/ REF$/,"")}
 
+/* ===== REASSORT v2 (v8.80) : memes regles dans PharmaScope et dans l'appli equipe =====
+   - les produits rembourses sont exclus (liste calculee par PharmaScope : TVA, labos,
+     dispositifs rembourses) ;
+   - les ventes sont comptees depuis le dernier passage en rayon du produit (memoire
+     partagee "reassort_dernier"), ou sur les derniers jours s'il n'a jamais ete note ;
+   - un labo n'apparait qu'a partir de "palier" unites a remonter au total (on ne va
+     au rayon que quand cela vaut le deplacement) ; dans un labo affiche, les produits sous
+     "minProd" unites attendent le passage suivant. Un facing vide est toujours affiche. */
+var REA_DEF={minProd:2,palier:6,jours:3,maxJours:14,facing:5};
+function reaRegles(r){var o=Object.assign({},REA_DEF);
+if(r&&typeof r==="object")["minProd","palier","jours","maxJours","facing"].forEach(function(k){var v=parseInt(r[k],10);if(v>0)o[k]=v});
+return o}
+function reaIsoJour(d){d=d||new Date();var m=d.getMonth()+1,j=d.getDate();return d.getFullYear()+"-"+(m<10?"0":"")+m+"-"+(j<10?"0":"")+j}
+/* garde la memoire legere : on oublie les passages de plus de 30 jours */
+function reaElaguer(der){var lim=new Date();lim.setDate(lim.getDate()-30);var l=reaIsoJour(lim);var o={};
+Object.keys(der||{}).forEach(function(c){var v=der[c];if(typeof v==="string"&&v>=l)o[c]=v});return o}
+function reaCalcul(src,o){
+o=o||{};var R=reaRegles(o.regles);if(o.toutVoir){R.minProd=1;R.palier=1}
+var ex=o.exclus||{},der=o.dernier||{},ign=o.ignorer||{};
+var dates=(src&&src.RECD||[]).slice().sort();
+if(!src||!src.REC||!dates.length)return{lignes:[],attente:[],deb:"",fin:"",regles:R};
+var fin=dates[dates.length-1];
+var nDef=o.jours>0?o.jours:R.jours;
+var fenDef={};dates.slice(Math.max(0,dates.length-nDef)).forEach(function(d){fenDef[d]=1});
+var dMin=dates[Math.max(0,dates.length-R.maxJours)];
+var deb=fin,stk=src.STKU||{},brutes=[];
+Object.keys(src.REC).forEach(function(code){
+if(ex[code])return;
+var e=src.REC[code];var dj=ign[code]?"":(der[code]||"");var vendu=0;
+Object.keys(e.d||{}).forEach(function(dk){var ok=dj?(dk>dj&&dk>=dMin):!!fenDef[dk];if(ok&&e.d[dk]>0){vendu+=e.d[dk];if(dk<deb)deb=dk}});
+if(vendu<=0)return;
+var dispo=stk.hasOwnProperty(code)?stk[code]:null;
+if(dispo!==null&&dispo<=0)return;
+var a=Math.min(Math.round(vendu),R.facing);if(dispo!==null&&dispo<a)a=dispo;if(a<1)return;
+brutes.push({c:code,n:e.n||("EAN "+code),v:Math.round(vendu),a:a,s:dispo,vide:vendu>=R.facing,taux:vendu/R.facing,g:(src.STKG&&src.STKG[code])||"",lab:(o.labDe?o.labDe(code):"")||"",depuis:dj})});
+/* 1) seuil par labo (toutes ses unites), 2) seuil par produit dans les labos retenus */
+var parLab={};
+brutes.forEach(function(l){var g=parLab[l.lab]||(parLab[l.lab]={u:0,vide:false});g.u+=l.a;if(l.vide)g.vide=true});
+var lignes=[],att={},petits=0;
+brutes.forEach(function(l){var g=parLab[l.lab];
+if(!(g.u>=R.palier||g.vide)){var t=att[l.lab]||(att[l.lab]={lab:l.lab,u:0,n:0});t.u+=l.a;t.n++;return}
+if(l.a>=R.minProd||l.vide)lignes.push(l);else petits++});
+var attente=Object.keys(att).map(function(k){return att[k]}).sort(function(a,b){return b.u-a.u});
+return{lignes:lignes,attente:attente,petits:petits,deb:deb,fin:fin,regles:R}}
+/* Codes des produits rembourses vendus recemment (exclus du reassort, liste partagee avec l'appli equipe) */
+function reaExclus(pd){var ex={};if(!pd||!pd.REC)return ex;var ix=(pd.M||[]).length-1;var m={};
+Object.keys(pd.P||{}).forEach(function(sup){(pd.P[sup]||[]).forEach(function(p){if(p&&p.c&&pd.REC[p.c]&&(!m[p.c]||estGrossisteNom(m[p.c].sup)))m[p.c]={p:p,sup:sup}})});
+Object.keys(pd.REC).forEach(function(c){var x=m[c];var r=null;
+try{r=x?classeProduit(pd,x.p,x.sup,ix):(estProduitOrdo({n:pd.REC[c].n||""},"")?"R":null)}catch(e){r=null}
+if(r==="R")ex[c]=1});
+return ex}
 function ReassortPage(props){
 var expert=useTheme().expert!==false;
 var pd=props.pd;
-var facingS=useState(5);var facing=facingS[0];var setFacing=facingS[1];
-var joursS=useState(7);var nbJours=joursS[0];var setNbJours=joursS[1];
+var R=reaRegles(props.regles);var facing=R.facing;function setFacing(v){if(props.onRegles)props.onRegles({facing:v})}
+var tvS=useState(false);var toutVoir=tvS[0];var setToutVoir=tvS[1];
+var joursS=useState(0);var nbJours=joursS[0]||reaRegles(props.regles).jours;var setNbJours=joursS[1];
 var searchS=useState("");var search=searchS[0];var setSearch=searchS[1];
 var faitsS=useState(function(){return lsJour("ps_reassort_faits")||{}});var faits=faitsS[0];var setFaits=faitsS[1];
 useEffect(function(){lsJourSet("ps_reassort_faits",faits)},[faits]);
-var minS=useState(3);var minVendu=minS[0];var setMinVendu=minS[1];
 var triS=useState(function(){return lsVal("ps_reassort_tri2","labo")});var tri=triS[0];var setTri=triS[1];
 useEffect(function(){try{localStorage.setItem("ps_reassort_tri2",JSON.stringify(tri))}catch(e){}},[tri]);
 var grandS=useState(function(){try{return window.innerWidth<700}catch(e){return false}});var grand=grandS[0];var setGrand=grandS[1];
@@ -5318,27 +5377,10 @@ React.createElement("div",{style:{fontWeight:700,fontSize:16,marginBottom:8}},"A
 React.createElement("div",{style:{fontSize:13,color:"var(--text2)",maxWidth:420,margin:"0 auto",lineHeight:1.5}},
 "Importez l'\u00e9dition d\u00e9taill\u00e9e des ventes Winpharma (page Import) : le r\u00e9assort liste alors les produits vendus ces derniers jours \u00e0 remettre en rayon."))}
 
-var dates=(pd.RECD||[]).slice().sort();
-var fin=dates.length?dates[dates.length-1]:"";
-var fenetre=dates.slice(Math.max(0,dates.length-nbJours));
-var fenSet={};fenetre.forEach(function(d){fenSet[d]=1});
-var deb=fenetre.length?fenetre[0]:"";
-
-var stk=pd.STKU||{};
 var supR=reassortSupMap(pd);
-
-var lignes=[];
-Object.keys(pd.REC).forEach(function(code){
-var e=pd.REC[code];
-var vendu=0;
-Object.keys(e.d||{}).forEach(function(dk){if(fenSet[dk])vendu+=e.d[dk]||0});
-if(vendu<=0)return;
-var dispo=stk.hasOwnProperty(code)?stk[code]:null;
-if(dispo!==null&&dispo<=0)return;
-var aPrendre=Math.min(Math.round(vendu),facing);
-if(dispo!==null&&dispo<aPrendre)aPrendre=dispo;
-if(aPrendre<1)return;
-lignes.push({c:code,n:e.n||("EAN "+code),v:Math.round(vendu),s:dispo,a:aPrendre,taux:vendu/facing,g:(pd.STKG&&pd.STKG[code])||"",lab:labReassort(pd,code,supR[code])})});
+var calcR=reaCalcul({REC:pd.REC,RECD:pd.RECD,STKU:pd.STKU,STKG:pd.STKG},{regles:props.regles,exclus:props.exclus,dernier:props.dernier,ignorer:faits,jours:nbJours,toutVoir:toutVoir,labDe:function(code){return labReassort(pd,code,supR[code])}});
+var deb=calcR.deb,fin=calcR.fin,stk=pd.STKU||{};
+var lignes=calcR.lignes.slice();
 
 if(tri==="labo"){lignes.sort(function(a,b){var o=(a.lab===LAB_R_AUTRES?1:0)-(b.lab===LAB_R_AUTRES?1:0);return o||a.lab.localeCompare(b.lab,"fr")||b.taux-a.taux||b.v-a.v})}
 else if(tri==="emplacement"){lignes.sort(function(a,b){if(!a.g&&b.g)return 1;if(a.g&&!b.g)return -1;return a.g.localeCompare(b.g,"fr",{numeric:true})||b.taux-a.taux})}
@@ -5347,7 +5389,6 @@ var nbGeo=0;lignes.forEach(function(l){if(l.g)nbGeo++});
 var vides=lignes.filter(function(l){return l.v>=facing}).length;
 
 var vis=lignes.filter(function(l){
-if(l.v<minVendu)return false;
 if(!search)return true;
 var s=search.toLowerCase();
 return l.n.toLowerCase().indexOf(s)>=0||l.c.indexOf(search)>=0});
@@ -5357,10 +5398,10 @@ var uniTot=0;vis.forEach(function(l){if(!faits[l.c])uniTot+=l.a});
 
 function toggle(code){
 var o={};Object.keys(faits).forEach(function(k){o[k]=faits[k]});
-if(o[code])delete o[code];else o[code]=1;
-setFaits(o)}
+var on=!o[code];if(on)o[code]=1;else delete o[code];
+setFaits(o);if(props.onDernier)props.onDernier([code],on)}
 function resetFaits(){setFaits({})}
-function cocherLabo(codes,tous){var o={};Object.keys(faits).forEach(function(k){o[k]=faits[k]});codes.forEach(function(c){if(tous)delete o[c];else o[c]=1});setFaits(o)}
+function cocherLabo(codes,tous){var o={};Object.keys(faits).forEach(function(k){o[k]=faits[k]});codes.forEach(function(c){if(tous)delete o[c];else o[c]=1});setFaits(o);if(props.onDernier)props.onDernier(codes,!tous)}
 var rangees=vis;
 if(tri==="labo"){rangees=[];var gCour=null;vis.forEach(function(l){if(!gCour||gCour.lab!==l.lab){gCour={entete:true,lab:l.lab,codes:[],nf:0,u:0};rangees.push(gCour)}gCour.codes.push(l.c);if(faits[l.c])gCour.nf++;else gCour.u+=l.a;rangees.push(l)})}
 function expTxt(){
@@ -5384,7 +5425,10 @@ gr.forEach(function(g){g.info=g.lignes.length+" r\u00e9f."});
 imprimerListe({titre:"R\u00e9assort rayon",sous:"ventes du "+String(deb).split("-").reverse().join("/")+" au "+String(fin).split("-").reverse().join("/"),cases:true,colonnes:[{t:"Produit"},{t:"\u00c0 remonter",d:"r",w:"75px"},{t:"Emplacement",w:"110px"},{t:"",w:"75px"}],groupes:gr,pied:uniTot+" unit\u00e9s \u00e0 remonter de la r\u00e9serve"})}}),
 React.createElement("button",{onClick:copier,style:{padding:"6px 14px",borderRadius:8,background:"var(--accent)",color:"#fff",fontSize:12,fontWeight:600}},"\ud83d\udccb Copier la liste"))),
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:14}},
-"Produits vendus du "+deb+" au "+fin+" (hors TVA 2,1%) \u2014 a remonter de la reserve"),
+"Produits non rembours\u00e9s vendus depuis leur dernier passage en rayon"+(deb?" (ventes du "+String(deb).split("-").reverse().join("/")+" au "+String(fin).split("-").reverse().join("/")+")":"")+" \u2014 \u00e0 remonter de la r\u00e9serve"),
+calcR.attente.length||toutVoir?React.createElement("div",{style:{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",fontSize:13,color:"var(--text2)",background:"var(--bg2)",border:"1px dashed var(--border)",borderRadius:10,padding:"8px 12px",marginBottom:14,lineHeight:1.45}},
+React.createElement("span",{style:{flex:1,minWidth:200}},toutVoir?"Tout est affich\u00e9, m\u00eame les petites quantit\u00e9s.":("\u23f3 "+calcR.attente.length+" labo"+(calcR.attente.length>1?"s attendent":" attend")+" d'avoir au moins "+R.palier+" unit\u00e9s \u00e0 remonter ("+calcR.attente.slice(0,3).map(function(a){return a.lab+" "+a.u+" u."}).join(", ")+(calcR.attente.length>3?"\u2026":"")+")")),
+React.createElement("button",{onClick:function(){setToutVoir(!toutVoir)},style:{fontSize:12,fontWeight:700,color:"var(--accent)",padding:"4px 8px"}},toutVoir?"Revenir aux seuils":"Tout voir")):null,
 
 React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10,marginBottom:14}},
 [{l:"A REMONTER",v:uniTot+" unites",c:"var(--accent)"},
@@ -5412,14 +5456,7 @@ React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
 React.createElement("span",{style:{fontSize:12,color:"var(--text2)"}},"Trier :"),
 [["labo","Labo"],["urgence","Urgence"],["emplacement","Emplacement"]].map(function(o){
 return React.createElement("button",{key:o[0],onClick:function(){setTri(o[0])},title:o[0]==="emplacement"?(nbGeo+" produit(s) avec un emplacement renseign\u00e9 dans Winpharma"):"",style:{padding:"4px 10px",borderRadius:6,fontSize:12,fontWeight:600,background:tri===o[0]?"var(--accent)":"var(--bg)",color:tri===o[0]?"#fff":"var(--text2)",border:"1px solid "+(tri===o[0]?"var(--accent)":"var(--border)")}},o[1])})),
-React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
-React.createElement("span",{style:{fontSize:12,color:"var(--text2)"}},"Min. vendu:"),
-[1,3,5].map(function(mv){
-return React.createElement("button",{key:mv,onClick:function(){setMinVendu(mv)},
-style:{padding:"4px 10px",borderRadius:6,fontSize:12,fontWeight:600,
-background:minVendu===mv?"var(--blue)":"var(--bg)",
-color:minVendu===mv?"#fff":"var(--text2)",
-border:"1px solid "+(minVendu===mv?"var(--blue)":"var(--border)")}},mv+"+")})),
+React.createElement("label",{style:{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"var(--text2)"}},"Un produit d\u00e8s",React.createElement("input",{type:"number",min:1,max:50,value:R.minProd,onChange:function(e){var v=parseInt(e.target.value,10);if(v>0&&props.onRegles)props.onRegles({minProd:v})},style:{width:52,padding:"4px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13,textAlign:"center"}}),"u."),React.createElement("label",{style:{display:"flex",alignItems:"center",gap:6,fontSize:12,color:"var(--text2)"}},"Un labo d\u00e8s",React.createElement("input",{type:"number",min:1,max:50,value:R.palier,onChange:function(e){var v=parseInt(e.target.value,10);if(v>0&&props.onRegles)props.onRegles({palier:v})},style:{width:52,padding:"4px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13,textAlign:"center"}}),"u. au total"),
 nFaits>0?React.createElement("button",{onClick:resetFaits,style:{padding:"4px 10px",borderRadius:6,fontSize:12,background:"var(--bg)",color:"var(--text3)",border:"1px solid var(--border)",marginLeft:"auto"}},"\u21ba Tout decocher"):null)):null,
 
 React.createElement("input",{type:"text",value:search,onChange:function(e){setSearch(e.target.value)},
@@ -5433,7 +5470,7 @@ expert?(sansStock>0?React.createElement("div",{style:{fontSize:12,color:"var(--o
 React.createElement("div",{style:{display:"grid",gap:6}},
 rangees.map(function(l){
 if(l.entete){var tousF=l.nf===l.codes.length;
-return React.createElement("div",{key:"h-"+l.lab,style:{minWidth:0,display:"flex",alignItems:"center",gap:10,padding:grand?"14px 4px 4px":"10px 2px 2px",position:"sticky",top:grand?56:0,zIndex:2,background:"var(--bg)"}},
+return React.createElement("div",{key:"h-"+l.lab,style:{minWidth:0,display:"flex",alignItems:"center",gap:10,padding:grand?"14px 4px 4px":"10px 2px 2px",position:"sticky",top:grand&&!shellActif()?56:0,zIndex:2,background:"var(--bg)"}},
 React.createElement("div",{style:{flex:1,minWidth:0,fontSize:grand?16:14,fontWeight:800,color:tousF?"var(--text3)":"var(--text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},(tousF?"\u2705 ":"")+l.lab),
 React.createElement("span",{style:{fontSize:12,color:"var(--text3)",flexShrink:0}},tousF?"fait":(l.u+" u. \u00b7 "+(l.codes.length-l.nf)+" r\u00e9f.")),
 React.createElement("button",{onClick:function(){cocherLabo(l.codes,tousF)},style:{flexShrink:0,padding:grand?"8px 12px":"4px 10px",borderRadius:8,fontSize:12,fontWeight:700,border:"1px solid var(--accent)",color:tousF?"var(--text3)":"var(--accent)",background:"transparent"}},tousF?"\u21ba d\u00e9cocher":"\u2713 tout cocher"))}
@@ -6318,7 +6355,7 @@ var endValS=useState("");var endVal=endValS[0];var setEndVal=endValS[1];
 var prodSearchS=useState("");var prodSearch=prodSearchS[0];var setProdSearch=prodSearchS[1];
 var editIdS=useState(null);var editId=editIdS[0];var setEditId=editIdS[1];
 function editerChallenge(c){setEditId(c.id);setSelLab(c.lab||"");setLabSearch("");setProdVal(c.produit&&!/produit\(s\) cible/.test(c.produit)?c.produit:"");setObjVal(String(c.objectif||""));
-if(c.assignee)setAssignee(c.assignee);setStartVal(c.debut||"");setEndVal(c.fin||"");setSelEans((c.eans||[]).slice());setProdSearch("");setShowForm(true);try{window.scrollTo({top:0,behavior:"smooth"})}catch(e){}}
+if(c.assignee)setAssignee(c.assignee);setStartVal(c.debut||"");setEndVal(c.fin||"");setSelEans((c.eans||[]).slice());setProdSearch("");setShowForm(true);try{scrollHaut(true)}catch(e){}}
 var selEansS=useState([]);var selEans=selEansS[0];var setSelEans=selEansS[1];
 var teamNames=team.map(function(m){return m.name});if(!teamNames.length)teamNames=OPERATORS;
 
@@ -7244,7 +7281,7 @@ var btnP=Object.assign({},btn,{background:"var(--accent)",color:"#fff",border:"1
 var champ={display:"block",width:"100%",minWidth:0,boxSizing:"border-box",padding:"8px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:14};
 function lib(t,el,aide){return React.createElement("label",{style:{display:"block",fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:10,minWidth:0}},t,React.createElement("div",{style:{marginTop:4}},el),aide?React.createElement("div",{style:{fontSize:11,fontWeight:400,marginTop:3}},aide):null)}
 function majFiche(id,champs){setFiches(fiches.map(function(f){return f.id===id?Object.assign({},f,champs):f}))}
-function editer(f){setEd(Object.assign(ficheVide(),JSON.parse(JSON.stringify(f))));setOng("editer");window.scrollTo(0,0)}
+function editer(f){setEd(Object.assign(ficheVide(),JSON.parse(JSON.stringify(f))));setOng("editer");scrollHaut()}
 function nouvelle(pre){var n=ficheVide();if(serieF)n.serie=serieF;if(pre)Object.assign(n,pre);setEd(n);setOng("editer")}
 function enregistrer(imprimer){
 if(!ed.produit.trim()){avertir("Indiquez au moins le nom du produit");return}
@@ -7967,12 +8004,50 @@ if(/^\d{13}$/.test(code||"")&&!/^340/.test(code)){var r=dominant(c.pre[code.slic
 if(nom&&!/^EAN /.test(nom)){var w=nomNorm(nom).trim().split(" ");if(w[0]&&w[0].length>=4){var r2=w[1]?dominant(c.n2[w[0]+" "+w[1]]):null;if(r2)return r2;var r1=dominant(c.n1[w[0]]);if(r1)return r1}}
 return null}
 var UNIV_ORDO="M\u00e9dicaments sur ordonnance non rembours\u00e9s",UNIV_SERV="Honoraires et prestations";
+/* v8.80 : noms retrouves en ligne pour les produits que Winpharma ne nomme pas
+   (bases ouvertes et gratuites Open Beauty Facts / Open Food Facts / Open Products Facts).
+   On n'envoie que le code-barres du produit, aucune donnee de vente ni de patient.
+   Memoire partagee "noms_produits" : {code:{n:nom,b:marque,src:base}} ou {code:{x:date}} si introuvable. */
+var NOMS_EXT={o:{}};
+function nomExterne(code){var e=NOMS_EXT.o&&NOMS_EXT.o[code];if(!e||!e.n)return null;
+var b=String(e.b||"").split(",")[0].trim();return (b&&nomNorm(e.n).indexOf(nomNorm(b).trim())<0?b+" ":"")+e.n}
+var BASES_OUVERTES=[["Open Beauty Facts","https://world.openbeautyfacts.org"],["Open Food Facts","https://world.openfoodfacts.org"],["Open Products Facts","https://world.openproductsfacts.org"]];
+function chercherNomEnLigne(code){var i=0;
+function suivante(){if(i>=BASES_OUVERTES.length)return Promise.resolve(null);var B=BASES_OUVERTES[i++];
+var ctl=typeof AbortController!=="undefined"?new AbortController():null;var t=ctl?setTimeout(function(){ctl.abort()},8000):null;
+return fetch(B[1]+"/api/v2/product/"+encodeURIComponent(code)+".json?fields=product_name_fr,product_name,generic_name_fr,brands",ctl?{signal:ctl.signal}:{}).then(function(r){return r.ok?r.json():null}).catch(function(){return null}).then(function(j){if(t)clearTimeout(t);
+var p=j&&j.status===1&&j.product;var n=p&&String(p.product_name_fr||p.product_name||p.generic_name_fr||"").trim();
+if(n)return{n:n.slice(0,80),b:String(p.brands||"").slice(0,60),src:B[0]};return suivante()})}
+return suivante()}
 var UNIV_CODES={o:{}};
+/* Recherche des noms en ligne, par lots, avec progression. Les produits deja cherches ne sont pas recherches deux fois (sauf apres 30 jours). */
+function IdentifierEnLigne(props){
+var stS=useState(null);var st=stS[0];var setSt=stS[1];var stop=useRef(false);
+if(!props.setNoms)return null;
+var noms=props.noms||{};var lim=new Date();lim.setDate(lim.getDate()-30);var limIso=isoLocal(lim);
+var aChercher=(props.prods||[]).filter(function(q){if(!(q.ca>0)||codeInterne(q.c)||!/^\d{8,14}$/.test(q.c))return false;var e=noms[q.c];return !e||(!e.n&&!(e.x&&e.x>=limIso))}).slice(0,250).map(function(q){return q.c});
+function lancer(){stop.current=false;var codes=aChercher.slice();var n=codes.length,fait=0,trouves=0,lot={};
+setSt({en:true,fait:0,n:n,tr:0});
+function enregistrer(fin){var l=lot;lot={};if(Object.keys(l).length)props.setNoms(function(o){return Object.assign({},o||{},l)});if(fin)setSt({en:false,fait:fait,n:n,tr:trouves})}
+function travail(){if(stop.current||!codes.length)return Promise.resolve();var c=codes.shift();
+return chercherNomEnLigne(c).then(function(r){fait++;if(r){trouves++;lot[c]=r}else lot[c]={x:isoLocal(new Date())};
+if(fait%10===0){enregistrer(false);setSt({en:true,fait:fait,n:n,tr:trouves})}
+return new Promise(function(ok){setTimeout(ok,700)})}).then(travail)}
+Promise.all([travail(),travail()]).then(function(){enregistrer(true)})}
+var b={padding:"8px 14px",borderRadius:8,fontSize:13,fontWeight:700,border:"none"};
+return React.createElement("div",{style:{display:"flex",gap:10,alignItems:"center",flexWrap:"wrap",margin:"4px 0 10px"}},
+st&&st.en?React.createElement(React.Fragment,null,
+React.createElement("span",{style:{fontSize:13,color:"var(--text2)"}},"\ud83d\udd0e Recherche en ligne\u2026 "+st.fait+" / "+st.n+" \u00b7 "+st.tr+" trouv\u00e9"+(st.tr>1?"s":"")),
+React.createElement("button",{onClick:function(){stop.current=true},style:Object.assign({},b,{background:"var(--bg3)",color:"var(--text2)"})},"Arr\u00eater")):
+React.createElement(React.Fragment,null,
+aChercher.length?React.createElement("button",{onClick:lancer,style:Object.assign({},b,{background:"var(--accent)",color:"#fff"})},"\ud83d\udd0e Identifier en ligne ("+aChercher.length+" produit"+(aChercher.length>1?"s":"")+")"):null,
+st?React.createElement("span",{style:{fontSize:13,color:st.tr?"var(--accent)":"var(--text3)"}},st.tr?("\u2713 "+st.tr+" produit"+(st.tr>1?"s":"")+" identifi\u00e9"+(st.tr>1?"s":"")+" sur "+st.fait+" : ils sont rang\u00e9s automatiquement dans leur univers."):("Aucun nom trouv\u00e9 sur "+st.fait+" codes.")):
+React.createElement("span",{style:{fontSize:12,color:"var(--text3)",lineHeight:1.4,flex:1,minWidth:200}},"Cherche le nom de chaque code dans les bases ouvertes de produits (Open Beauty Facts, Open Food Facts). Seul le code-barres est envoy\u00e9.")))}
 function codeInterne(c){c=String(c||"");return c.length<13||/^(9999|1000)/.test(c)}
 function sansNom(nom){return !nom||/^EAN /.test(nom)||/^[0-9 ]+$/.test(nom)}
 function universDe(pd){
 if(!pd||!pd.P||!pd.U)return{};
-if(_univCache.P===pd.P&&_univCache.U===pd.U&&_univCache.S===pd.STKV&&_univCache.O===UNIV_OVR.o&&_univCache.C===UNIV_CODES.o&&_univCache.R===UNIV_REGLES.o)return _univCache.map;
+if(_univCache.P===pd.P&&_univCache.U===pd.U&&_univCache.S===pd.STKV&&_univCache.O===UNIV_OVR.o&&_univCache.C===UNIV_CODES.o&&_univCache.R===UNIV_REGLES.o&&_univCache.N===NOMS_EXT.o)return _univCache.map;
 var corr=correctionsUnivers();var cles=Object.keys(corr).filter(function(k){return pd.U[corr[k]]});
 var noms=Object.keys(pd.U);
 var otc=noms.filter(function(u){return u.indexOf("OTC")>=0})[0]||null;
@@ -7990,6 +8065,7 @@ var motsCles=[];["Hygi\u00e8ne bucco-dentaire","Soins capillaires","B\u00e9b\u00
 var codesU=UNIV_CODES.o||{};var rglU=reglesUnivers(pd);
 var labAff={};
 function classer(code,nom,sup,tva,tm){
+if(sansNom(nom)){var nx=nomExterne(code);if(nx)nom=nx}
 var douteux=sup==="INCONNU"||sup==="Divers"||estGrossisteNom(sup||"");
 var supEff=sup;if(douteux){var lp=labProbable(pd,code,nom);if(lp)supEff=lp}
 labAff[code]=supEff&&!(supEff==="INCONNU"||supEff==="Divers")?(estGrossisteNom(supEff)?"Via "+supEff+" (labo non pr\u00e9cis\u00e9)":supEff):"Labo non identifi\u00e9";
@@ -8021,7 +8097,7 @@ return sansNom(nom)?UNIV_INC:UNIV_AUTRE}
 var map={};
 Object.keys(pd.P).forEach(function(sup){(pd.P[sup]||[]).forEach(function(q){if(q.c&&!map[q.c])map[q.c]=classer(q.c,q.n,sup,q.tva,q.ca>0?(q.m||0)/q.ca:null)})});
 if(pd.STKV)Object.keys(pd.STKV).forEach(function(c){var v=pd.STKV[c];if(!map[c]&&Array.isArray(v))map[c]=classer(c,v[1],v[2],null)});
-_univCache={P:pd.P,U:pd.U,S:pd.STKV,O:UNIV_OVR.o,C:UNIV_CODES.o,R:UNIV_REGLES.o,map:map,lab:labAff};return map}
+_univCache={P:pd.P,U:pd.U,S:pd.STKV,O:UNIV_OVR.o,C:UNIV_CODES.o,R:UNIV_REGLES.o,N:NOMS_EXT.o,map:map,lab:labAff};return map}
 function candidatsPrefixe(pd,code){labProbable(pd,"0","");if(!/^\d{13}$/.test(code||"")||/^340/.test(code))return null;return _labProbCache.pre?_labProbCache.pre[code.slice(0,7)]:null}
 function labAffiche(pd,code,sup){universDe(pd);return (_univCache.lab&&_univCache.lab[code])||sup}
 
@@ -8029,7 +8105,7 @@ function labAffiche(pd,code,sup){universDe(pd);return (_univCache.lab&&_univCach
 var _ustCache={P:null,U:null,S:null,O:null,r:null};
 function statsUnivers(pd){
 if(!pd||!pd.P||!pd.U||!pd.M)return null;
-if(_ustCache.P===pd.P&&_ustCache.U===pd.U&&_ustCache.S===pd.STKU&&_ustCache.O===UNIV_OVR.o&&_ustCache.C===UNIV_CODES.o&&_ustCache.R===UNIV_REGLES.o)return _ustCache.r;
+if(_ustCache.P===pd.P&&_ustCache.U===pd.U&&_ustCache.S===pd.STKU&&_ustCache.O===UNIV_OVR.o&&_ustCache.C===UNIV_CODES.o&&_ustCache.R===UNIV_REGLES.o&&_ustCache.N===NOMS_EXT.o)return _ustCache.r;
 var map=universDe(pd);var nM=pd.M.length;var lf=dernierMoisComplet(pd);if(lf<0)lf=nM-1;
 var d12=Math.max(0,lf-11);
 function fiable(a,b){for(var k=a;k<=b;k++){var f=pd.F&&pd.F[pd.M[k]];var f1=pd.F&&pd.F[pd.M[k+12]];if(!f||(f.jours||0)<10)return false;if(f1&&(f.ventes||0)<(f1.ventes||0)*0.5)return false}return true}
@@ -8054,7 +8130,7 @@ if(cmp&&x.nom!==UNIV_REMB&&x.nom!==UNIV_SERV&&labA.indexOf("Via ")!==0&&labA!=="
 var stq=pd.STKU&&pd.STKU.hasOwnProperty(q.c)?pd.STKU[q.c]:null;var sv=pd.STKV?pd.STKV[q.c]:null;
 var val=typeof sv==="number"?sv:(stq>0&&q.q>0?stq*Math.max(0,(q.ca-q.m)/q.q):0);
 if(stq>0){x.stk+=val;if(der<0||nM-1-der>=6){x.dorm+=val;x.nDorm++}}
-x.prods.push({c:q.c,n:q.n,lab:labA,tva:q.tva,ca:ca,m:m,q:qq,stk:stq,qs:qs,der:der})})});
+x.prods.push({c:q.c,n:sansNom(q.n)?(nomExterne(q.c)||q.n):q.n,lab:labA,tva:q.tva,ca:ca,m:m,q:qq,stk:stq,qs:qs,der:der})})});
 if(pd.STKV)Object.keys(pd.STKV).forEach(function(c){var v=pd.STKV[c];if(!Array.isArray(v))return;var x=u(map[c]||UNIV_AUTRE);if(!(pd.STKU&&pd.STKU[c]>0))return;x.stk+=v[0]||0;x.dorm+=v[0]||0;x.nDorm++});
 var liste=Object.keys(U).map(function(k){return U[k]}).filter(function(x){return x.ca>0||x.stk>0});
 var totCA=0,totM=0;liste.forEach(function(x){totCA+=x.ca;totM+=x.m});
@@ -8065,7 +8141,7 @@ x.prods.sort(function(a,b){return b.ca-a.ca});var cum=0;x.n80=0;x.nRefs=0;x.prod
 x.couv=x.ach>0?x.stk/(x.ach/52):null;
 x.obj=pd.U[x.nom]?pd.U[x.nom].obj:null;x.icone=pd.U[x.nom]?pd.U[x.nom].icon:null});
 var r={liste:liste,totCA:totCA,totM:totM,cmp:cmp,saisonMois:saisonIdx.map(function(k){return pd.M[k]}),labsDelta:labsDelta,d12:d12,lf:lf};
-_ustCache={P:pd.P,U:pd.U,S:pd.STKU,O:UNIV_OVR.o,C:UNIV_CODES.o,R:UNIV_REGLES.o,r:r};return r}
+_ustCache={P:pd.P,U:pd.U,S:pd.STKU,O:UNIV_OVR.o,C:UNIV_CODES.o,R:UNIV_REGLES.o,N:NOMS_EXT.o,r:r};return r}
 
 /* ===== NOUVELLE GAMME : faut-il la faire entrer ? (v8.25) =====
    Avant un essai (quelques references) ou l'ouverture d'un marche complet :
@@ -8763,7 +8839,7 @@ var labS=useState("");var labo=labS[0];var setLabo=labS[1];
 var flS=useState("");var flash=flS[0];var setFlash=flS[1];
 var vS=useState(8);var voir=vS[0];var setVoir=vS[1];
 var oS=useState(null);var ouvert=oS[0];var setOuvert=oS[1];
-useEffect(function(){if(props.prefill&&props.prefill.mot){setMot(props.prefill.mot);setFlash("");try{window.scrollTo(0,0)}catch(e){}}},[props.prefill]);
+useEffect(function(){if(props.prefill&&props.prefill.mot){setMot(props.prefill.mot);setFlash("");try{scrollHaut()}catch(e){}}},[props.prefill]);
 var entete=React.createElement(EnTeteOutil,{titre:"\ud83e\uddf2 Rattacher \u00e0 un labo",sous:"Certains produits arrivent sans vrai labo (\u00ab Divers \u00bb, grossiste, confr\u00e8re...). Donnez un mot du nom du produit (souvent la marque, ex. LONGEVITY) et le labo : tous les produits qui contiennent ce mot y sont rang\u00e9s, avec leurs ventes pass\u00e9es et leur stock. Les futurs produits de la marque suivront tout seuls. Rien n'est modifi\u00e9 dans Winpharma."});
 if(!pd||!pd.P)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\ud83d\udcca",titre:"Pas encore de ventes",texte:"Importez vos ventes Winpharma pour retrouver les produits sans labo.",action:props.setPage?function(){props.setPage("import")}:null}));
 var labos=Object.keys(pd.L||{}).filter(function(x){return !estFournOrphelin(x)}).sort();
@@ -8815,7 +8891,7 @@ React.createElement("div",{style:{fontWeight:700,fontSize:14}},(o?"\u25be ":"\u2
 React.createElement("div",{style:petit},g.produits.length+" produits \u00b7 CA 12 mois "+fmtE(g.ca)+(g.stk>0?" \u00b7 stock "+fmtE(g.stk):"")+" \u00b7 actuellement : "+g.sups.join(", "))),
 React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap"}},
 g.labo?React.createElement("button",{onClick:function(){ajouter(g.marque,g.labo)},style:{padding:"6px 10px",borderRadius:8,background:"var(--accent)",color:"#fff",fontWeight:700,fontSize:12}},"\u2192 "+g.labo):null,
-React.createElement("button",{onClick:function(){setMot(g.marque);setLabo(g.labo||"");setFlash("");try{window.scrollTo({top:0,behavior:"smooth"})}catch(e){}},style:{padding:"6px 10px",borderRadius:8,border:"1px solid var(--accent)",color:"var(--accent)",background:"transparent",fontWeight:600,fontSize:12}},"Choisir le labo"),
+React.createElement("button",{onClick:function(){setMot(g.marque);setLabo(g.labo||"");setFlash("");try{scrollHaut(true)}catch(e){}},style:{padding:"6px 10px",borderRadius:8,border:"1px solid var(--accent)",color:"var(--accent)",background:"transparent",fontWeight:600,fontSize:12}},"Choisir le labo"),
 React.createElement("button",{onClick:function(){ignorer(g.marque)},style:{padding:"6px 8px",fontSize:12,color:"var(--text3)",background:"transparent"}},"Ignorer"))),
 o?React.createElement("div",{style:{marginTop:6}},g.produits.slice(0,12).map(ligneProduit)):null)}),
 sugg.length>voir?React.createElement("button",{onClick:function(){setVoir(voir+10)},style:{marginTop:10,fontSize:13,color:"var(--accent)",background:"transparent",fontWeight:600}},"Voir plus ("+(sugg.length-voir)+")"):null);
@@ -8988,7 +9064,7 @@ if(/conseil/i.test(u))return "Conseil (OTC)";var w=u.split(/[ ,&]+/)[0];if(/^M.d
 var COUL_ACTION={TDG:"#7c3aed",Promo:"#ea580c"};
 /* Navigation vers une promo ou une TDG precise (depuis la page Univers) */
 var PS_FOCUS={v:null};
-function ouvrirAction(a,setPage){if(!a||!setPage)return;PS_FOCUS.v={type:a.type,id:a.id,debut:a.debut,nom:a.nom};setPage(a.type==="TDG"?"tdg":"promos");try{window.scrollTo(0,0)}catch(e){}}
+function ouvrirAction(a,setPage){if(!a||!setPage)return;PS_FOCUS.v={type:a.type,id:a.id,debut:a.debut,nom:a.nom};setPage(a.type==="TDG"?"tdg":"promos");try{scrollHaut()}catch(e){}}
 function flashFocus(id){setTimeout(function(){var el=document.getElementById(id);if(!el)return;try{el.scrollIntoView({behavior:"smooth",block:"center"})}catch(e){el.scrollIntoView()}
 el.style.transition="box-shadow .3s";el.style.boxShadow="0 0 0 3px #7c3aed";setTimeout(function(){el.style.boxShadow=""},2600)},350)}
 
@@ -9769,9 +9845,10 @@ React.createElement("h3",{style:{fontSize:20,fontWeight:700,color:col,marginBott
 x.nom===UNIV_INC?React.createElement("div",{style:Object.assign({},carte,{marginBottom:12,borderColor:"var(--orange)"})},
 React.createElement("div",{style:{fontWeight:700,color:"var(--orange)",marginBottom:6}},"\ud83d\udd0e Produits \u00e0 identifier"),
 React.createElement("div",{style:{fontSize:13,color:"var(--text2)",lineHeight:1.5,marginBottom:8}},"L'export des ventes ne donne que le code de ces produits. PharmaScope retrouve le nom gr\u00e2ce au fichier stock : importez-le avec vos ventes (page Import ou dossier Drive), il nommera tous les produits encore en stock. Pour les autres, tapez le code dans Winpharma puis rangez le produit ci-dessous : votre choix est gard\u00e9 pour la suite."),
+React.createElement(IdentifierEnLigne,{prods:x.prods,noms:props.nomsExt,setNoms:props.setNomsExt}),
 React.createElement("button",{onClick:function(){var t=x.prods.filter(function(q){return q.ca>0}).slice(0,60).map(function(q){return q.c+"\t"+Math.round(q.ca)+" \u20ac"}).join("\n");try{navigator.clipboard.writeText(t);avertir("Liste des codes copi\u00e9e")}catch(e){}},style:{fontSize:12,fontWeight:700,color:"var(--accent)",padding:0,marginBottom:6}},"\ud83d\udccb Copier les 60 premiers codes"),
 x.prods.filter(function(q){return q.ca>0}).slice(0,40).map(function(q){return React.createElement("div",{key:q.c,style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,padding:"7px 0",borderTop:"1px solid var(--border)",fontSize:13}},
-React.createElement("div",{style:{minWidth:0}},React.createElement("div",{style:{fontWeight:600,fontFamily:"monospace"}},q.c),React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},fmtE(q.ca)+" sur 12 mois"+(q.tva!==null&&q.tva!==undefined?" \u2022 TVA "+String(q.tva).replace(".",",")+" %":"")+(codeInterne(q.c)?" \u2022 code interne Winpharma":""))),
+React.createElement("div",{style:{minWidth:0}},React.createElement("div",{style:{fontWeight:600,fontFamily:"monospace"}},q.c),!sansNom(q.n)?React.createElement("div",{style:{fontSize:13,fontWeight:600}},q.n+" (trouv\u00e9 en ligne)"):null,React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},fmtE(q.ca)+" sur 12 mois"+(q.tva!==null&&q.tva!==undefined?" \u2022 TVA "+String(q.tva).replace(".",",")+" %":"")+(codeInterne(q.c)?" \u2022 code interne Winpharma":""))),
 props.setCodes?React.createElement("select",{value:"",onChange:function(e){if(!e.target.value)return;var o=Object.assign({},props.codes||{});o[q.c]=e.target.value;props.setCodes(o)},style:{maxWidth:"48%",padding:"5px 6px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:12}},
 React.createElement("option",{value:""},"Ranger dans\u2026"),Object.keys(pd.U).concat([UNIV_ORDO,UNIV_SERV,UNIV_AUTRE]).map(function(u){return React.createElement("option",{key:u,value:u},u)})):null)}),
 props.codes&&Object.keys(props.codes).length?React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:8}},Object.keys(props.codes).length+" code(s) d\u00e9j\u00e0 rang\u00e9s \u00e0 la main. ",React.createElement("button",{onClick:function(){props.setCodes({})},style:{fontSize:12,color:"var(--orange)",padding:0,textDecoration:"underline"}},"Tout annuler")):null):null,
@@ -9821,7 +9898,7 @@ React.createElement("div",{style:{display:"flex",justifyContent:"space-between",
 React.createElement("div",null,React.createElement("div",{style:{fontSize:18,fontWeight:700}},fmtE(x.ca)),React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},pct(x.partCA*100)+" du CA \u2022 marge "+pct(x.tx))),
 React.createElement("svg",{width:90,height:32,viewBox:"0 0 100 32",style:{flexShrink:0}},React.createElement("polyline",{points:pts,fill:"none",stroke:col,strokeWidth:2,strokeLinejoin:"round"}))),
 React.createElement("div",{style:{fontSize:12,marginTop:6,color:x.evo===null?"var(--text3)":(x.evo>=0?"var(--accent)":"var(--red)"),fontWeight:600}},x.evo===null?"":(x.evo>=0?"\u25b2 +":"\u25bc ")+Math.round(x.evo)+" % vs an dernier"),nAct?React.createElement("div",{style:{fontSize:12,marginTop:4,color:"var(--text2)"}},"\ud83c\udfaf "+nAct+" action"+(nAct>1?"s":"")+" commerciale"+(nAct>1?"s":"")+" sur 12 mois"):null)}));
-contenu=React.createElement("div",null,React.createElement(ApercuUnivers,{st:st,liste:liste,coul:coul,ico:ico,onSel:function(n){setSel(n);try{window.scrollTo(0,0)}catch(e){}}}),grilleU,!expert&&!voirU&&tri.length>9?React.createElement("button",{onClick:function(){setVoirU(true)},style:{display:"block",width:"100%",marginTop:12,padding:"10px",borderRadius:10,fontSize:13,fontWeight:600,color:"var(--accent)",background:"transparent",border:"1px dashed var(--accent)"}},"Voir les "+(tri.length-9)+" autres univers"):null)}
+contenu=React.createElement("div",null,React.createElement(ApercuUnivers,{st:st,liste:liste,coul:coul,ico:ico,onSel:function(n){setSel(n);try{scrollHaut()}catch(e){}}}),grilleU,!expert&&!voirU&&tri.length>9?React.createElement("button",{onClick:function(){setVoirU(true)},style:{display:"block",width:"100%",marginTop:12,padding:"10px",borderRadius:10,fontSize:13,fontWeight:600,color:"var(--accent)",background:"transparent",border:"1px dashed var(--accent)"}},"Voir les "+(tri.length-9)+" autres univers"):null)}
 
 if(ong==="marge"){
 var parM=liste.slice().filter(function(x){return x.ca>0}).sort(function(a,b){return b.m-a.m});
@@ -10379,6 +10456,8 @@ var ruptS=useState(null);var ruptures=ruptS[0];var setRuptures=ruptS[1];
 var metS=useState({});var metres=metS[0];var setMetres=metS[1];
 var pgS=useState([]);var projGammes=pgS[0];var setProjGammes=pgS[1];
 var pcmS=useState(PCM_INIT);var pcmCfg=pcmS[0];var setPcmCfg=pcmS[1];var pcmPret=useRef(false);
+var reaRS=useState(function(){try{var x=localStorage.getItem("ps_reassort_regles");return x?JSON.parse(x):null}catch(e){return null}});var reaReg=reaRS[0];var setReaReg=reaRS[1];
+var reaDS=useState({});var reaDer=reaDS[0];var setReaDer=reaDS[1];var reaPret=useRef(false);
 var dcS=useState([]);var duelCats=dcS[0];var setDuelCats=dcS[1];
 var rgS=useState([]);var regLabos=rgS[0];var setRegLabos=rgS[1];
 var affS=useState(function(){try{return localStorage.getItem("ps_affichage")||"essentiel"}catch(e){return"essentiel"}});var expert=affS[0]==="expert";
@@ -10393,6 +10472,7 @@ var uoS=useState({});var univOvr=uoS[0];var setUnivOvr=uoS[1];UNIV_OVR.o=univOvr
 var aiS=useState({});var alIgn=aiS[0];var setAlIgn=aiS[1];
 var rgS=useState({});var reglG=rgS[0];var setReglG=rgS[1];
 var ucS=useState({});var univCodes=ucS[0];var setUnivCodes=ucS[1];UNIV_CODES.o=univCodes;
+var nxS=useState(function(){try{var x=localStorage.getItem("ps_noms_produits");return x?JSON.parse(x):{}}catch(e){return {}}});var nomsExt=nxS[0];var setNomsExt=nxS[1];NOMS_EXT.o=nomsExt;var nxPret=useRef(false);
 var urS=useState([]);var univRegles=urS[0];var setUnivRegles=urS[1];UNIV_REGLES.o=univRegles;
 function setCondition(lab,obj){setConditions(function(prev){var n=Object.assign({},prev||{});n[lab]=obj;return n})}
 var palmaresS=useState({});var palmares=palmaresS[0];var setPalmares=palmaresS[1];
@@ -10703,6 +10783,21 @@ if(r&&typeof r==="object"&&r.pyr){v=r;SYNC_BASE["potentiel_culottes"]=r}
 else{try{var x=localStorage.getItem("ps_potentiel_culottes");if(x){x=JSON.parse(x);if(x&&x.pyr)v=x}}catch(e){}}
 if(v)setPcmCfg(v);pcmPret.current=true})},[]);
 useEffect(function(){if(!pcmPret.current||!pcmCfg||!auth||auth.role!=="admin")return;try{localStorage.setItem("ps_potentiel_culottes",JSON.stringify(pcmCfg))}catch(e){};syncSave("potentiel_culottes",pcmCfg,setPcmCfg)},[pcmCfg]);
+useEffect(function(){var p=supaClient?supaLoad("noms_produits").catch(function(){return null}):Promise.resolve(null);
+p.then(function(r){if(r&&typeof r==="object"&&!Array.isArray(r)){SYNC_BASE["noms_produits"]=r;setNomsExt(function(o){return Object.assign({},o||{},r)})}nxPret.current=true})},[]);
+useEffect(function(){if(!nxPret.current||!auth||auth.role!=="admin")return;try{localStorage.setItem("ps_noms_produits",JSON.stringify(nomsExt))}catch(e){};syncSave("noms_produits",nomsExt,setNomsExt)},[nomsExt]);
+/* Reassort (v8.80) : regles partagees avec l'appli equipe + memoire du dernier passage en rayon */
+useEffect(function(){
+var p1=supaClient?supaLoad("reassort_regles").catch(function(){return null}):Promise.resolve(null);
+var p2=supaClient?supaLoad("reassort_dernier").catch(function(){return null}):Promise.resolve(null);
+Promise.all([p1,p2]).then(function(r){
+if(r[0]&&typeof r[0]==="object"){SYNC_BASE["reassort_regles"]=r[0];setReaReg(r[0])}
+if(r[1]&&typeof r[1]==="object"){SYNC_BASE["reassort_dernier"]=r[1];setReaDer(r[1])}
+reaPret.current=true})},[]);
+useEffect(function(){if(!reaPret.current||!reaReg||!auth||auth.role!=="admin")return;try{localStorage.setItem("ps_reassort_regles",JSON.stringify(reaReg))}catch(e){};syncSave("reassort_regles",reaReg,setReaReg)},[reaReg]);
+useEffect(function(){if(!reaPret.current||!auth||auth.role!=="admin")return;syncSave("reassort_dernier",reaDer,setReaDer)},[reaDer]);
+useEffect(function(){if(!auth||auth.role!=="admin"||!pd||!pd.REC)return;var t=setTimeout(function(){if(!reaPret.current)return;var ex=reaExclus(pd);
+setReaReg(function(o){o=o||{};if(jsonEq(o.exclus||{},ex))return o;return Object.assign({},o,{exclus:ex})})},3000);return function(){clearTimeout(t)}},[pd,supaLoaded]);
 useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_univ_labos",JSON.stringify(univOvr))}catch(e){};syncSave("univers_labos",univOvr,setUnivOvr)},[univOvr]);
 /* Reglages Google : completes par ceux deja presents sur cet appareil, puis recopies dans l'appareil */
 useEffect(function(){if(!supaLoaded)return;
@@ -10872,7 +10967,7 @@ var ldLive=useMemo(function(){return refreshLdFromPd(ajouterLabosWinpharma(ld,pd
 var labTabInit=useRef(null);
 var prodS=useState(null);var prodCode=prodS[0];var setProdCode=prodS[1];
 var scanS=useState(false);var scanOuvert=scanS[0];var setScanOuvert=scanS[1];
-function ouvrirProduit(c){setProdCode(c);setPage("produit");try{window.scrollTo(0,0)}catch(e){}}
+function ouvrirProduit(c){setProdCode(c);setPage("produit");try{scrollHaut()}catch(e){}}
 function toggleDark(){setDark(!dark)}
 function logout(){localStorage.removeItem("ps_auth");sessionStorage.removeItem("ps_auth");setAuth(null)}
 
@@ -10891,8 +10986,15 @@ if(page==="labdetail"&&!activeTab)return;
 var st={ps:1,p:page,t:tt};if(!cur||!cur.ps)window.history.replaceState(st,"");else window.history.pushState(st,"")}catch(e){}},[page,activeTab]);
 useEffect(function(){function onPop(e){var s=e.state;if(!s||!s.ps)return;
 if(s.p==="labdetail"&&s.t){setOpenTabs(function(o){return o.indexOf(s.t)<0?o.concat([s.t]):o});setActiveTab(s.t)}
-setPage(s.p);try{window.scrollTo(0,0)}catch(err){}}
+setPage(s.p);try{scrollHaut()}catch(err){}}
 window.addEventListener("popstate",onPop);return function(){window.removeEventListener("popstate",onPop)}},[]);
+var coque=winWidth<900&&!!auth&&auth.role!=="equipe";
+useEffect(function(){var h=document.documentElement;if(coque)h.classList.add("ps-shell");else h.classList.remove("ps-shell");
+if(!coque)return;
+function recaler(){setTimeout(function(){var a=document.activeElement;if(a&&/^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName))return;try{if(window.scrollY||window.pageYOffset)window.scrollTo(0,0)}catch(e){}},120)}
+document.addEventListener("focusout",recaler);document.addEventListener("change",recaler);
+var vv=window.visualViewport;if(vv)vv.addEventListener("resize",recaler);
+return function(){h.classList.remove("ps-shell");document.removeEventListener("focusout",recaler);document.removeEventListener("change",recaler);if(vv)vv.removeEventListener("resize",recaler)}},[coque]);
 if(!auth){return React.createElement(ThemeCtx.Provider,{value:{dark:dark,toggle:toggleDark}},React.createElement(LoginScreen,{onLogin:function(session){setAuth(session)}}))}
 var isAdmin=auth&&auth.role==="admin";
 var isEquipe=auth&&auth.role==="equipe";
@@ -10936,7 +11038,7 @@ content=React.createElement(HomePage,{setAlIgn:setAlIgn,expert:expert,setExpert:
 }else if(page==="moisprec"){
 content=React.createElement(MoisPrecedentPage,{key:"mp-"+(pd&&pd.M?pd.M.length+"-"+pd.M[pd.M.length-1]:"0"),pd:pdCal,openLab:openLab});
 }else if(page==="reassort"){
-content=React.createElement(ReassortPage,{pd:pdCal});
+content=React.createElement(ReassortPage,{pd:pdCal,regles:reaReg,exclus:(reaReg&&reaReg.exclus)||reaExclus(pdCal),dernier:reaDer,onRegles:function(ch){setReaReg(function(o){return Object.assign({},o||{},ch)})},onDernier:function(codes,on){setReaDer(function(d){var n=reaElaguer(d||{});var auj=reaIsoJour();codes.forEach(function(c){if(on)n[c]=auj;else delete n[c]});return n})}});
 }else if(page==="aujourdhui"){
 content=React.createElement(AujourdhuiPage,{ruptures:ruptures,pd:pdCal,ld:ldLive,openLab:openLab,setPage:setPage,tasks:tachesVis,tdgs:tdgsApp,challenges:challenges,cmdPassed:cmdPassed,cmdHidden:cmdHidden});
 }else if(page==="dormant"){
@@ -10982,7 +11084,7 @@ content=React.createElement(AlertesPage,{pd:pdCal,openLab:openLab,setPage:setPag
 }else if(page==="produit"){
 content=React.createElement(FicheProduitPage,{pd:pdCal,ld:ldLive,code:prodCode,setCode:ouvrirProduit,openLab:openLab,ign:alIgn,onScan:function(){setScanOuvert(true)}});
 }else if(page==="univers"){
-content=React.createElement(UniversPage,{regles:univRegles,setRegles:setUnivRegles,tdgs:tdgsApp,promos:((pdCal&&pdCal.PROMO)||[]).concat(promosAj||[]),ld:ldLive,pd:pdCal,openLab:openLab,setPage:setPage,metres:metres,setMetres:setMetres,overrides:univOvr,setOverrides:setUnivOvr,codes:univCodes,setCodes:setUnivCodes});
+content=React.createElement(UniversPage,{nomsExt:nomsExt,setNomsExt:setNomsExt,regles:univRegles,setRegles:setUnivRegles,tdgs:tdgsApp,promos:((pdCal&&pdCal.PROMO)||[]).concat(promosAj||[]),ld:ldLive,pd:pdCal,openLab:openLab,setPage:setPage,metres:metres,setMetres:setMetres,overrides:univOvr,setOverrides:setUnivOvr,codes:univCodes,setCodes:setUnivCodes});
 }else if(page==="memo"){
 content=React.createElement(MemoPage,{key:"memo-"+(pdCal&&pdCal.CAL?1:0),ld:ldLive,pd:pdCal,decisions:decisions,events:events,setEvents:setEvents,gcalEvents:gcalEvents,setGcalEvents:setGcalEvents});
 }else if(page==="vnotes"){
@@ -11004,8 +11106,9 @@ content=React.createElement("div",{style:{padding:20}},"Page en construction");
 if(isEquipe){return React.createElement(ThemeCtx.Provider,{value:{dark:dark,toggle:toggleDark}},React.createElement(AppEquipe,{auth:auth,cs:campCS,cfg:campCf,dark:dark,toggleDark:toggleDark,logout:logout}))}
 if(page==="home"&&content)content=React.createElement("div",null,expert&&blocs.bandeaux===false?null:React.createElement("div",{style:expert?null:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",columnGap:12}},React.createElement(BandeauCampagne,{cs:campCS,cfg:campCf,setPage:setPage}),React.createElement(BandeauCulottes,{cfg:pcmCfg,pd:pdCal,onClick:function(){setPage("potentiel")}})),content);
 return React.createElement(ThemeCtx.Provider,{value:{dark:dark,toggle:toggleDark,expert:expert,setExpert:setExpert}},
+React.createElement(isMobile?"div":React.Fragment,isMobile?{style:{height:"100%",display:"flex",flexDirection:"column",position:"relative",overflow:"hidden"}}:null,
 !isMobile?React.createElement(Sidebar,{drive:driveProps,page:page,setPage:setPage,onLogout:logout,onExport:exportUserData,onImport:importUserData,badges:navBadges,ld:ld,pd:pd,openLab:openLab,cloudOk:cloudOk,onPushCloud:pushAllToCloud}):null,
-isMobile?React.createElement("div",{style:{position:"fixed",top:0,left:0,right:0,background:"var(--bg2)",borderBottom:"1px solid var(--border)",padding:"calc(10px + env(safe-area-inset-top)) 16px 10px",zIndex:100,display:"flex",justifyContent:"space-between",alignItems:"center"}},
+isMobile?React.createElement("div",{style:{position:"relative",flexShrink:0,background:"var(--bg2)",borderBottom:"1px solid var(--border)",padding:"calc(10px + env(safe-area-inset-top)) 16px 10px",zIndex:100,display:"flex",justifyContent:"space-between",alignItems:"center"}},
 React.createElement("div",{style:{display:"flex",alignItems:"center",gap:6}},
 React.createElement("button",{onClick:function(){setNavOpen(true)},style:{fontSize:20,padding:"2px 6px",color:"var(--text)"}},"\u2630"),
 logoImg(26),
@@ -11018,7 +11121,7 @@ React.createElement("button",{onClick:toggleDark,style:{fontSize:16}},dark?"\u26
 React.createElement("button",{onClick:logout,style:{fontSize:12,color:"var(--red)"}},"\ud83d\udeaa")
 )
 ):null,
-React.createElement("div",{style:Object.assign({},mainPad,isMobile?{paddingTop:"calc(60px + env(safe-area-inset-top))",paddingBottom:"calc(84px + env(safe-area-inset-bottom))"}:{})},
+React.createElement("div",{id:isMobile?"ps-scroll":undefined,style:Object.assign({},mainPad,isMobile?{flex:1,minHeight:0,overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",overscrollBehavior:"contain",paddingTop:16,paddingBottom:24}:{})},
 cloudMsg?React.createElement("div",{style:{display:"flex",gap:10,alignItems:"center",padding:isMobile?"7px 10px":"10px 14px",fontSize:isMobile?12:13,marginBottom:10,borderRadius:10,background:cloudOk===false?"var(--red-bg)":"var(--orange-bg)",color:cloudOk===false?"var(--red)":"var(--orange)",border:"1px solid currentColor"}},
 React.createElement("span",{style:{flex:1}},"\u26a0\ufe0f "+cloudMsg),
 React.createElement("button",{onClick:function(){setCloudMsg("")},style:{fontSize:16,color:"inherit"}},"\u00d7")):null,
@@ -11027,21 +11130,21 @@ PAGES_CA.indexOf(page)>=0&&(expert||mdlR!=="brut")?React.createElement(BasculeMD
 isMobile&&!rechOuverte?null:React.createElement(GlobalSearch,{variant:"top",openProduit:ouvrirProduit,autoFocus:isMobile,onNavigate:isMobile?function(){setRechOuverte(false)}:null,ld:ldLive,pd:pdCal,openLab:openLab,setPage:setPage,tasks:tachesVis,onRattacher:function(m){setRattPrefill({mot:m,t:Date.now()});setPage("rattacher");if(isMobile)setRechOuverte(false)}}),
 React.createElement(GardeEcran,{cle:page+"|"+(activeTab||"")},content),
 scanOuvert?React.createElement(ScanProduit,{onClose:function(){setScanOuvert(false)},onCode:function(c){setScanOuvert(false);ouvrirProduit(c)}}):null),
-montrerInstall&&!navOpen?React.createElement("div",{style:{position:"fixed",left:12,right:12,bottom:"calc(84px + env(safe-area-inset-bottom))",zIndex:180,background:"var(--bg2)",border:"1px solid var(--accent)",borderRadius:14,padding:"14px 16px",boxShadow:"0 8px 24px rgba(0,0,0,.18)",fontSize:14,lineHeight:1.5}},
+montrerInstall&&!navOpen?React.createElement("div",{style:{position:"absolute",left:12,right:12,bottom:"calc(84px + env(safe-area-inset-bottom))",zIndex:180,background:"var(--bg2)",border:"1px solid var(--accent)",borderRadius:14,padding:"14px 16px",boxShadow:"0 8px 24px rgba(0,0,0,.18)",fontSize:14,lineHeight:1.5}},
 React.createElement("div",{style:{display:"flex",justifyContent:"space-between",gap:10}},React.createElement("b",null,"\ud83d\udcf2 Installer PharmaScope"),React.createElement("button",{onClick:fermerInstall,style:{fontSize:18,color:"var(--text3)",padding:0}},"\u00d7")),
 React.createElement("div",{style:{marginTop:4,color:"var(--text2)"}},"Touchez le bouton Partager ",React.createElement("b",null,"\u2191")," en bas de Safari, puis \u00ab Sur l'\u00e9cran d'accueil \u00bb. PharmaScope s'ouvrira en plein \u00e9cran, comme une app."),
 React.createElement("button",{onClick:fermerInstall,style:{marginTop:8,fontSize:13,fontWeight:700,color:"var(--accent)",padding:0}},"Compris")):null,
-toast?React.createElement("div",{style:{position:"fixed",left:"50%",transform:"translateX(-50%)",bottom:isMobile?"calc(84px + env(safe-area-inset-bottom))":"calc(20px + env(safe-area-inset-bottom))",zIndex:300,display:"flex",gap:14,alignItems:"center",padding:"12px 18px",borderRadius:12,background:"#1f2937",color:"#fff",fontSize:14,boxShadow:"0 8px 24px rgba(0,0,0,.25)",maxWidth:"92vw"}},
+toast?React.createElement("div",{style:{position:isMobile?"absolute":"fixed",left:"50%",transform:"translateX(-50%)",bottom:isMobile?"calc(84px + env(safe-area-inset-bottom))":"calc(20px + env(safe-area-inset-bottom))",zIndex:300,display:"flex",gap:14,alignItems:"center",padding:"12px 18px",borderRadius:12,background:"#1f2937",color:"#fff",fontSize:14,boxShadow:"0 8px 24px rgba(0,0,0,.25)",maxWidth:"92vw"}},
 React.createElement("span",{style:{lineHeight:1.4}},toast.msg),
 toast.undo?React.createElement("button",{onClick:function(){try{toast.undo()}catch(e){}setToast(null)},style:{color:"#6ee7b7",fontWeight:700,fontSize:14}},"Annuler"):null):null,
-isMobile?React.createElement("nav",{style:{position:"fixed",left:0,right:0,bottom:0,zIndex:150,display:"flex",justifyContent:"space-around",background:"var(--bg2)",borderTop:"1px solid var(--border)",padding:"6px 4px calc(6px + env(safe-area-inset-bottom))",boxShadow:"0 -4px 16px rgba(0,0,0,.06)"}},
+isMobile?React.createElement("nav",{style:{position:"relative",flexShrink:0,zIndex:150,display:"flex",justifyContent:"space-around",background:"var(--bg2)",borderTop:"1px solid var(--border)",padding:"6px 4px calc(6px + env(safe-area-inset-bottom))",boxShadow:"0 -4px 16px rgba(0,0,0,.06)"}},
 [["home","\ud83c\udfe0","Accueil"],["aujourdhui","\u2600","Du jour"],["commandes","\ud83d\udce6","Commandes"],["reassort","\ud83e\uddfa","R\u00e9assort"],["menu","\u2630","Menu"]].map(function(b){
 var on=b[0]==="menu"?navOpen:page===b[0];var badge=b[0]==="commandes"?badgeCmd:0;
-return React.createElement("button",{key:b[0],"aria-label":b[2],onClick:function(){if(b[0]==="menu")setNavOpen(true);else{setPage(b[0]);setNavOpen(false);try{window.scrollTo(0,0)}catch(e){}}},style:{position:"relative",flex:1,minWidth:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 0",color:on?"var(--accent)":"var(--text2)",fontSize:11,fontWeight:on?700:500,whiteSpace:"nowrap",overflow:"hidden"}},
+return React.createElement("button",{key:b[0],"aria-label":b[2],onClick:function(){if(b[0]==="menu")setNavOpen(true);else{setPage(b[0]);setNavOpen(false);try{scrollHaut()}catch(e){}}},style:{position:"relative",flex:1,minWidth:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2,padding:"4px 0",color:on?"var(--accent)":"var(--text2)",fontSize:11,fontWeight:on?700:500,whiteSpace:"nowrap",overflow:"hidden"}},
 React.createElement("span",{style:{fontSize:20,lineHeight:1}},b[1]),b[2],
 badge?React.createElement("span",{style:{position:"absolute",top:0,right:"22%",minWidth:16,height:16,padding:"0 4px",borderRadius:8,background:"var(--red)",color:"#fff",fontSize:11,fontWeight:700,lineHeight:"16px"}},badge>99?"99+":badge):null)})):null,
 isMobile?React.createElement(MobileNav,{drive:driveProps,page:page,setPage:setPage,open:navOpen,onClose:function(){setNavOpen(false)},badges:navBadges,ld:ld,pd:pd,openLab:openLab,cloudOk:cloudOk,onPushCloud:pushAllToCloud,onExport:exportUserData,onImport:importUserData}):null
-)
+))
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
