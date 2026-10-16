@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.22">
+<meta name="ps-version" content="e1.23">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -182,7 +182,7 @@ var CAMP_CATS=[
 function campCfg(c){var o=Object.assign({},CAMP_DEF,c||{});o.actes=Object.assign({},CAMP_DEF.actes,(c&&c.actes)||{});["trodA","trodC"].forEach(function(k){if(!o.actes[k]||!o.actes[k].length)o.actes[k]=CAMP_DEF.actes[k]});o.obj=Object.assign({},(c&&c.obj)||{});return o}
 function campCompter(CS,cfg,d0,d1){
 var A=campCfg(cfg).actes;var kinds=(CS&&CS.K)||{};
-var res={};CAMP_CATS.forEach(function(c){res[c.k]={n:0,V:{},ici:0,info:0,p65:0,m65:0,VD:{},code:{}}});var hon=0;
+var res={};CAMP_CATS.forEach(function(c){res[c.k]={n:0,V:{},ici:0,info:0,p65:0,m65:0,coll:0,VD:{},code:{}}});var hon=0;
 function set(a){var m={};(a||[]).forEach(function(c){m[String(c).trim()]=1});return m}
 var sG=set(A.grippe),sC=set(A.covid),sAu=set(A.autres),sTA=set(A.trodA),sTC=set(A.trodC);
 var grAct=Object.keys(sG).length>0,covAct=Object.keys(sC).length>0;
@@ -195,8 +195,8 @@ if(sG[code]){add("grippe",q,V);hon+=ca}
 else if(sC[code]){add("covid",q,V);hon+=ca}
 else if(sTA[code]||sTC[code]){var kt=sTA[code]?"trodA":"trodC";add(kt,q,V);hon+=ca;var pc=res[kt].code[code]||(res[kt].code[code]={q:0,ca:0});pc.q+=q;pc.ca+=ca}
 else if(sAu[code]){hon+=ca}
-if(k==="eflu"||k==="fl65"){if(!grAct)add("grippe",q,V);res.grippe.info+=q;res.grippe.p65+=q;addVD(V)}
-else if(k==="grMix"){res.grippe.info+=q;res.grippe.m65+=q;addVD(V)}
+if(k==="eflu"||k==="fl65"){if(!grAct)add("grippe",q,V);res.grippe.info+=q;res.grippe.p65+=q;addVD(V);if(q-qa>=25)res.grippe.coll+=q-qa}
+else if(k==="grMix"){res.grippe.info+=q;res.grippe.m65+=q;addVD(V);if(q-qa>=25)res.grippe.coll+=q-qa}
 else if(k==="zona"){add("zona",q,V);res.zona.ici+=qa}
 else if(k==="pnA"){add("pneumo",q,V);res.pneumo.ici+=qa}
 else if(k==="pnM"){add("pneumo",qa,VA);res.pneumo.ici+=qa;res.pneumo.info+=q-qa}
@@ -207,7 +207,7 @@ function campGrippe(r){return r&&r.cats?r.cats.grippe.n:0}
 function isoMoinsAn(iso){return (parseInt(iso.slice(0,4),10)-1)+iso.slice(4)}
 function isoPlusJours(iso,n){return tdgDayStr(tdgDayNum(iso)+n)}
 function campObjectifs(CS,cfg){var C=campCfg(cfg);var dern=campCompter(CS,C,isoMoinsAn(C.debut),isoMoinsAn(C.fin));var o={};
-CAMP_CATS.forEach(function(c){if(c.k!=="grippe"){o[c.k]=null;return}var v=parseInt(C.obj[c.k],10);if(v>0)o[c.k]=v;else{var n=Math.round(dern.cats[c.k].info);o[c.k]=n>0?Math.ceil(n*1.2):null}});return{obj:o,dern:dern}}
+CAMP_CATS.forEach(function(c){if(c.k!=="grippe"){o[c.k]=null;return}var v=parseInt(C.obj[c.k],10);if(v>0)o[c.k]=v;else{var n=Math.round(dern.cats[c.k].info-dern.cats[c.k].coll);o[c.k]=n>0?Math.ceil(n*1.2):null}});return{obj:o,dern:dern}}
 function campHumeur(n,ref){if(!ref)return n>0?"\ud83d\ude42":"\ud83c\udf31";if(n>=ref*1.1)return"\ud83e\udd29";if(n>=ref)return"\ud83d\ude00";if(n>=ref*0.8)return"\ud83d\ude42";return"\ud83d\udcaa"}
 function campPrenom(v){return String(v||"").split(" ")[0]}
 function FuseeCampagne(props){
@@ -245,8 +245,8 @@ var dDeb=new Date(C.debut+"T12:00:00");var libDeb=jours[dDeb.getDay()]+" "+dDeb.
 var recordEl=null;
 if(!avant&&!sansDonnees){var s0=tdgDayNum(C.debut),sF=tdgDayNum(C.fin),sN=tdgDayNum(fin);var best=null,bestP=null;var dd=function(iso){return iso.slice(8,10)+"/"+iso.slice(5,7)};
 for(var w=0;s0+7*w<=sF&&w<30;w++){var a0=tdgDayStr(s0+7*w),a1=tdgDayStr(Math.min(s0+7*w+6,sF));
-if(s0+7*w<=sN){var vw=Math.round(campCompter(CS,C,a0,a1<fin?a1:fin).cats.grippe.info);if(vw>0&&(!best||vw>best.v))best={v:vw,a:a0,b:a1,enC:s0+7*w+6>=sN}}
-var vp=Math.round(campCompter(CS,C,isoMoinsAn(a0),isoMoinsAn(a1)).cats.grippe.info);if(vp>0&&(!bestP||vp>bestP.v))bestP={v:vp,a:isoMoinsAn(a0),b:isoMoinsAn(a1)}}
+if(s0+7*w<=sN){var gw=campCompter(CS,C,a0,a1<fin?a1:fin).cats.grippe;var vw=Math.round(gw.info-gw.coll);if(vw>0&&(!best||vw>best.v))best={v:vw,a:a0,b:a1,enC:s0+7*w+6>=sN}}
+var gp=campCompter(CS,C,isoMoinsAn(a0),isoMoinsAn(a1)).cats.grippe;var vp=Math.round(gp.info-gp.coll);if(vp>0&&(!bestP||vp>bestP.v))bestP={v:vp,a:isoMoinsAn(a0),b:isoMoinsAn(a1)}}
 var chip=function(k,txt){return React.createElement("span",{key:k,style:{display:"inline-block",background:"rgba(255,255,255,.17)",borderRadius:10,padding:"4px 9px",fontSize:12.5,fontWeight:600,lineHeight:1.35}},txt)};
 if(best||bestP)recordEl=React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginTop:8}},
 best?chip("b","\ud83c\udfc6 Meilleure semaine : "+best.v+" vaccins ("+dd(best.a)+"\u2013"+dd(best.b)+")"+(best.enC?" \u00b7 c'est celle-ci !":"")):null,
@@ -338,8 +338,8 @@ reglOuv?React.createElement("div",{style:{marginTop:10}},
 React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:12}},
 React.createElement("div",null,React.createElement("label",{style:lab},"D\u00e9but de campagne"),React.createElement("input",{type:"date",value:C.debut,onChange:function(e){if(e.target.value)setC({debut:e.target.value})},style:inp})),
 React.createElement("div",null,React.createElement("label",{style:lab},"Fin de campagne"),React.createElement("input",{type:"date",value:C.fin,onChange:function(e){if(e.target.value)setC({fin:e.target.value})},style:inp}))),
-React.createElement("div",{style:{fontWeight:600,fontSize:13,marginBottom:6}},"\ud83c\udfaf Objectif grippe de la saison, en vaccins d\u00e9livr\u00e9s (vide = saison derni\u00e8re + 20 %)"),
-React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:12}},CAMP_CATS.filter(function(c){return c.k==="grippe"}).map(function(c){var d=Math.round(dern.cats[c.k].info);
+React.createElement("div",{style:{fontWeight:600,fontSize:13,marginBottom:6}},"\ud83c\udfaf Objectif grippe de la saison, en vaccins d\u00e9livr\u00e9s (vide = saison derni\u00e8re hors livraisons EHPAD + 20 %)"),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:8,marginBottom:12}},CAMP_CATS.filter(function(c){return c.k==="grippe"}).map(function(c){var d=Math.round(dern.cats[c.k].info-dern.cats[c.k].coll);
 return React.createElement("div",{key:c.k},React.createElement("label",{style:lab},c.ico+" "+c.nom),React.createElement("input",{type:"number",min:0,value:C.obj[c.k]||"",placeholder:d>0?String(Math.ceil(d*1.2)):"\u00e0 fixer",onChange:function(e){setObj(c.k,e.target.value)},style:inp}))})),
 React.createElement("div",{style:{fontWeight:600,fontSize:13,marginBottom:4}},"\ud83d\udd22 Codes Winpharma des actes"),
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8,lineHeight:1.45}},"Plusieurs codes possibles, s\u00e9par\u00e9s par une virgule. Les codes pr\u00e9-remplis sont mes hypoth\u00e8ses d'apr\u00e8s vos ventes (prix et saisonnalit\u00e9) : v\u00e9rifiez-les dans Winpharma. Les vaccins sur la m\u00eame facture qu'un de ces actes comptent comme \u00ab vaccin\u00e9s ici \u00bb."),
