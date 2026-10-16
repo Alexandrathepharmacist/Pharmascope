@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.23">
+<meta name="ps-version" content="e1.24">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -293,6 +293,7 @@ var catSel=null;CAMP_CATS.forEach(function(c){if(c.k===selC)catSel=c});
 var detail=catSel&&!sansDonnees?React.createElement("div",{id:"ps-camp-detail",style:Object.assign({},carte,{borderTop:"4px solid "+catSel.coul,scrollMarginTop:70})},
 React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:8}},React.createElement("b",{style:{fontSize:15}},catSel.ico+" "+catSel.nom+" : comparaison avec l'an dernier"),React.createElement("button",{onClick:function(){setSelC(null)},style:{fontSize:18,color:"var(--text3)",padding:0}},"\u00d7")),
 React.createElement(CourbeCampagne,{key:catSel.k,cs:CS,cfg:C,cat:catSel,debut:C.debut,fin:C.fin,obj:catSel.k==="grippe"?totObj:null}),
+catSel.k==="grippe"||catSel.k==="covid"?React.createElement(JoursCampagne,{key:"j"+catSel.k,cs:CS,cfg:C,cat:catSel}):null,
 catSel.trod?React.createElement(ProduitsTrod,{cs:CS,cfg:C,kt:catSel.k,admin:admin}):null):null;
 var tuilesV=React.createElement("div",null,
 React.createElement("div",{style:{fontWeight:700,margin:"4px 2px 8px"}},"\ud83d\udc89 Les autres vaccins"),
@@ -490,6 +491,75 @@ return React.createElement("div",null,bandeau,oBox,boutons,legende,
 React.createElement("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",style:{display:"block"},role:"img","aria-label":c.nom+" : "+libC+" face \u00e0 "+libP},el),
 React.createElement("div",{style:{background:"var(--bg3)",borderRadius:10,padding:"8px 12px",fontSize:13,marginTop:6,lineHeight:1.5}},ligne),
 notes.length?React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:6,lineHeight:1.4}},notes.join(" ")):null)}
+/* v8.90 : vaccins grippe/Covid - quels jours de la semaine sont les plus charges pendant la campagne (calendrier colore + moyennes par jour) */
+var CAMP_FERIES_MD=["11-01","11-11","12-25","01-01"];
+var CAMP_JOURS=["","Lun","Mar","Mer","Jeu","Ven","Sam"];
+var CAMP_JOURS_L=["","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+function campJoursSerie(CS,C,c,d0,d1,DEB){var n0=tdgDayNum(d0),n1=tdgDayNum(d1);var out=[];
+for(var n=n0;n<=n1;n++){var iso=tdgDayStr(n);var dow=new Date(n*86400000).getUTCDay();if(dow===0)continue;
+var fer=CAMP_FERIES_MD.indexOf(iso.slice(5))>=0;var v=null;
+if(!fer&&iso>=DEB){if(CS.D[iso]){var r=campCompter(CS,C,iso,iso).cats[c.k];v=[r.n,r.info-r.coll]}else v=[0,0]}
+out.push({iso:iso,n:n,dow:dow,fer:fer,v:v})}
+return out}
+function campHexA(h,a){var x=parseInt(String(h).slice(1),16);return"rgba("+(x>>16)+","+((x>>8)&255)+","+(x&255)+","+a+")"}
+function JoursCampagne(props){
+var CS=props.cs,C=props.cfg,c=props.cat;var th=useContext(ThemeCtx);var dark=th&&th.dark;var gr=c.k==="grippe";
+var mS=useState(0);var mi=gr?mS[0]:0;var setMi=mS[1];
+var vS=useState("cur");var vue=vS[0];var setVue=vS[1];
+var Z=useMemo(function(){if(!CS||!CS.cov||!CS.cov[1]||!CS.D)return null;var fin=CS.cov[1];var DEB=CS.cov[0]>CAMP_DEBUT_DONNEES?CS.cov[0]:CAMP_DEBUT_DONNEES;
+var D0=C.debut,D1=C.fin;if(fin<D0){D0=isoMoinsAn(D0);D1=isoMoinsAn(D1)}
+return{D0:D0,D1:D1,fin:fin,cur:campJoursSerie(CS,C,c,D0,fin<D1?fin:D1,DEB),prev:campJoursSerie(CS,C,c,isoMoinsAn(D0),isoMoinsAn(D1),DEB)}},[CS,C,c.k]);
+if(!Z)return null;
+function moy(arr){var s=[0,0,0,0,0,0,0],k=[0,0,0,0,0,0,0];arr.forEach(function(x){if(!x.v)return;s[x.dow]+=x.v[mi];k[x.dow]++});
+var m=[null];for(var d=1;d<=6;d++)m.push(k[d]?s[d]/k[d]:null);return{m:m,nb:k.reduce(function(a,b){return a+b},0)}}
+var mC=moy(Z.cur),mP=moy(Z.prev);
+function extremes(m){var hi=0,lo=0;for(var d=1;d<=6;d++){if(m[d]===null)continue;if(!hi||m[d]>m[hi])hi=d;if(!lo||m[d]<m[lo])lo=d}return{hi:hi,lo:lo}}
+var eC=extremes(mC.m),eP=extremes(mP.m);var assezC=mC.nb>=12;
+var lib=c.k==="covid"?"injections Covid":(mi===1?"vaccins grippe d\u00e9livr\u00e9s":"injections grippe");
+var ink=dark?"#c3c2b7":"#5f5e5a";
+var fr1=function(x){return x===null?"\u2013":(x>=10?String(Math.round(x)):String(Math.round(x*10)/10).replace(".",","))};
+/* calendrier de la vue choisie */
+var arr=vue==="cur"?Z.cur:Z.prev;var mx=1;arr.forEach(function(x){if(x.v&&x.v[mi]>mx)mx=x.v[mi]});
+var sem=[];var cle={};arr.forEach(function(x){var lun=x.n-(x.dow-1);var w=cle[lun];if(!w){w={lun:lun,j:{}};cle[lun]=w;sem.push(w)}w.j[x.dow]=x});
+var cel={flex:1,minWidth:0,height:30,borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700};
+function cellule(x,k){if(!x)return React.createElement("div",{key:k,style:Object.assign({},cel,{background:"transparent"})});
+if(x.fer)return React.createElement("div",{key:k,title:"jour f\u00e9ri\u00e9",style:Object.assign({},cel,{background:"var(--bg3)",color:"var(--text3)",fontWeight:400,fontSize:10})},"f\u00e9ri\u00e9");
+if(!x.v)return React.createElement("div",{key:k,style:Object.assign({},cel,{background:"var(--bg3)",color:"var(--text3)",fontWeight:400})},"\u00b7");
+var v=Math.round(x.v[mi]);var t=v/mx;var auj=x.iso===Z.fin&&vue==="cur";
+return React.createElement("div",{key:k,title:tdgFr(x.iso)+" : "+v+" "+lib,style:Object.assign({},cel,{background:v>0?campHexA(c.coul,0.12+0.78*t):"var(--bg3)",color:t>0.55?"#fff":"var(--text)",outline:auj?"2px solid "+c.coul:"none",outlineOffset:1})},v>0?String(v):"0")}
+var lab={width:46,flexShrink:0,fontSize:10,color:"var(--text3)",display:"flex",alignItems:"center"};
+var ligne=function(k,label,cells,st){return React.createElement("div",{key:k,style:Object.assign({display:"flex",gap:4,marginBottom:4},st||{})},React.createElement("div",{style:lab},label),cells)};
+var entete=ligne("h","",[1,2,3,4,5,6].map(function(d){return React.createElement("div",{key:d,style:{flex:1,textAlign:"center",fontSize:11,fontWeight:700,color:ink}},CAMP_JOURS[d])}));
+var lignes=sem.map(function(w){var d0=tdgDayStr(w.lun);return ligne(w.lun,d0.slice(8,10)+"/"+d0.slice(5,7),[1,2,3,4,5,6].map(function(d){return cellule(w.j[d],d)}))});
+/* moyennes par jour : cette campagne et la precedente */
+function ligneMoy(k,label,M,E,ok){var mm=0;for(var d=1;d<=6;d++)if(M.m[d]!==null&&M.m[d]>mm)mm=M.m[d];
+return ligne(k,label,[1,2,3,4,5,6].map(function(d){var x=M.m[d];var hi=ok&&d===E.hi&&x>0;var t=mm>0&&x!==null?x/mm:0;
+return React.createElement("div",{key:d,style:Object.assign({},cel,{height:34,flexDirection:"column",lineHeight:1.05,background:x===null?"var(--bg3)":campHexA(c.coul,0.08+0.5*t),color:"var(--text)",border:hi?"2px solid "+c.coul:"2px solid transparent"})},
+React.createElement("span",null,(hi?"\ud83d\udd25":"")+fr1(x)),React.createElement("span",{style:{fontSize:9,fontWeight:400,color:"var(--text3)"}},"/ jour"))}),{marginTop:2})}
+var y0=parseInt(Z.D0.slice(0,4),10);
+function pill(act,txt,fn){return React.createElement("button",{onClick:fn,style:{padding:"5px 11px",borderRadius:16,fontSize:12,fontWeight:700,border:"none",whiteSpace:"nowrap",background:act?c.coul:"transparent",color:act?"#fff":"var(--text2)"}},txt)}
+var grp={display:"inline-flex",gap:2,background:"var(--bg3)",borderRadius:18,padding:2};
+/* phrase de synthese */
+var phr=[];
+if(assezC&&eC.hi)phr.push(React.createElement("div",{key:"c"},"Cette campagne, le jour le plus charg\u00e9 est le ",React.createElement("b",null,CAMP_JOURS_L[eC.hi])," (\u2248 "+fr1(mC.m[eC.hi])+" "+lib+" par jour), le plus calme le "+CAMP_JOURS_L[eC.lo]+" (\u2248 "+fr1(mC.m[eC.lo])+")."));
+if(eP.hi&&mP.m[eP.hi]>0)phr.push(React.createElement("div",{key:"p"},"Campagne pr\u00e9c\u00e9dente : jour le plus charg\u00e9 le ",React.createElement("b",null,CAMP_JOURS_L[eP.hi])," (\u2248 "+fr1(mP.m[eP.hi])+" par jour), le plus calme le "+CAMP_JOURS_L[eP.lo]+" (\u2248 "+fr1(mP.m[eP.lo])+")."));
+var conseilJ=assezC?eC.hi:eP.hi;
+if(conseilJ)phr.push(React.createElement("div",{key:"k",style:{marginTop:4}},"\ud83d\udca1 Pr\u00e9voyez un vaccinateur suppl\u00e9mentaire le ",React.createElement("b",null,CAMP_JOURS_L[conseilJ]),assezC?".":" (selon la campagne pr\u00e9c\u00e9dente, en attendant assez de jours cette ann\u00e9e)."));
+var notes=[];
+if(isoMoinsAn(Z.D0)<"2026-01-01")notes.push("Jusqu'au 31/12/2025, la pharmacie fermait le midi du lundi au jeudi : la campagne pr\u00e9c\u00e9dente s'est faite avec ces horaires.");
+notes.push("Moyenne par jour d'ouverture (lundi au samedi, jours f\u00e9ri\u00e9s exclus)"+(mi===1?", hors livraisons collectives (EHPAD).":"."));
+return React.createElement("div",{style:{marginTop:16,paddingTop:12,borderTop:"1px solid var(--border)"}},
+React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:4}},"\ud83d\udcc5 Quels jours sont les plus charg\u00e9s ?"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},"Plus la case est fonc\u00e9e, plus il y a eu de "+lib+" ce jour-l\u00e0."),
+React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}},
+React.createElement("div",{style:grp},pill(vue==="cur","Cette campagne",function(){setVue("cur")}),pill(vue==="prev","Campagne pr\u00e9c\u00e9dente",function(){setVue("prev")})),
+gr?React.createElement("div",{style:grp},pill(mi===0,"Injections ici",function(){setMi(0)}),pill(mi===1,"Vaccins d\u00e9livr\u00e9s",function(){setMi(1)})):null),
+entete,lignes,
+React.createElement("div",{style:{fontSize:11,fontWeight:700,color:ink,margin:"10px 0 4px"}},"Moyenne par jour"),
+ligneMoy("mc",y0+"-"+String(y0+1).slice(2),mC,eC,assezC),
+ligneMoy("mp",(y0-1)+"-"+String(y0).slice(2),mP,eP,true),
+phr.length?React.createElement("div",{style:{background:"var(--bg3)",borderRadius:10,padding:"8px 12px",fontSize:13,marginTop:8,lineHeight:1.5}},phr):null,
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:6,lineHeight:1.4}},notes.join(" ")))}
 function ProduitsTrod(props){
 var CS=props.cs,kt=props.kt,admin=props.admin;var d1=CS&&CS.cov?CS.cov[1]:aujIso();var d0=isoPlusJours(d1,-364);
 var agg={},nT=0,nP=0;var C=props.cfg;var lc=C.actes[kt]||[];
