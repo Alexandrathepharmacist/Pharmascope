@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.17">
+<meta name="ps-version" content="e1.18">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -256,7 +256,7 @@ React.createElement(FuseeCampagne,{pct:avant?0:pct}),
 React.createElement("div",{style:{fontSize:13,lineHeight:1.5,marginTop:6,opacity:0.95}},
 avant?(totDern>0?"L'an dernier, l'\u00e9quipe a r\u00e9alis\u00e9 "+totDern+" vaccinations grippe. Objectif cette saison : "+totObj+" \ud83c\udfaf":"Objectif : faire d\u00e9coller la fus\u00e9e d\u00e8s le premier jour ! \ud83c\udfaf"):
 heroMsg+(totObj?" ("+Math.round(pct)+" % de l'objectif)":"")+(saison&&saison.cats.grippe.info?" \u00b7 "+saison.cats.grippe.info+" vaccins grippe d\u00e9livr\u00e9s au total.":"")),
-sansDonnees?null:React.createElement("button",{onClick:function(){ouvrir("grippe")},style:{marginTop:10,padding:"7px 12px",borderRadius:10,background:"rgba(255,255,255,.18)",color:"#fff",fontWeight:700,fontSize:13}},selC==="grippe"?"\u25b4 Fermer la courbe grippe":"\ud83d\udcc8 Courbe grippe mois par mois"));
+sansDonnees?null:React.createElement("button",{onClick:function(){ouvrir("grippe")},style:{marginTop:10,padding:"7px 12px",borderRadius:10,background:"rgba(255,255,255,.18)",color:"#fff",fontWeight:700,fontSize:13}},selC==="grippe"?"\u25b4 Fermer la courbe grippe":"\ud83d\udcc8 Comparer avec l'an dernier"));
 
 /* --- tuiles --- */
 function tuile(c){var an=!!(c.annee&&annee);var av=an?false:avant;var src=an?annee:saison;
@@ -280,7 +280,7 @@ info?React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTo
 React.createElement("div",{style:{fontSize:12,color:c.coul,fontWeight:700,marginTop:6,filter:"saturate(1.2) brightness(.85)"}},selC===c.k?"\u25b4 Fermer":(c.trod?"\ud83d\udcc8 Courbe et produits \u203a":"\ud83d\udcc8 Voir la courbe \u203a")))}
 var catSel=null;CAMP_CATS.forEach(function(c){if(c.k===selC)catSel=c});
 var detail=catSel&&!sansDonnees?React.createElement("div",{id:"ps-camp-detail",style:Object.assign({},carte,{borderTop:"4px solid "+catSel.coul,scrollMarginTop:70})},
-React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:8}},React.createElement("b",{style:{fontSize:15}},catSel.ico+" "+catSel.nom+" : \u00e9volution mois par mois"),React.createElement("button",{onClick:function(){setSelC(null)},style:{fontSize:18,color:"var(--text3)",padding:0}},"\u00d7")),
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginBottom:8}},React.createElement("b",{style:{fontSize:15}},catSel.ico+" "+catSel.nom+" : comparaison avec l'an dernier"),React.createElement("button",{onClick:function(){setSelC(null)},style:{fontSize:18,color:"var(--text3)",padding:0}},"\u00d7")),
 React.createElement(CourbeCampagne,{cs:CS,cfg:C,cat:catSel,debut:C.debut,fin:C.fin}),
 catSel.trod?React.createElement(ProduitsTrod,{cs:CS,cfg:C,kt:catSel.k,admin:admin}):null):null;
 var tuilesV=React.createElement("div",null,
@@ -368,39 +368,110 @@ return React.createElement("div",null,
 equipe?null:React.createElement(EnTeteOutil,{titre:"\ud83d\udc89 Vaccins & TROD",sous:"Suivi de la campagne de vaccination adultes et des tests rapides, visible aussi par l'\u00e9quipe."}),
 majBloc,
 hero,selC==="grippe"?detail:null,tuilesV,graphe,classement,reglages,pied)}
-function campMoisListe(CS){if(!CS||!CS.cov||!CS.cov[0])return[];var b=CS.cov[1].slice(0,7);var a=CS.cov[0]<CAMP_DEBUT_DONNEES?CAMP_DEBUT_DONNEES.slice(0,7):CS.cov[0].slice(0,7);var y0=parseInt(b.slice(0,4),10)-2,m0=parseInt(b.slice(5,7),10)+1;if(m0>12){m0-=12;y0++}var lim=y0+"-"+("0"+m0).slice(-2);if(a<lim)a=lim;var out=[];var y=parseInt(a.slice(0,4),10),m=parseInt(a.slice(5,7),10);
-while(true){var k=y+"-"+("0"+m).slice(-2);out.push(k);if(k>=b||out.length>60)break;m++;if(m>12){m=1;y++}}return out}
 function finMois(k){var y=parseInt(k.slice(0,4),10),m=parseInt(k.slice(5,7),10);var d=new Date(Date.UTC(y,m,0));return k+"-"+("0"+d.getUTCDate()).slice(-2)}
+/* v8.84 : courbe vaccins lisible - 12 mois, cette annee face a l'an dernier, cumul ou mois par mois, ecart colore */
+var CAMP_MOIS3=["jan","f\u00e9v","mar","avr","mai","juin","juil","ao\u00fbt","sep","oct","nov","d\u00e9c"];
+function campPeriode(c,C,fin){var y=parseInt(fin.slice(0,4),10);var d0;
+if(c.annee){d0=y+"-01-01"}else{var md=C.debut.slice(5);d0=(fin.slice(5)>=md?y:y-1)+"-"+md}
+var m=parseInt(d0.slice(5,7),10),yy=parseInt(d0.slice(0,4),10);var mois=[];
+for(var i=0;i<12;i++){mois.push(yy+"-"+("0"+m).slice(-2));m++;if(m>12){m=1;yy++}}
+return{d0:d0,mois:mois}}
+function campVal2(c,rr){return c.k==="grippe"||c.k==="dtcp"||c.k==="hpv"?rr.info:(c.k==="zona"||c.k==="pneumo"?rr.ici:0)}
+function campNiceMax(v){if(v<=4)return 4;var p=Math.pow(10,Math.floor(Math.log(v)/Math.LN10));var r=v/p;var t=[1,2,4,6,8,10];for(var i=0;i<t.length;i++){if(r<=t[i]+1e-9)return t[i]*p}return 10*p}
+function campSeries(CS,C,c){
+var fin=CS.cov[1];var DEB=CS.cov[0]>CAMP_DEBUT_DONNEES?CS.cov[0]:CAMP_DEBUT_DONNEES;var P=campPeriode(c,C,fin);
+function cpt(a,b){if(a<DEB)a=DEB;if(b<a)return null;var rr=campCompter(CS,C,a,b).cats[c.k];return[rr.n,campVal2(c,rr)]}
+var cur=[],prev=[],prevAd=null,iP=-1,lastI=-1;
+P.mois.forEach(function(k,i){var a=k+"-01",b=finMois(k);if(a<P.d0)a=P.d0;
+if(a>fin||b<DEB){cur.push(null)}else{if(b>fin){b=fin;iP=i}cur.push(cpt(a,b));lastI=i}
+var bp=finMois(isoMoinsAn(k+"-01").slice(0,7));prev.push(bp<DEB?null:cpt(isoMoinsAn(a),bp));
+if(iP===i)prevAd=cpt(isoMoinsAn(a),isoMoinsAn(fin))});
+return{P:P,fin:fin,DEB:DEB,cur:cur,prev:prev,prevAd:prevAd,iP:iP,lastI:lastI,prevPartiel:isoMoinsAn(P.d0)<DEB}}
 function CourbeCampagne(props){
 var CS=props.cs,C=props.cfg,c=props.cat;var th=useContext(ThemeCtx);var dark=th&&th.dark;
-var mois=campMoisListe(CS);var hS=useState(mois.length-1);var hv=hS[0];var setHv=hS[1];if(hv>mois.length-1)hv=mois.length-1;
-if(mois.length<2)return React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Pas encore assez de mois de ventes pour tracer une courbe.");
-var s1=[],s2=[];mois.forEach(function(k){var d0=k+"-01",d1=finMois(k);if(CS.cov[0]>d0)d0=CS.cov[0];if(CS.cov[1]<d1)d1=CS.cov[1];var rr=campCompter(CS,C,d0,d1).cats[c.k];s1.push(Math.round(rr.n));s2.push(c.k==="grippe"||c.k==="dtcp"||c.k==="hpv"?Math.round(rr.info):(c.k==="zona"||c.k==="pneumo"?Math.round(rr.ici):null))});
-var a2=s2.some(function(v){return v>0});var lib1=c.trod?"tests r\u00e9alis\u00e9s":(c.k==="grippe"||c.k==="covid"?"injections faites ici":(c.k==="dtcp"||c.k==="hpv"?"vaccin\u00e9s ici":"vaccins d\u00e9livr\u00e9s (adultes)"));var lib2=c.k==="grippe"?"vaccins grippe d\u00e9livr\u00e9s":(c.k==="dtcp"||c.k==="hpv"?"d\u00e9livr\u00e9s au total (tous \u00e2ges)":"dont vaccin\u00e9s ici");
-var W=largeurGraphe(),H=W<600?220:240,L=34,R=10,T=26,B=24;var pw=W-L-R,ph=H-T-B;var n=mois.length;var st=pw/(n-1);
-var mx=Math.max.apply(null,s1.concat(s2.map(function(v){return v||0})).concat([1]))*1.12;
-function X(i){return L+i*st}function Y(v){return T+ph-(v/mx)*ph}
-var ink=dark?"#c3c2b7":"#5f5e5a",gridC=dark?"rgba(255,255,255,.10)":"rgba(0,0,0,.08)",c2=dark?"#8d8c85":"#94a3b8";
-var el=[];var dC=props.debut.slice(0,7),fC=props.fin.slice(0,7);var dC0=isoMoinsAn(props.debut).slice(0,7),fC0=isoMoinsAn(props.fin).slice(0,7);
-(c.annee||c.trod?[]:[[dC0,fC0],[dC,fC]]).forEach(function(z,j){var i0=-1,i1=-1;mois.forEach(function(k,i){if(k>=z[0]&&k<=z[1]){if(i0<0)i0=i;i1=i}});if(i0<0)return;
-el.push(React.createElement("rect",{key:"s"+j,x:Math.max(L,X(i0)-st/2),y:T,width:Math.min(W-R,X(i1)+st/2)-Math.max(L,X(i0)-st/2),height:ph,fill:c.coul,opacity:dark?0.14:0.08,rx:4}));
-el.push(React.createElement("text",{key:"st"+j,x:Math.max(L,X(i0)-st/2)+4,y:T-8,fontSize:10,fill:ink},"saison "+z[0].slice(0,4)+"-"+(parseInt(z[0].slice(0,4),10)+1)))});
-[0,0.5,1].forEach(function(f,i){var v=mx/1.12*f;el.push(React.createElement("line",{key:"g"+i,x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:gridC}));el.push(React.createElement("text",{key:"gt"+i,x:L-5,y:Y(v)+4,textAnchor:"end",fontSize:10,fill:ink},String(Math.round(v))))});
-mois.forEach(function(k,i){var pas=n>14?3:(n>8?2:1);if(i%pas!==0&&i!==n-1)return;el.push(React.createElement("text",{key:"x"+i,x:X(i),y:H-6,textAnchor:"middle",fontSize:10,fill:ink},MOIS_LETTRE[parseInt(k.slice(5,7),10)-1]+(k.slice(5,7)==="01"||i===0?" "+k.slice(2,4):"")))});
-if(a2)el.push(React.createElement("polyline",{key:"l2",points:s2.map(function(v,i){return X(i)+","+Y(v||0)}).join(" "),fill:"none",stroke:c2,strokeWidth:2,strokeDasharray:"5 4",strokeLinejoin:"round"}));
-el.push(React.createElement("polyline",{key:"l1",points:s1.map(function(v,i){return X(i)+","+Y(v)}).join(" "),fill:"none",stroke:c.coul,strokeWidth:2.5,strokeLinejoin:"round",strokeLinecap:"round"}));
-el.push(React.createElement("line",{key:"hv",x1:X(hv),x2:X(hv),y1:T,y2:T+ph,stroke:ink,strokeDasharray:"2 3",opacity:0.6}));
-s1.forEach(function(v,i){el.push(React.createElement("circle",{key:"p"+i,cx:X(i),cy:Y(v),r:i===hv?5.5:3,fill:c.coul,stroke:dark?"#1a1a19":"#fff",strokeWidth:2}))});
-var imx=s1.indexOf(Math.max.apply(null,s1));if(imx>=0&&s1[imx]>0)el.push(React.createElement("text",{key:"mx",x:X(imx),y:Y(s1[imx])-9,textAnchor:"middle",fontSize:11,fontWeight:700,fill:dark?"#fff":"#2c2c2a"},String(s1[imx])));
-mois.forEach(function(k,i){el.push(React.createElement("rect",{key:"h"+i,x:X(i)-st/2,y:0,width:st,height:H,fill:"transparent",style:{cursor:"pointer"},onMouseEnter:function(){setHv(i)},onClick:function(){setHv(i)}}))});
-var kh=mois[hv];var ia=mois.indexOf(isoMoinsAn(kh+"-01").slice(0,7));
-var puce=function(col,dash){return React.createElement("span",{style:{display:"inline-block",width:16,borderTop:"2.5px "+(dash?"dashed ":"solid ")+col,verticalAlign:"middle",marginRight:5}})};
-return React.createElement("div",null,
-React.createElement("div",{style:{display:"flex",gap:14,flexWrap:"wrap",fontSize:12,color:"var(--text2)",marginBottom:6}},React.createElement("span",null,puce(c.coul),lib1),a2?React.createElement("span",null,puce(c2,true),lib2):null,c.annee||c.trod?null:React.createElement("span",null,React.createElement("span",{style:{display:"inline-block",width:11,height:11,borderRadius:3,background:c.coul,opacity:0.3,verticalAlign:"middle",marginRight:5}}),"p\u00e9riode de campagne")),
-React.createElement("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",style:{display:"block"},role:"img","aria-label":"\u00c9volution mensuelle "+c.nom},el),
-React.createElement("div",{style:{background:"var(--bg3)",borderRadius:10,padding:"8px 12px",fontSize:13,marginTop:6,lineHeight:1.5}},
-React.createElement("b",null,moisCourt(kh)+" : "+s1[hv]+" "+lib1),a2&&s2[hv]?" \u00b7 "+s2[hv]+" "+lib2:"",ia>=0?React.createElement("span",{style:{color:"var(--text2)"}}," (m\u00eame mois l'an dernier : "+s1[ia]+")"):null,
-kh===CS.cov[1].slice(0,7)&&CS.cov[1]<finMois(kh)?React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},"Mois en cours : ventes lues jusqu'au "+tdgFr(CS.cov[1])+"."):null))}
+var modeS=useState("cumul");var mode=modeS[0];var setMode=modeS[1];
+var miS=useState(0);var mi=miS[0];var setMi=miS[1];
+var hS=useState(-1);var hv=hS[0];var setHv=hS[1];
+var S=useMemo(function(){return CS&&CS.cov&&CS.cov[1]?campSeries(CS,C,c):null},[CS,C,c.k]);
+if(!S||S.lastI<0)return React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Pas encore de ventes sur la p\u00e9riode pour tracer une courbe.");
+var a2=S.cur.concat(S.prev).some(function(x){return x&&x[1]>0});var m=a2?mi:0;
+function v(x){return x?Math.round(x[m]):null}
+var cur=S.cur.map(v),prev=S.prev.map(v),pAd=S.prevAd?Math.round(S.prevAd[m]):null;var lastI=S.lastI,iP=S.iP;
+/* cumuls */
+var cC=[],cP=[],sc=0,sp=null;
+cur.forEach(function(x,i){if(i>lastI){cC.push(null)}else{sc+=x||0;cC.push(sc)}
+if(prev[i]===null&&sp===null){cP.push(null)}else{sp=(sp||0)+(prev[i]||0);cP.push(sp)}});
+var pAvantP=iP>0?cP[iP-1]:null;var cPad=iP>=0&&pAd!==null?(pAvantP||0)+pAd:null;
+var totC=cC[lastI];var totP=iP===lastI?cPad:cP[lastI];
+/* series affichees + ecarts */
+var sC=mode==="cumul"?cC:cur,sP=mode==="cumul"?cP:prev;
+var ecart=cur.map(function(x,i){if(i>lastI)return null;var ref=i===iP?(mode==="cumul"?cPad:pAd):sP[i];if(ref===null||sP[i]===null)return null;return sC[i]-ref});
+/* libelles */
+var nomM=c.trod?"tests r\u00e9alis\u00e9s":(c.k==="grippe"||c.k==="covid"?"injections faites ici":(c.k==="dtcp"||c.k==="hpv"?"vaccin\u00e9s ici":"vaccins d\u00e9livr\u00e9s (adultes)"));
+var nomM2=c.k==="grippe"?"vaccins grippe d\u00e9livr\u00e9s":(c.k==="dtcp"||c.k==="hpv"?"d\u00e9livr\u00e9s (tous \u00e2ges)":"dont vaccin\u00e9s ici");
+var court=c.k==="grippe"?["Injections ici","Vaccins d\u00e9livr\u00e9s"]:(c.k==="dtcp"||c.k==="hpv"?["Vaccin\u00e9s ici","D\u00e9livr\u00e9s (tous \u00e2ges)"]:["D\u00e9livr\u00e9s (adultes)","Vaccin\u00e9s ici"]);
+var lib=m===1?nomM2:nomM;
+var y0=parseInt(S.P.d0.slice(0,4),10);var libC=c.annee?String(y0):"saison "+y0+"-"+(y0+1);var libP=c.annee?String(y0-1):"saison "+(y0-1)+"-"+y0;
+/* couleurs */
+var ink=dark?"#c3c2b7":"#5f5e5a",gridC=dark?"rgba(255,255,255,.10)":"rgba(0,0,0,.07)",cG=dark?"#8d8c85":"#a8b3c2",bg=dark?"#1a1a19":"#fff";
+var vert=dark?"#4ade80":"#15803d",rouge=dark?"#f87171":"#dc2626";
+function coulE(e){return e>0?vert:(e<0?rouge:ink)}
+function sig(e){return e>0?"+"+e:String(e)}
+/* bandeau : ou en est-on par rapport a l'an dernier a la meme date */
+var eT=totP===null?null:totC-totP;
+var bandeau=React.createElement("div",{style:{display:"flex",alignItems:"center",gap:12,background:eT===null?"var(--bg3)":(eT>=0?(dark?"rgba(74,222,128,.12)":"#f0fdf4"):(dark?"rgba(248,113,113,.12)":"#fef2f2")),borderRadius:12,padding:"10px 12px",marginBottom:10}},
+React.createElement("div",{style:{fontSize:30,fontWeight:800,lineHeight:1,color:eT===null?ink:coulE(eT),whiteSpace:"nowrap"}},eT===null?String(totC):(eT>0?"\u25b2 ":(eT<0?"\u25bc ":""))+sig(eT)),
+React.createElement("div",{style:{fontSize:13,lineHeight:1.4}},
+React.createElement("b",null,eT===null?lib+" depuis le "+tdgFr(S.P.d0):(eT>0?"d'avance sur l'an dernier \u00e0 la m\u00eame date":(eT<0?"de retard sur l'an dernier \u00e0 la m\u00eame date":"autant que l'an dernier \u00e0 la m\u00eame date"))),
+eT===null?null:React.createElement("div",{style:{color:"var(--text2)"}},totC+" "+lib+" cette ann\u00e9e contre "+totP+" l'an dernier, du "+tdgFr(S.P.d0).slice(0,5)+" au "+tdgFr(S.fin).slice(0,5)+".")));
+/* boutons */
+function pill(act,txt,fn){return React.createElement("button",{onClick:fn,style:{padding:"5px 11px",borderRadius:16,fontSize:12,fontWeight:700,border:"none",whiteSpace:"nowrap",background:act?c.coul:"transparent",color:act?"#fff":"var(--text2)"}},txt)}
+var grp={display:"inline-flex",gap:2,background:"var(--bg3)",borderRadius:18,padding:2};
+var boutons=React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}},
+React.createElement("div",{style:grp},pill(mode==="cumul","Cumul\u00e9",function(){setMode("cumul")}),pill(mode==="mois","Mois par mois",function(){setMode("mois")})),
+a2?React.createElement("div",{style:grp},pill(m===0,court[0],function(){setMi(0)}),pill(m===1,court[1],function(){setMi(1)})):null);
+/* graphique */
+var W=largeurGraphe(),L=40,R=14,T=18,ph=W<600?165:185;var yAx=T+ph+15,yE=yAx+17,H=yE+6;var pw=W-L-R,st=pw/11;
+var vals=[];sC.concat(sP).forEach(function(x){if(x!==null)vals.push(x)});if(pAd!==null)vals.push(mode==="cumul"?cPad:pAd);
+var mx=campNiceMax(Math.max.apply(null,vals.concat([1]))*1.08);
+function X(i){return L+i*st}function Y(x){return T+ph-(x/mx)*ph}
+var el=[];var hvI=hv<0?lastI:hv;
+if(!c.annee&&!c.trod){var i0=-1,i1=-1;S.P.mois.forEach(function(k,i){if(k>=C.debut.slice(0,7)&&k<=C.fin.slice(0,7)){if(i0<0)i0=i;i1=i}});
+if(i0<0){var dP=isoMoinsAn(C.debut).slice(0,7),fP=isoMoinsAn(C.fin).slice(0,7);S.P.mois.forEach(function(k,i){var kp=isoMoinsAn(k+"-01").slice(0,7);if(kp>=dP&&kp<=fP){if(i0<0)i0=i;i1=i}})}
+if(i0>=0){var bx0=Math.max(L-st/2,X(i0)-st/2),bx1=Math.min(W-R+st/2,X(i1)+st/2);el.push(React.createElement("rect",{key:"camp",x:bx0,y:T,width:bx1-bx0,height:ph,fill:c.coul,opacity:dark?0.10:0.06,rx:4}));
+el.push(React.createElement("text",{key:"campt",x:bx0+4,y:T-6,fontSize:10,fill:ink},"campagne"))}}
+[0,0.5,1].forEach(function(f,i){var y=mx*f;el.push(React.createElement("line",{key:"g"+i,x1:L,x2:W-R,y1:Y(y),y2:Y(y),stroke:gridC}));el.push(React.createElement("text",{key:"gt"+i,x:L-5,y:Y(y)+4,textAnchor:"end",fontSize:10,fill:ink},String(Math.round(y))))});
+el.push(React.createElement("line",{key:"hv",x1:X(hvI),x2:X(hvI),y1:T,y2:T+ph,stroke:ink,strokeDasharray:"2 3",opacity:0.5}));
+var ptsP=[];sP.forEach(function(x,i){if(x!==null)ptsP.push(X(i)+","+Y(x))});
+if(ptsP.length>1)el.push(React.createElement("polyline",{key:"lp",points:ptsP.join(" "),fill:"none",stroke:cG,strokeWidth:2.2,strokeLinejoin:"round",strokeLinecap:"round"}));
+sP.forEach(function(x,i){if(x!==null)el.push(React.createElement("circle",{key:"pp"+i,cx:X(i),cy:Y(x),r:i===hvI?4:2.4,fill:cG}))});
+var ptsC=[];var iC0=-1;sC.forEach(function(x,i){if(x!==null&&i<=lastI){if(iC0<0)iC0=i;ptsC.push(X(i)+","+Y(x))}});
+if(ptsC.length>1){el.push(React.createElement("polygon",{key:"ac",points:X(iC0)+","+Y(0)+" "+ptsC.join(" ")+" "+X(lastI)+","+Y(0),fill:c.coul,opacity:dark?0.16:0.10}));
+el.push(React.createElement("polyline",{key:"lc",points:ptsC.join(" "),fill:"none",stroke:c.coul,strokeWidth:3,strokeLinejoin:"round",strokeLinecap:"round"}))}
+sC.forEach(function(x,i){if(x===null||i>lastI)return;var part=i===iP;el.push(React.createElement("circle",{key:"pc"+i,cx:X(i),cy:Y(x),r:i===hvI?6:3.6,fill:part?bg:c.coul,stroke:part?c.coul:bg,strokeWidth:part?2.5:1.5}))});
+var vL=sC[lastI];if(vL!==null){var lx=X(lastI),anc=lastI>=10?"end":(lastI===0?"start":"middle");el.push(React.createElement("text",{key:"vl",x:lastI>=10?lx+4:lx,y:Y(vL)-10,textAnchor:anc,fontSize:12,fontWeight:800,fill:dark?"#fff":"#1f2937"},String(vL)))}
+S.P.mois.forEach(function(k,i){var mm=parseInt(k.slice(5,7),10);el.push(React.createElement("text",{key:"x"+i,x:X(i),y:yAx,textAnchor:"middle",fontSize:W<400?9:10,fontWeight:i===hvI?800:400,fill:i>lastI?(dark?"#77766f":"#a3a39e"):ink},CAMP_MOIS3[mm-1]))});
+el.push(React.createElement("text",{key:"elib",x:0,y:yE,textAnchor:"start",fontSize:9,fill:ink},"\u00e9cart"));
+ecart.forEach(function(e,i){if(e===null)return;var lg=String(Math.abs(e)).length;el.push(React.createElement("text",{key:"e"+i,x:X(i),y:yE,textAnchor:"middle",fontSize:lg>=3||W<400?9:10,fontWeight:700,fill:coulE(e)},(e===0?"=":sig(e))))});
+S.P.mois.forEach(function(k,i){el.push(React.createElement("rect",{key:"h"+i,x:X(i)-st/2,y:0,width:st,height:H,fill:"transparent",style:{cursor:"pointer"},onMouseEnter:function(){setHv(i)},onClick:function(){setHv(i)}}))});
+var puce=function(col,w){return React.createElement("span",{style:{display:"inline-block",width:18,borderTop:w+"px solid "+col,verticalAlign:"middle",marginRight:5}})};
+var legende=React.createElement("div",{style:{display:"flex",gap:14,flexWrap:"wrap",fontSize:12,color:"var(--text2)",marginBottom:4}},
+React.createElement("span",null,puce(c.coul,3),React.createElement("b",{style:{color:"var(--text)"}},libC)),React.createElement("span",null,puce(cG,2.2),libP),
+React.createElement("span",{style:{color:"var(--text3)"}},mode==="cumul"?"total qui s'additionne mois apr\u00e8s mois":lib+" chaque mois"));
+/* encadre du mois touche */
+var k=S.P.mois[hvI];var kP=isoMoinsAn(k+"-01").slice(0,7);var xC=sC[hvI],xP=sP[hvI],part=hvI===iP;var refP=part?(mode==="cumul"?cPad:pAd):xP;var eH=ecart[hvI];
+var ligne;
+if(hvI>lastI){ligne=React.createElement("span",null,React.createElement("b",null,moisCourt(k)+" : \u00e0 venir"),xP!==null?React.createElement("span",{style:{color:"var(--text2)"}}," \u00b7 l'an dernier "+(mode==="cumul"?"\u00e0 fin "+moisCourt(kP)+" : ":"en "+moisCourt(kP)+" : ")+xP):null)}
+else{ligne=React.createElement("span",null,React.createElement("b",null,(mode==="cumul"?(part?"Au "+tdgFr(S.fin)+" : ":"\u00c0 fin "+moisCourt(k)+" : "):moisCourt(k)+(part?" (au "+tdgFr(S.fin).slice(0,5)+")":"")+" : ")+xC+" "+lib),
+refP!==null?React.createElement("span",{style:{color:"var(--text2)"}}," \u00b7 l'an dernier "+(part?"\u00e0 la m\u00eame date":(mode==="cumul"?"\u00e0 fin "+moisCourt(kP):"en "+moisCourt(kP)))+" : "+refP+" "):React.createElement("span",{style:{color:"var(--text3)"}}," \u00b7 pas de donn\u00e9es l'an dernier"),
+eH!==null?React.createElement("b",{style:{color:coulE(eH)}},"("+(eH===0?"\u00e9galit\u00e9":sig(eH))+")"):null)}
+var notes=[];
+if(S.prevPartiel)notes.push("Les ventes ne sont connues qu'\u00e0 partir du "+tdgFr(S.DEB)+" : l'an dernier est incomplet avant cette date, l'\u00e9cart est donc flatteur.");
+if(iP>=0)notes.push("Mois en cours compt\u00e9 jusqu'au "+tdgFr(S.fin)+" et compar\u00e9 \u00e0 la m\u00eame date l'an dernier (point creux).");
+return React.createElement("div",null,bandeau,boutons,legende,
+React.createElement("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",style:{display:"block"},role:"img","aria-label":c.nom+" : "+libC+" face \u00e0 "+libP},el),
+React.createElement("div",{style:{background:"var(--bg3)",borderRadius:10,padding:"8px 12px",fontSize:13,marginTop:6,lineHeight:1.5}},ligne),
+notes.length?React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:6,lineHeight:1.4}},notes.join(" ")):null)}
 function ProduitsTrod(props){
 var CS=props.cs,kt=props.kt,admin=props.admin;var d1=CS&&CS.cov?CS.cov[1]:aujIso();var d0=isoPlusJours(d1,-364);
 var agg={},nT=0,nP=0;var C=props.cfg;var lc=C.actes[kt]||[];
