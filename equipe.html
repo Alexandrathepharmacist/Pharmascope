@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.19">
+<meta name="ps-version" content="e1.20">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -182,20 +182,20 @@ var CAMP_CATS=[
 function campCfg(c){var o=Object.assign({},CAMP_DEF,c||{});o.actes=Object.assign({},CAMP_DEF.actes,(c&&c.actes)||{});["trodA","trodC"].forEach(function(k){if(!o.actes[k]||!o.actes[k].length)o.actes[k]=CAMP_DEF.actes[k]});o.obj=Object.assign({},(c&&c.obj)||{});return o}
 function campCompter(CS,cfg,d0,d1){
 var A=campCfg(cfg).actes;var kinds=(CS&&CS.K)||{};
-var res={};CAMP_CATS.forEach(function(c){res[c.k]={n:0,V:{},ici:0,info:0,code:{}}});var hon=0;
+var res={};CAMP_CATS.forEach(function(c){res[c.k]={n:0,V:{},ici:0,info:0,p65:0,m65:0,code:{}}});var hon=0;
 function set(a){var m={};(a||[]).forEach(function(c){m[String(c).trim()]=1});return m}
 var sG=set(A.grippe),sC=set(A.covid),sAu=set(A.autres),sTA=set(A.trodA),sTC=set(A.trodC);
 var grAct=Object.keys(sG).length>0,covAct=Object.keys(sC).length>0;
 function add(cat,q,V){var r=res[cat];r.n+=q;Object.keys(V||{}).forEach(function(v){r.V[v]=(r.V[v]||0)+V[v]})}
 if(!CS||!CS.D)return{cats:res,hon:0};
 Object.keys(CS.D).forEach(function(iso){if(iso<d0||iso>d1)return;var day=CS.D[iso];
-Object.keys(day).forEach(function(code){var r=day[code];var q=r[0]||0,qa=r[1]||0,ca=r[2]||0,V=r[3]||{},VA=r[4]||{};var k=kinds[code];
+Object.keys(day).forEach(function(code){var r=day[code];var q=r[0]||0,qa=r[1]||0,ca=r[2]||0,V=r[3]||{},VA=r[4]||{};var k=kinds[code];if((k==="eflu"||k==="fl65"||k==="grMix")&&q>0&&ca>0&&ca/q<6)k=null;
 if(sG[code]){add("grippe",q,V);hon+=ca}
 else if(sC[code]){add("covid",q,V);hon+=ca}
 else if(sTA[code]||sTC[code]){var kt=sTA[code]?"trodA":"trodC";add(kt,q,V);hon+=ca;var pc=res[kt].code[code]||(res[kt].code[code]={q:0,ca:0});pc.q+=q;pc.ca+=ca}
 else if(sAu[code]){hon+=ca}
-if(k==="eflu"){if(!grAct)add("grippe",q,V);res.grippe.info+=q}
-else if(k==="grMix"){res.grippe.info+=q}
+if(k==="eflu"||k==="fl65"){if(!grAct)add("grippe",q,V);res.grippe.info+=q;res.grippe.p65+=q}
+else if(k==="grMix"){res.grippe.info+=q;res.grippe.m65+=q}
 else if(k==="zona"){add("zona",q,V);res.zona.ici+=qa}
 else if(k==="pnA"){add("pneumo",q,V);res.pneumo.ici+=qa}
 else if(k==="pnM"){add("pneumo",qa,VA);res.pneumo.ici+=qa;res.pneumo.info+=q-qa}
@@ -264,7 +264,7 @@ var n=src?Math.round(src.cats[c.k].n):0;var o=obj[c.k];var a=an?(aN1ok?Math.roun
 var pc=o?Math.min(100,n/o*100):0;var hum=av?"\u23f3":campHumeur(n,a);
 var sous=an?((a!==null&&a>0?(n>=a?"+"+(n-a):String(n-a))+" vs l'an dernier \u00e0 date \u00b7 ":"")+"depuis le 1er janvier"):avant?(d>0?"L'an dernier : "+d+" sur la saison":"Pas de donn\u00e9es l'an dernier"):(a!==null&&a>0?(n>=a?"+"+(n-a)+" vs l'an dernier \u00e0 date":(n-a)+" vs l'an dernier \u00e0 date"):"");
 var info="";if(!av&&src){var s=src.cats[c.k];
-if(c.k==="grippe"&&s.info)info=s.info+" vaccins grippe d\u00e9livr\u00e9s";
+if(c.k==="grippe"&&s.info)info=s.info+" vaccins grippe d\u00e9livr\u00e9s ("+s.p65+" \u00e0 65 ans et + \u00b7 "+s.m65+" moins de 65 ans)";
 if(c.k==="zona"&&s.ici)info="dont "+s.ici+" vaccin\u00e9s ici";
 if(c.k==="pneumo"&&s.ici)info="dont "+Math.round(s.ici)+" vaccin\u00e9s ici";
 if((c.k==="dtcp"||c.k==="hpv")&&s.info)info="vaccin\u00e9s ici \u00b7 "+Math.round(s.info)+" d\u00e9livr\u00e9s au total (tous \u00e2ges)";
@@ -369,7 +369,7 @@ equipe?null:React.createElement(EnTeteOutil,{titre:"\ud83d\udc89 Vaccins & TROD"
 majBloc,
 hero,selC==="grippe"?detail:null,tuilesV,graphe,classement,reglages,pied)}
 function finMois(k){var y=parseInt(k.slice(0,4),10),m=parseInt(k.slice(5,7),10);var d=new Date(Date.UTC(y,m,0));return k+"-"+("0"+d.getUTCDate()).slice(-2)}
-/* v8.85 : courbe vaccins - grippe et Covid : periode de campagne, semaine par semaine ; autres vaccins et TROD : 12 mois. Cette annee face a l'an dernier, cumul ou detail, ecart colore */
+/* v8.86 : grippe 65 ans et + / moins de 65 ans. v8.85 : courbe vaccins - grippe et Covid : periode de campagne, semaine par semaine ; autres vaccins et TROD : 12 mois. Cette annee face a l'an dernier, cumul ou detail, ecart colore */
 var CAMP_MOIS3=["jan","f\u00e9v","mar","avr","mai","juin","juil","ao\u00fbt","sep","oct","nov","d\u00e9c"];
 function campDdMm(iso){return iso.slice(8,10)+"/"+iso.slice(5,7)}
 function campPeriode(c,C,fin){var T=[];
@@ -379,11 +379,11 @@ var n0=tdgDayNum(D0),n1=tdgDayNum(D1);
 for(var w=0;n0+7*w<=n1;w++){var a=tdgDayStr(n0+7*w),b=tdgDayStr(Math.min(n0+7*w+6,n1));
 T.push({a:a,b:b,lab:campDdMm(a),nom:"Semaine du "+campDdMm(a)+" au "+campDdMm(b),nomP:"la m\u00eame semaine l'an dernier",finNom:"au "+campDdMm(b),finNomP:"au "+campDdMm(b)})}
 return{d0:D0,T:T,sem:true}}
-function campVal2(c,rr){return c.k==="grippe"||c.k==="dtcp"||c.k==="hpv"?rr.info:(c.k==="zona"||c.k==="pneumo"?rr.ici:0)}
+function campVals(c,rr){return[rr.n,c.k==="grippe"||c.k==="dtcp"||c.k==="hpv"?rr.info:(c.k==="zona"||c.k==="pneumo"?rr.ici:0),rr.p65||0,rr.m65||0]}
 function campNiceMax(v){if(v<=4)return 4;var p=Math.pow(10,Math.floor(Math.log(v)/Math.LN10));var r=v/p;var t=[1,2,4,6,8,10];for(var i=0;i<t.length;i++){if(r<=t[i]+1e-9)return t[i]*p}return 10*p}
 function campSeries(CS,C,c){
 var fin=CS.cov[1];var DEB=CS.cov[0]>CAMP_DEBUT_DONNEES?CS.cov[0]:CAMP_DEBUT_DONNEES;var P=campPeriode(c,C,fin);
-function cpt(a,b){if(a<DEB)a=DEB;if(b<a)return null;var rr=campCompter(CS,C,a,b).cats[c.k];return[rr.n,campVal2(c,rr)]}
+function cpt(a,b){if(a<DEB)a=DEB;if(b<a)return null;var rr=campCompter(CS,C,a,b).cats[c.k];return campVals(c,rr)}
 var cur=[],prev=[],prevAd=null,iP=-1,lastI=-1;
 P.T.forEach(function(t,i){var a=t.a,b=t.b;
 if(a>fin||b<DEB){cur.push(null)}else{if(b>fin){b=fin;iP=i}cur.push(cpt(a,b));lastI=i}
@@ -398,7 +398,7 @@ var hS=useState(-1);var hv=hS[0];var setHv=hS[1];
 var S=useMemo(function(){return CS&&CS.cov&&CS.cov[1]?campSeries(CS,C,c):null},[CS,C,c.k]);
 if(!S||S.lastI<0)return React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Pas encore de ventes sur la p\u00e9riode pour tracer une courbe.");
 var sem=S.P.sem,T=S.P.T,n=T.length;
-var a2=S.cur.concat(S.prev).some(function(x){return x&&x[1]>0});var m=a2?mi:0;
+var a2=S.cur.concat(S.prev).some(function(x){return x&&x[1]>0});var gr=c.k==="grippe";var m=a2?(gr||mi<2?mi:0):0;
 function v(x){return x?Math.round(x[m]):null}
 var cur=S.cur.map(v),prev=S.prev.map(v),pAd=S.prevAd?Math.round(S.prevAd[m]):null;var lastI=S.lastI,iP=S.iP;
 /* cumuls */
@@ -414,7 +414,7 @@ var ecart=cur.map(function(x,i){if(i>lastI||sP[i]===null)return null;var ref=i==
 var nomM=c.trod?"tests r\u00e9alis\u00e9s":(c.k==="grippe"||c.k==="covid"?"injections faites ici":(c.k==="dtcp"||c.k==="hpv"?"vaccin\u00e9s ici":"vaccins d\u00e9livr\u00e9s (adultes)"));
 var nomM2=c.k==="grippe"?"vaccins grippe d\u00e9livr\u00e9s":(c.k==="dtcp"||c.k==="hpv"?"d\u00e9livr\u00e9s (tous \u00e2ges)":"dont vaccin\u00e9s ici");
 var court=c.k==="grippe"?["Injections ici","Vaccins d\u00e9livr\u00e9s"]:(c.k==="dtcp"||c.k==="hpv"?["Vaccin\u00e9s ici","D\u00e9livr\u00e9s (tous \u00e2ges)"]:["D\u00e9livr\u00e9s (adultes)","Vaccin\u00e9s ici"]);
-var lib=m===1?nomM2:nomM;
+var lib=m===3?"vaccins grippe moins de 65 ans d\u00e9livr\u00e9s":(m===2?"vaccins grippe 65 ans et + d\u00e9livr\u00e9s":(m===1?nomM2:nomM));
 var y0=parseInt(S.P.d0.slice(0,4),10);var libC=sem?"campagne "+y0+"-"+(y0+1):String(y0);var libP=sem?"campagne "+(y0-1)+"-"+y0:String(y0-1);
 /* couleurs */
 var ink=dark?"#c3c2b7":"#5f5e5a",gridC=dark?"rgba(255,255,255,.10)":"rgba(0,0,0,.07)",cG=dark?"#8d8c85":"#a8b3c2",bg=dark?"#1a1a19":"#fff";
@@ -433,7 +433,8 @@ function pill(act,txt,fn){return React.createElement("button",{onClick:fn,style:
 var grp={display:"inline-flex",gap:2,background:"var(--bg3)",borderRadius:18,padding:2};
 var boutons=React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}},
 React.createElement("div",{style:grp},pill(mode==="cumul","Cumul\u00e9",function(){setMode("cumul")}),pill(mode!=="cumul",sem?"Semaine par semaine":"Mois par mois",function(){setMode("detail")})),
-a2?React.createElement("div",{style:grp},pill(m===0,court[0],function(){setMi(0)}),pill(m===1,court[1],function(){setMi(1)})):null);
+a2?React.createElement("div",{style:grp},pill(m===0,court[0],function(){setMi(0)}),pill(m>=1,court[1],function(){setMi(1)})):null,
+gr&&m>=1?React.createElement("div",{style:grp},pill(m===1,"Tous",function(){setMi(1)}),pill(m===2,"65 ans et +",function(){setMi(2)}),pill(m===3,"Moins de 65 ans",function(){setMi(3)})):null);
 /* graphique */
 var W=largeurGraphe(),L=40,R=14,TP=12,ph=W<600?165:185;var yAx=TP+ph+15,yE=yAx+17,H=yE+6;var pw=W-L-R,st=pw/(n-1);
 var pas=st<24?2:1;var hvI=hv<0?lastI:hv;
@@ -468,6 +469,7 @@ else{ligne=React.createElement("span",null,React.createElement("b",null,(mode===
 refP!==null?React.createElement("span",{style:{color:"var(--text2)"}},(part?" \u00b7 l'an dernier \u00e0 la m\u00eame date : ":(mode==="cumul"?" \u00b7 l'an dernier "+t.finNomP+" : ":(sem?" \u00b7 m\u00eame semaine l'an dernier : ":" \u00b7 l'an dernier "+t.nomP+" : ")))+refP+" "):React.createElement("span",{style:{color:"var(--text3)"}}," \u00b7 pas de donn\u00e9es l'an dernier"),
 eH!==null?React.createElement("b",{style:{color:coulE(eH)}},"("+(eH===0?"\u00e9galit\u00e9":sig(eH))+")"):null)}
 var notes=[];var sansP=totP===null;
+if(gr&&m>=2)notes.push("65 ans et + : Efluelda et Fluad. Moins de 65 ans : Vaxigrip, Flucelvax, Influvac, Fluarix.");
 if(sansP)notes.push("Pas de comparaison possible : les ventes ne sont connues qu'\u00e0 partir du "+tdgFr(S.DEB)+".");
 else if(S.prevPartiel)notes.push("Les ventes ne sont connues qu'\u00e0 partir du "+tdgFr(S.DEB)+" : l'an dernier est incomplet avant cette date, l'\u00e9cart est donc flatteur.");
 if(sem)notes.push("Campagne du "+tdgFr(S.P.d0)+" au "+tdgFr(T[n-1].b)+(sansP?".":", compar\u00e9e aux m\u00eames dates l'an dernier."));
