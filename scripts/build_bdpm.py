@@ -75,6 +75,32 @@ for r in gener:
     if typ in ("1", "2", "4") and cis_comm.get(c):
         s = grp_labs.setdefault(gid, set()); s.add(li)
 
+# --- generiques commerciaux hors repertoire (ex. paracetamol, macrogol) : equivalents entre labos generiques ---
+GENLABS = {"BIOGARAN","ZENTIVA","TEVA","VIATRIS","ARROW","SANDOZ","EG LABO","CRISTERS","ZYDUS","SUBSTIPHARM","ACCORD","KRKA","ALMUS","EVOLUPHARM"}
+in_rep = set(r[2].strip() for r in gener)
+comp = {}
+for r in compo:
+    if len(r) > 6 and norm(r[6]) == "SA":
+        comp.setdefault(r[0].strip(), set()).add((r[2].strip(), norm(r[4])))
+hk = {}
+for c, row in cis.items():
+    if c in in_rep or c not in comp or not cis_comm.get(c): continue
+    lb = lab(row[10])
+    if lb not in GENLABS: continue
+    key = (tuple(sorted(comp[c])), norm(row[2]))
+    hk.setdefault(key, []).append((c, lb))
+nh = 0
+for key, lst in hk.items():
+    if len(set(lb for _, lb in lst)) < 2: continue
+    nh += 1; gid = "H%d" % nh
+    grp[gid] = cis[lst[0][0]][1].split(",")[0].strip() + " (hors repertoire)"
+    for c, lb in lst:
+        li = L(lb)
+        for cp in cis_cips.get(c, []):
+            if cp not in cipg: cipg[cp] = [gid, 5, li, cipinfo.get(cp, (None,))[0]]
+        grp_labs.setdefault(gid, set()).add(li)
+print("groupes hors repertoire", nh)
+
 # --- biosimilaires (groupes substituables + quelques hors liste) ---
 BIO = [("FILGRASTIM","Filgrastim",["NEUPOGEN"],1),("PEGFILGRASTIM","Pegfilgrastim",["NEULASTA"],1),
        ("RANIBIZUMAB","Ranibizumab",["LUCENTIS"],1),("TERIPARATIDE","Teriparatide",["FORSTEO"],1),
@@ -109,7 +135,7 @@ for r in compo:
 out = {"maj": datetime.date.today().isoformat(), "source": "Base de donnees publique des medicaments (ANSM)",
        "labs": labs, "grp": grp, "cip": cipg, "grp_labs": {k: sorted(v) for k, v in grp_labs.items()},
        "bio": bio, "bio_labs": {k: sorted(v) for k, v in bio_labs.items()},
-       "cles": {"cip": "[groupe, type (0 princeps, 1 generique, 2 complementarite, 4 substituable), labo, prix TTC]",
+       "cles": {"cip": "[groupe, type (0 princeps, 1 generique, 2 complementarite, 4 substituable, 5 generique hors repertoire), labo, prix TTC]",
                 "bio": "[groupe, 1=reference, labo, 1=substituable par le pharmacien, prix TTC]"}}
 import os; os.makedirs("data", exist_ok=True)
 json.dump(out, open("data/bdpm.json", "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
