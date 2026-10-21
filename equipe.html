@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.24">
+<meta name="ps-version" content="e1.25">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -558,6 +558,79 @@ entete,lignes,
 React.createElement("div",{style:{fontSize:11,fontWeight:700,color:ink,margin:"10px 0 4px"}},"Moyenne par jour"),
 ligneMoy("mc",y0+"-"+String(y0+1).slice(2),mC,eC,assezC),
 ligneMoy("mp",(y0-1)+"-"+String(y0).slice(2),mP,eP,true),
+phr.length?React.createElement("div",{style:{background:"var(--bg3)",borderRadius:10,padding:"8px 12px",fontSize:13,marginTop:8,lineHeight:1.5}},phr):null,
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:6,lineHeight:1.4}},notes.join(" ")),
+React.createElement(HeuresCampagne,{cs:CS,cfg:C,cat:c,mi:mi,vue:vue,D0:Z.D0,D1:Z.D1,fin:Z.fin}))}
+/* v8.91 : vaccins grippe/Covid - a quelle heure ? (carte jours x heures, matin / midi / apres-midi, campagne precedente avec coupure du midi) */
+function campHeuresCompter(CS,C,c,mi,d0,d1,DEB){
+var A=campCfg(C).actes;var kinds=CS.K||{};function set(a){var m={};(a||[]).forEach(function(x){m[String(x).trim()]=1});return m}
+var sG=set(A.grippe),sC=set(A.covid);var grAct=Object.keys(sG).length>0,covAct=Object.keys(sC).length>0;
+function poids(code,r){var k=kinds[code];
+if(c.k==="covid")return sC[code]?1:(k==="cov"&&!covAct?1:0);
+if(mi===0)return sG[code]?1:((k==="eflu"||k==="fl65")&&!grAct?1:0);
+if(k!=="eflu"&&k!=="fl65"&&k!=="grMix")return 0;var q=r?r[0]||0:0,qa=r?r[1]||0:0,ca=r?r[2]||0:0;
+if(q>0&&ca>0&&ca/q<6)return 0;if(q-qa>=25)return q>0?qa/q:0;return 1}
+var S=[],Nd=[0,0,0,0,0,0,0],avecH=0,avecD=0;for(var d=0;d<7;d++){var z=[];for(var j=0;j<48;j++)z.push(0);S.push(z)}
+var n0=tdgDayNum(d0),n1=tdgDayNum(d1);
+for(var n=n0;n<=n1;n++){var iso=tdgDayStr(n);var dow=new Date(n*86400000).getUTCDay();if(dow===0||iso<DEB||CAMP_FERIES_MD.indexOf(iso.slice(5))>=0)continue;
+Nd[dow]++;if(CS.D&&CS.D[iso])avecD++;var hd=CS.H&&CS.H[iso];if(!hd)continue;avecH++;var dd=(CS.D&&CS.D[iso])||{};
+Object.keys(hd).forEach(function(code){var f=poids(code,dd[code]);if(!f)return;var o=hd[code];Object.keys(o).forEach(function(s){var i=parseInt(s,10);if(i>=0&&i<48)S[dow][i]+=o[s]*f})})}
+return{S:S,Nd:Nd,avecH:avecH,avecD:avecD,coupure:d0<"2026-01-01"}}
+function HeuresCampagne(props){
+var CS=props.cs,C=props.cfg,c=props.cat,mi=props.mi,vue=props.vue;var th=useContext(ThemeCtx);var dark=th&&th.dark;
+var Z=useMemo(function(){var DEB=CS.cov[0]>CAMP_DEBUT_DONNEES?CS.cov[0]:CAMP_DEBUT_DONNEES;var f1=props.fin<props.D1?props.fin:props.D1;
+return{cur:campHeuresCompter(CS,C,c,mi,props.D0,f1,DEB),prev:campHeuresCompter(CS,C,c,mi,isoMoinsAn(props.D0),isoMoinsAn(props.D1),DEB)}},[CS,C,c.k,mi,props.D0,props.D1,props.fin]);
+var titre=React.createElement("div",{style:{fontWeight:700,fontSize:15,margin:"16px 0 4px"}},"\u23f0 \u00c0 quelle heure ?");
+var X=vue==="cur"?Z.cur:Z.prev;
+if(!X.avecH){return React.createElement("div",null,titre,React.createElement("div",{style:{fontSize:13,color:"var(--text2)",background:"var(--bg3)",borderRadius:10,padding:"8px 12px",lineHeight:1.5}},
+X.avecD?"Les heures appara\u00eetront apr\u00e8s la prochaine mise \u00e0 jour des ventes sur le compte titulaire : PharmaScope relira tout l'historique avec les heures.":"Pas de ventes sur cette p\u00e9riode."))}
+var lib=c.k==="covid"?"injections Covid":(mi===1?"vaccins grippe d\u00e9livr\u00e9s":"injections grippe");
+var ink=dark?"#c3c2b7":"#5f5e5a";
+var fr1=function(x){return x>=10?String(Math.round(x)):String(Math.round(x*10)/10).replace(".",",")};
+function parH(Y,dow,h){return Y.Nd[dow]?(Y.S[dow][2*h]+Y.S[dow][2*h+1])/Y.Nd[dow]:0}
+/* carte jours x heures */
+var H0=8,H1=19;var mx=0.0001;for(var dw=1;dw<=6;dw++)for(var h=H0;h<=H1;h++){var v=parH(X,dw,h);if(v>mx)mx=v}
+var cel={flex:1,minWidth:0,height:24,borderRadius:6,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700};
+var lab={width:46,flexShrink:0,fontSize:10,color:"var(--text3)",display:"flex",alignItems:"center"};
+var best={v:0,dow:0,h:0};
+var rows=[React.createElement("div",{key:"t",style:{display:"flex",gap:4,marginBottom:4}},React.createElement("div",{style:lab}),[1,2,3,4,5,6].map(function(d){return React.createElement("div",{key:d,style:{flex:1,textAlign:"center",fontSize:11,fontWeight:700,color:ink}},CAMP_JOURS[d])}))];
+for(var h2=H0;h2<=H1;h2++){(function(h){
+rows.push(React.createElement("div",{key:h,style:{display:"flex",gap:4,marginBottom:3}},React.createElement("div",{style:lab},h+"h"),[1,2,3,4,5,6].map(function(d){
+if(d===6&&h>=19)return React.createElement("div",{key:d,style:Object.assign({},cel,{background:"transparent"})});
+var v=parH(X,d,h);if(v>best.v)best={v:v,dow:d,h:h};
+var ferme=X.coupure&&d<=4&&h===13&&v<0.05;
+if(ferme)return React.createElement("div",{key:d,style:Object.assign({},cel,{background:"var(--bg3)",color:"var(--text3)",fontWeight:400,fontSize:9})},"ferm\u00e9");
+var t=v/mx;return React.createElement("div",{key:d,title:CAMP_JOURS_L[d]+" "+h+"h-"+(h+1)+"h : "+fr1(v)+" "+lib+" par jour en moyenne",style:Object.assign({},cel,{background:v>0.04?campHexA(c.coul,0.10+0.80*t):"var(--bg3)",color:t>0.55?"#fff":"var(--text)",fontWeight:v>0.04?700:400})},v>0.04?fr1(v):"\u00b7")})))})(h2)}
+/* matin / midi / apres-midi (demi-heures : 8h30 = 17, 12h30 = 25, 14h30 = 29, 19h30 = 39) */
+var PL=[["Matin","8h30\u201312h30",17,25],["Midi","12h30\u201314h30",25,29],["Apr\u00e8s-midi","14h30\u201319h30",29,39]];
+function profil(Y){var tot=0,p=[0,0,0];var nb=Y.Nd.reduce(function(a,b){return a+b},0);
+for(var d=1;d<=6;d++)for(var i=0;i<48;i++){var v=Y.S[d][i];tot+=v;PL.forEach(function(x,k){if(i>=x[2]&&i<x[3])p[k]+=v})}
+return{tot:tot,nb:nb,pct:p.map(function(v){return tot>0?Math.round(v/tot*100):null}),jour:p.map(function(v){return nb?v/nb:null})}}
+var pC=profil(Z.cur),pP=profil(Z.prev);
+var y0=parseInt(props.D0.slice(0,4),10);
+var celP={flex:1,minWidth:0,borderRadius:8,padding:"6px 4px",textAlign:"center",lineHeight:1.2};
+function ligneP(k,label,P,ok){var m=Math.max.apply(null,P.pct.map(function(x){return x||0}).concat([1]));
+return React.createElement("div",{key:k,style:{display:"flex",gap:4,marginBottom:4}},React.createElement("div",{style:lab},label),PL.map(function(x,i){var v=P.pct[i];
+return React.createElement("div",{key:i,style:Object.assign({},celP,{background:ok&&v!==null?campHexA(c.coul,0.08+0.45*(v/m)):"var(--bg3)"})},
+React.createElement("div",{style:{fontWeight:800,fontSize:14}},ok&&v!==null?v+" %":"\u2013"),
+React.createElement("div",{style:{fontSize:10,color:"var(--text3)"}},ok&&P.jour[i]!==null?fr1(P.jour[i])+" / jour":""))}))}
+var okC=Z.cur.avecH>0&&pC.tot>0,okP=Z.prev.avecH>0&&pP.tot>0;
+var enteteP=React.createElement("div",{style:{display:"flex",gap:4,marginBottom:4}},React.createElement("div",{style:lab}),PL.map(function(x,i){return React.createElement("div",{key:i,style:{flex:1,textAlign:"center",fontSize:11,fontWeight:700,color:ink,lineHeight:1.2}},x[0],React.createElement("div",{style:{fontSize:9,fontWeight:400,color:"var(--text3)"}},x[1]))}));
+/* phrases */
+var phr=[];
+if(best.v>0)phr.push(React.createElement("div",{key:"b"},"Cr\u00e9neau le plus charg\u00e9 "+(vue==="cur"?"cette campagne":"la campagne pr\u00e9c\u00e9dente")+" : le ",React.createElement("b",null,CAMP_JOURS_L[best.dow]+" entre "+best.h+"h et "+(best.h+1)+"h")," (\u2248 "+fr1(best.v)+" "+lib+" par jour)."));
+var tj=[];var nbX=X.Nd.reduce(function(a,b){return a+b},0);for(var hh=H0;hh<=H1;hh++){var s=0;for(var d3=1;d3<=6;d3++)s+=X.S[d3][2*hh]+X.S[d3][2*hh+1];tj.push(nbX?s/nbX:0)}
+var bw=-1,bv=0;for(var w=0;w<tj.length-1;w++){if(tj[w]+tj[w+1]>bv){bv=tj[w]+tj[w+1];bw=w}}
+if(bw>=0&&bv>0)phr.push(React.createElement("div",{key:"w"},"\ud83d\udca1 Le pic de la journ\u00e9e se situe ",React.createElement("b",null,"entre "+(H0+bw)+"h et "+(H0+bw+2)+"h")," : c'est le meilleur moment pour un vaccinateur en renfort."));
+if(okC&&okP&&pC.pct[1]!==null&&pP.pct[1]!==null){var dM=pC.pct[1]-pP.pct[1];
+phr.push(React.createElement("div",{key:"m",style:{marginTop:4}},"\ud83d\udd53 Midi (12h30\u201314h30) : ",React.createElement("b",null,pC.pct[1]+" %")," des "+lib+" cette campagne, contre "+pP.pct[1]+" % la pr\u00e9c\u00e9dente"+(Z.prev.coupure?" (le midi n'\u00e9tait alors ouvert que le vendredi et le samedi)":"")+". "+(dM>=3?"L'ouverture en continu attire des patients \u00e0 l'heure du d\u00e9jeuner.":(dM<=-3?"Le midi reste un cr\u00e9neau calme.":"La part du midi a peu chang\u00e9."))))}
+var notes=["Moyenne par jour d'ouverture (lundi au samedi, jours f\u00e9ri\u00e9s exclus), selon l'heure du ticket de caisse."];
+if(vue==="cur"&&Z.cur.Nd.reduce(function(a,b){return a+b},0)<12)notes.push("D\u00e9but de campagne : peu de jours encore, les moyennes vont bouger.");
+return React.createElement("div",null,titre,
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},"Moyenne de "+lib+" par heure, selon le jour de la semaine ("+(vue==="cur"?"cette campagne":"campagne pr\u00e9c\u00e9dente")+"). Plus la case est fonc\u00e9e, plus c'est charg\u00e9."),
+rows,
+React.createElement("div",{style:{fontSize:11,fontWeight:700,color:ink,margin:"12px 0 4px"}},"Matin, midi ou apr\u00e8s-midi ?"),
+enteteP,ligneP("pc",y0+"-"+String(y0+1).slice(2),pC,okC),ligneP("pp",(y0-1)+"-"+String(y0).slice(2),pP,okP),
 phr.length?React.createElement("div",{style:{background:"var(--bg3)",borderRadius:10,padding:"8px 12px",fontSize:13,marginTop:8,lineHeight:1.5}},phr):null,
 React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:6,lineHeight:1.4}},notes.join(" ")))}
 function ProduitsTrod(props){
