@@ -68,7 +68,7 @@ if(/[?&]maj=/.test(location.search)){try{history.replaceState(null,"",location.p
 setTimeout(verifier,3000);
 setInterval(verifier,30*60000);
 })();
-if("serviceWorker" in navigator){try{navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){r.unregister()})}).catch(function(){})}catch(e){}}
+if("serviceWorker" in navigator){try{navigator.serviceWorker.getRegistrations().then(function(rs){rs.forEach(function(r){var u=(r.active&&r.active.scriptURL)||(r.waiting&&r.waiting.scriptURL)||(r.installing&&r.installing.scriptURL)||"";if(u.indexOf("sw-push.js")<0)r.unregister()})}).catch(function(){})}catch(e){}}
 </script>
 <script>
 /* Vaccins & TROD (repris de PharmaScope) et objectif culottes menstruelles (e1.11) */
