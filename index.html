@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.02">
+<meta name="ps-version" content="v9.03">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -198,9 +198,28 @@ w.document.write("<html><head><meta charset='utf-8'><title>Bon de commande "+ech
 "<div style='margin-top:12px;font-size:12px;color:#555'>Valeur estim\u00e9e au prix d'achat : "+Math.round(tot).toLocaleString("fr-FR")+" \u20ac HT</div>"+
 "<script>window.onload=function(){window.print()}<\/script></body></html>");
 w.document.close()}
+/* Commandes passees / propositions retirees (v9.03).
+   - "Passee" : la proposition du labo est masquee pendant 5 jours ouvres
+     (lundi-vendredi hors jours feries), delai habituel de livraison.
+   - "Retiree" : masquee 14 jours, sauf si un produit de ce labo devient
+     critique (rupture sous 2 semaines) apres le retrait.
+   Jours feries : les 11 fetes legales du Code du travail (art. L3133-1),
+   dont lundi de Paques, Ascension et lundi de Pentecote calcules depuis Paques. */
+var DELAI_LIVRAISON_OUVRES=5;var DUREE_RETRAIT_JOURS=14;
+function paquesIso(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),j=((h+l-7*m+114)%31)+1;return y+"-"+("0"+mo).slice(-2)+"-"+("0"+j).slice(-2)}
+var _feriesC={};
+function feriesFR(y){if(_feriesC[y])return _feriesC[y];var o={};["01-01","05-01","05-08","07-14","08-15","11-01","11-11","12-25"].forEach(function(md){o[y+"-"+md]=1});var p=paquesIso(y);[1,39,50].forEach(function(n){o[isoAjoute(p,n)]=1});_feriesC[y]=o;return o}
+function estJourOuvre(d){var j=d.getDay();if(j===0||j===6)return false;return !feriesFR(d.getFullYear())[isoLocal(d)]}
+function finDelaiOuvre(dateIso,n){var d=new Date(dateIso+"T12:00:00");if(isNaN(d.getTime()))return null;var k=0,garde=0;while(k<n&&garde<60){d.setDate(d.getDate()+1);garde++;if(estJourOuvre(d))k++}return isoLocal(d)}
 function passeActif(dateIso){
-if(!dateIso)return false;var d=new Date(dateIso+"T12:00:00");if(isNaN(d.getTime()))return true;
-return (Date.now()-d.getTime())<7*86400000}
+if(!dateIso)return false;var f=finDelaiOuvre(dateIso,DELAI_LIVRAISON_OUVRES);if(!f)return true;
+return aujIso()<=f}
+var CMD_RET={v:{}};
+function retireInfo(e){if(!e)return null;if(e===true)return{d:aujIso(),crit:[]};if(typeof e==="string")return{d:e,crit:[]};if(typeof e==="object"&&e.d)return{d:e.d,crit:Array.isArray(e.crit)?e.crit:[]};return null}
+function retireFin(e){var r=retireInfo(e);return r?isoAjoute(r.d,DUREE_RETRAIT_JOURS):null}
+function retireNouveauxCrit(e,critNoms){var r=retireInfo(e);if(!r)return[];return(critNoms||[]).filter(function(n){return r.crit.indexOf(n)<0})}
+function retireEnCours(e){var r=retireInfo(e);return !!r&&aujIso()<isoAjoute(r.d,DUREE_RETRAIT_JOURS)}
+function retireActif(e,critNoms){return retireEnCours(e)&&retireNouveauxCrit(e,critNoms).length===0}
 /* Besoins de commande calcules une fois par jeu de donnees, partages par la
    page Commandes, la pastille du menu, la tuile de l'accueil et les conseils. */
 var _cmdCache={s:null,p:null,t:null,v:{}};
@@ -214,8 +233,7 @@ var c=commandesDe(pd);var hs={};(hidden||[]).forEach(function(k){hs[k]=1});var n
 Object.keys(c).forEach(function(sup){
 if(estSupRx(pd,sup))return;
 if(passed&&passeActif(passed[sup]))return;
-if((c[sup].p||[]).some(function(q){return q.u==="critique"&&!hs[sup+"||"+q.n]}))n++});
-return n}
+var cr=(c[sup].p||[]).filter(function(q){return q.u==="critique"&&!hs[sup+"||"+q.n]}).map(function(q){return q.n});if(cr.length&&!retireActif(CMD_RET.v[sup],cr))n++}); return n}
 /* Totaux de la pharmacie sur les 12 derniers mois complets, depuis les ventes */
 function moisN1Ok(pd,i,j){if(j===undefined||j===null||!pd.F)return false;var f=pd.F[pd.M[i]],f1=pd.F[pd.M[j]];
 if(!f1)return false;if((f1.jours||0)<10)return false;if(f&&f.ventes&&(f1.ventes||0)<f.ventes*0.5)return false;return true}
@@ -401,7 +419,7 @@ return new Response(stream).text().then(function(t){return JSON.parse(t)})
 
 /* Etat de la derniere sauvegarde cloud, diffuse a l'ecran */
 var CLOUD_ETAT={ok:null,msg:""};
-var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
+var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
 function avertir(msg){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg}}))}catch(e){}}
 function proposerAnnulation(msg,annuler){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg,undo:annuler}}))}catch(e){}}
 function notifierCloud(ok,msg){CLOUD_ETAT={ok:ok,msg:msg||""};try{window.dispatchEvent(new CustomEvent("ps-cloud",{detail:CLOUD_ETAT}))}catch(e){}}
@@ -1685,7 +1703,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.02";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.03";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -4143,7 +4161,7 @@ var al=[];try{al=alertesVisibles(pd,o.ign||{}).slice(0,5).map(function(a){return
 /* commandes urgentes (rupture sous 2 semaines) */
 var cmd=[];try{var cs=commandesDe(pd);var hs={};(o.cmdHidden||[]).forEach(function(k2){hs[k2]=1});
 Object.keys(cs).forEach(function(sup){if(estSupRx(pd,sup))return;if(o.cmdPassed&&passeActif(o.cmdPassed[sup]))return;
-var n=(cs[sup].p||[]).filter(function(p){return p.u==="critique"&&!hs[sup+"||"+p.n]}).length;if(n)cmd.push({fournisseur:sup,produits:n})});
+var crB=(cs[sup].p||[]).filter(function(p){return p.u==="critique"&&!hs[sup+"||"+p.n]}).map(function(p){return p.n});var n=crB.length;if(n&&!retireActif(CMD_RET.v[sup],crB))cmd.push({fournisseur:sup,produits:n})});
 cmd.sort(function(a,b){return b.produits-a.produits})}catch(e){}
 /* vaccins de la semaine */
 var vac=null;try{if(o.campCS){var C=campCfg(o.campCf);var r=campCompter(o.campCS,C,lundi,sem.au);var rs=campCompter(o.campCS,C,C.debut,sem.au);var oo=campObjectifs(o.campCS,C);
@@ -5785,9 +5803,11 @@ var pd=props.pd;
 /* ecran de telephone : mise en page en lignes empilees */
 var etroitS=useState(function(){return window.innerWidth<700});var etroit=etroitS[0];var setEtroit=etroitS[1];
 useEffect(function(){function f(){setEtroit(window.innerWidth<700)}window.addEventListener("resize",f);return function(){window.removeEventListener("resize",f)}},[]);
-var dismissedS=useState(function(){return lsJour("ps_cmd_retires")||{}});var dismissed=dismissedS[0];var setDismissed=dismissedS[1];
-useEffect(function(){lsJourSet("ps_cmd_retires",dismissed)},[dismissed]);
-function dismissLab(lab){var nd=Object.assign({},dismissed);nd[lab]=true;setDismissed(nd)}
+var cmdRetires=props.cmdRetires||{};var setCmdRetires=props.setCmdRetires||function(){};
+function critNomsDe(c){return(c&&c.products||[]).filter(function(p){return p.u==="critique"}).map(function(p){return p.n})}
+function dismissLab(lab,c){var nd=Object.assign({},cmdRetires);nd[lab]={d:aujIso(),crit:critNomsDe(c)};setCmdRetires(nd)}
+function retablirLab(lab){var nd={};Object.keys(cmdRetires).forEach(function(k){if(k!==lab)nd[k]=cmdRetires[k]});setCmdRetires(nd)}
+function jjmm(iso){return(iso||"").split("-").reverse().slice(0,2).join("/")}
 var expandedS=useState(null);var expanded=expandedS[0];var setExpanded=expandedS[1];
 var filterS=useState("all");var filter=filterS[0];var setFilter=filterS[1];
 var expert=useTheme().expert!==false;var voirZS=useState({});var voirZ=voirZS[0];var setVoirZ=voirZS[1];
@@ -5810,7 +5830,7 @@ if(!cmdSource||!Object.keys(cmdSource).length)return React.createElement("div",{
 
 var cmdHidden=props.cmdHidden||[];var setCmdHidden=props.setCmdHidden;
 var cmdPassed=props.cmdPassed||{};var setCmdPassed=props.setCmdPassed;
-function markPassed(lab){if(!setCmdPassed)return;var o={};Object.keys(cmdPassed).forEach(function(k){o[k]=cmdPassed[k]});o[lab]=new Date().toISOString().split("T")[0];setCmdPassed(o)}
+function markPassed(lab){if(!setCmdPassed)return;var o={};Object.keys(cmdPassed).forEach(function(k){o[k]=cmdPassed[k]});o[lab]=aujIso();setCmdPassed(o)}
 var passesListe=Object.keys(cmdPassed).filter(function(k){return passeActif(cmdPassed[k])}).sort();
 function unmarkPassed(lab){if(!setCmdPassed)return;var o={};Object.keys(cmdPassed).forEach(function(k){if(k!==lab)o[k]=cmdPassed[k]});setCmdPassed(o)}
 function hideProd(lab,pn){if(setCmdHidden)setCmdHidden(cmdHidden.concat([lab+"||"+pn]))}
@@ -5840,14 +5860,16 @@ critique:{bg:"var(--red-bg)",c:"var(--red)",label:"\ud83d\udea8 CRITIQUE",icon:"
 urgent:{bg:"var(--orange-bg)",c:"var(--orange)",label:"\u26a0\ufe0f URGENT",icon:"\u26a0\ufe0f"},
 attention:{bg:"var(--blue-bg)",c:"var(--blue)",label:"\ud83d\udccc ATTENTION",icon:"\ud83d\udccc"}};
 
+commandes.forEach(function(c){var e=cmdRetires[c.lab];c.revenu=retireEnCours(e)?retireNouveauxCrit(e,critNomsDe(c)):null;if(c.revenu&&!c.revenu.length)c.revenu=null});
+var retiresListe=Object.keys(cmdRetires).filter(function(k){return retireEnCours(cmdRetires[k])}).sort();
 var filtered=commandes.filter(function(c){
 if(passeActif(cmdPassed[c.lab]))return false;
-if(dismissed[c.lab])return false;
+if(retireActif(cmdRetires[c.lab],critNomsDe(c)))return false;
 if(search&&c.lab.toLowerCase().indexOf(search.toLowerCase())<0)return false;
 if(filter!=="all"&&c.urgency!==filter)return false;return true});
 
 var counts={critique:0,urgent:0,attention:0};
-commandes.forEach(function(c){if(!dismissed[c.lab]&&!passeActif(cmdPassed[c.lab]))counts[c.urgency]=(counts[c.urgency]||0)+1});
+commandes.forEach(function(c){if(!retireActif(cmdRetires[c.lab],critNomsDe(c))&&!passeActif(cmdPassed[c.lab]))counts[c.urgency]=(counts[c.urgency]||0)+1});
 var totalValue=filtered.reduce(function(s,c){return s+c.estimatedValue},0);
 var totalProducts=filtered.reduce(function(s,c){return s+c.products.length},0);
 
@@ -5870,7 +5892,7 @@ React.createElement("input",{value:search,onChange:function(e){setSearch(e.targe
 var lb={all:"Tous ("+commandes.length+")",critique:"Critique ("+counts.critique+")",urgent:"Urgent ("+counts.urgent+")",attention:"Attention ("+counts.attention+")"};
 return React.createElement("button",{key:f,onClick:function(){setFilter(f)},style:{padding:"8px 14px",borderRadius:20,fontSize:13,fontWeight:filter===f?600:400,background:filter===f?"var(--accent)":"var(--bg3)",color:filter===f?"#fff":"var(--text2)"}},lb[f])})),
 
-Object.keys(dismissed).length>0?React.createElement("button",{onClick:function(){setDismissed({})},style:{padding:"6px 14px",borderRadius:8,fontSize:12,color:"var(--orange)",background:"var(--orange-bg)",marginBottom:8}},"\u21a9 R\u00e9tablir "+Object.keys(dismissed).length+" retir\u00e9(s)"):null,
+retiresListe.length>0?React.createElement("button",{onClick:function(){setCmdRetires({})},style:{padding:"6px 14px",borderRadius:8,fontSize:12,color:"var(--orange)",background:"var(--orange-bg)",marginBottom:8}},"\u21a9 R\u00e9tablir "+retiresListe.length+" retir\u00e9(s)"):null,
 
 (function(){
 var zonesDef=[
@@ -5896,7 +5918,7 @@ var apercu=c.products.slice(0,2).map(function(p){return p.n}).join(" \u00b7 ");
 var aDuT=c.products.some(function(p){return p.du});
 var enteteTel=React.createElement("div",{onClick:function(){setExpanded(isExp?null:c.lab)},style:{padding:"12px 14px",cursor:"pointer"}},
 React.createElement("div",{style:{display:"flex",justifyContent:"space-between",gap:10,alignItems:"flex-start"}},
-React.createElement("div",{style:{fontSize:16,fontWeight:700,lineHeight:1.25,minWidth:0}},c.lab),
+React.createElement("div",{style:{fontSize:16,fontWeight:700,lineHeight:1.25,minWidth:0}},c.lab,c.revenu?React.createElement("br",null):null,c.revenu?React.createElement("div",{title:c.revenu.join(", "),style:{display:"inline-block",marginTop:3,fontSize:11,fontWeight:600,color:"var(--red)",background:"var(--red-bg)",borderRadius:8,padding:"1px 8px"}},"\ud83d\udd14 Revenue : "+c.revenu.length+" produit"+(c.revenu.length>1?"s":"")+" devenu"+(c.revenu.length>1?"s":"")+" critique"+(c.revenu.length>1?"s":"")):null),
 React.createElement("span",{style:{fontSize:16,color:"var(--text3)",flexShrink:0}},isExp?"\u25b2":"\u25bc")),
 React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginTop:6}},
 React.createElement("span",{style:{fontSize:13,fontWeight:800,color:"#fff",background:z.col,padding:"3px 10px",borderRadius:12}},aDuT?"D\u00db \u2014 client en attente":(""+c.weeksLeft).replace(".",",")+" sem avant rupture"),
@@ -5904,7 +5926,7 @@ React.createElement("span",{style:{fontSize:13,color:"var(--text2)"}},React.crea
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:4,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},apercu),
 React.createElement("div",{style:{display:"flex",gap:8,marginTop:10}},
 React.createElement("button",{onClick:function(e){e.stopPropagation();markPassed(c.lab)},style:{flex:1,padding:"9px 12px",borderRadius:10,background:"var(--accent)",color:"#fff",border:"none",fontSize:14,fontWeight:600}},"\u2713 Command\u00e9e"),
-React.createElement("button",{onClick:function(e){e.stopPropagation();dismissLab(c.lab)},style:{padding:"9px 14px",borderRadius:10,background:"var(--bg3)",color:"var(--text2)",border:"none",fontSize:14}},"Retirer")));
+React.createElement("button",{onClick:function(e){e.stopPropagation();dismissLab(c.lab,c)},title:"Retirer pendant 2 semaines (revient plus t\u00f4t si un produit devient critique)",style:{padding:"9px 14px",borderRadius:10,background:"var(--bg3)",color:"var(--text2)",border:"none",fontSize:14}},"Retirer")));
 return React.createElement("div",{key:c.lab,style:{background:z.bgz,borderRadius:12,border:"1px solid var(--border)",borderLeft:"4px solid "+z.col,overflow:"hidden"}},
 etroit?enteteTel:React.createElement("div",{onClick:function(){setExpanded(isExp?null:c.lab)},style:{padding:"12px 16px",cursor:"pointer",display:"flex",alignItems:"center",gap:14,flexWrap:"wrap"}},
 React.createElement("div",{style:{minWidth:84,textAlign:"center"}},
@@ -5917,14 +5939,14 @@ return React.createElement("div",null,
 React.createElement("div",{style:{fontSize:25,fontWeight:800,color:z.col,lineHeight:1}},(""+c.weeksLeft).replace(".",",")+" sem"),
 React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:2}},"avant rupture"))})()),
 React.createElement("div",{style:{flex:1,minWidth:0}},
-React.createElement("div",{style:{fontSize:15,fontWeight:700}},c.lab),
+React.createElement("div",{style:{fontSize:15,fontWeight:700}},c.lab,c.revenu?" ":null,c.revenu?React.createElement("div",{title:c.revenu.join(", "),style:{display:"inline-block",marginLeft:6,fontSize:11,fontWeight:600,color:"var(--red)",background:"var(--red-bg)",borderRadius:8,padding:"1px 8px"}},"\ud83d\udd14 Revenue : "+c.revenu.length+" produit"+(c.revenu.length>1?"s":"")+" devenu"+(c.revenu.length>1?"s":"")+" critique"+(c.revenu.length>1?"s":"")):null),
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},apercu),
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:2}},c.products.length+" produit"+(c.products.length>1?"s":""))),
 React.createElement("div",{style:{textAlign:"right"}},
 React.createElement("div",{style:{fontSize:15,fontWeight:700}},c.toOrder+" u."),
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},"~"+fmtE(c.estimatedValue))),
-React.createElement("button",{onClick:function(e){e.stopPropagation();markPassed(c.lab)},title:"Marquer comme commande passee",style:{padding:"5px 12px",borderRadius:8,background:"var(--accent)",color:"#fff",border:"none",fontSize:12,fontWeight:600,flexShrink:0}},"\u2713 Pass\u00e9e"),
-React.createElement("button",{onClick:function(e){e.stopPropagation();dismissLab(c.lab)},title:"Retirer de la liste",style:{padding:"5px 9px",borderRadius:8,background:"var(--bg3)",color:"var(--text3)",border:"none",fontSize:13,flexShrink:0}},"\u00d7"),
+React.createElement("button",{onClick:function(e){e.stopPropagation();markPassed(c.lab)},title:"Commande pass\u00e9e : masqu\u00e9e 5 jours ouvr\u00e9s (d\u00e9lai de livraison)",style:{padding:"5px 12px",borderRadius:8,background:"var(--accent)",color:"#fff",border:"none",fontSize:12,fontWeight:600,flexShrink:0}},"\u2713 Pass\u00e9e"),
+React.createElement("button",{onClick:function(e){e.stopPropagation();dismissLab(c.lab,c)},title:"Retirer pendant 2 semaines (revient plus t\u00f4t si un produit devient critique)",style:{padding:"5px 9px",borderRadius:8,background:"var(--bg3)",color:"var(--text3)",border:"none",fontSize:13,flexShrink:0}},"\u00d7"),
 React.createElement("span",{style:{fontSize:16,color:"var(--text3)",flexShrink:0}},isExp?"\u25b2":"\u25bc")),
 isExp?React.createElement("div",{style:{padding:"0 16px 14px",background:"var(--bg2)"}},
 React.createElement("div",{style:{display:"flex",justifyContent:"flex-end",alignItems:"center",gap:10,flexWrap:"wrap",paddingTop:10}},
@@ -5958,8 +5980,19 @@ passesListe.map(function(lab){
 return React.createElement("div",{key:lab,style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,fontSize:12,padding:"5px 0",borderBottom:"1px solid var(--border)"}},
 React.createElement("span",null,
 React.createElement("b",null,lab),
-React.createElement("span",{style:{color:"var(--text3)"}}," \u2014 pass\u00e9e le "+(cmdPassed[lab]||"").split("-").reverse().join("/"))),
+React.createElement("span",{style:{color:"var(--text3)"}}," \u2014 pass\u00e9e le "+jjmm(cmdPassed[lab])+" \u00b7 masqu\u00e9e jusqu\u2019au "+jjmm(finDelaiOuvre(cmdPassed[lab],DELAI_LIVRAISON_OUVRES))+" inclus")),
 React.createElement("button",{onClick:function(){unmarkPassed(lab)},style:{fontSize:12,color:"var(--orange)",textDecoration:"underline",flexShrink:0}},"annuler"))}))):null,
+retiresListe.length?React.createElement("div",{style:{marginTop:16,background:"var(--bg2)",borderRadius:10,padding:12,border:"1px solid var(--border)"}},
+React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:4}},"\u23f8 "+retiresListe.length+" proposition(s) retir\u00e9e(s)"),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginBottom:8}},"Masqu\u00e9es 2 semaines. Elles reviennent plus t\u00f4t si un produit du labo devient critique (rupture sous 2 semaines)."),
+React.createElement("div",{style:{display:"grid",gap:2}},
+retiresListe.map(function(lab){var r=retireInfo(cmdRetires[lab]);var cc=null;commandes.forEach(function(x){if(x.lab===lab)cc=x});
+return React.createElement("div",{key:lab,style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,fontSize:12,padding:"5px 0",borderBottom:"1px solid var(--border)"}},
+React.createElement("span",null,
+React.createElement("b",null,lab),
+React.createElement("span",{style:{color:"var(--text3)"}}," \u2014 retir\u00e9e le "+jjmm(r.d)+" \u00b7 revient le "+jjmm(retireFin(cmdRetires[lab]))),
+cc&&cc.revenu?React.createElement("span",{style:{color:"var(--red)",fontWeight:600}}," \u00b7 de retour (nouveau produit critique)"):null),
+React.createElement("button",{onClick:function(){retablirLab(lab)},style:{fontSize:12,color:"var(--orange)",textDecoration:"underline",flexShrink:0}},"r\u00e9tablir"))}))):null,
 cmdHidden.length?React.createElement("div",{style:{marginTop:16,background:"var(--bg2)",borderRadius:10,padding:12,border:"1px solid var(--border)"}},
 React.createElement("div",{style:{fontSize:13,fontWeight:600,marginBottom:8}},"\ud83d\udeab "+cmdHidden.length+" produit(s) masqu\u00e9(s) - commande via grossiste uniquement"),
 React.createElement("div",{style:{display:"grid",gap:2}},
@@ -11523,6 +11556,9 @@ var navOpenS=useState(false);var navOpen=navOpenS[0];var setNavOpen=navOpenS[1];
 var cmdHiddenS=useState([]);var cmdHidden=cmdHiddenS[0];var setCmdHidden=cmdHiddenS[1];
 var widgetsS=useState(WIDGETS_DEFAUT);var widgets=widgetsS[0];var setWidgets=widgetsS[1];
 var cmdPassedS=useState({});var cmdPassed=cmdPassedS[0];var setCmdPassed=cmdPassedS[1];
+var cmdRetS=useState(function(){try{var x=localStorage.getItem("ps_cmd_retires2");if(x){x=JSON.parse(x);if(x&&typeof x==="object"&&!Array.isArray(x))return x}
+var old=lsJour("ps_cmd_retires");if(old&&typeof old==="object"){var o={};Object.keys(old).forEach(function(k){if(old[k])o[k]={d:aujIso(),crit:[]}});return o}}catch(e){}return{}});
+var cmdRetires=cmdRetS[0];var setCmdRetires=cmdRetS[1];var cmdRetPret=useRef(false);
 var voiceNotesS=useState([]);var voiceNotes=voiceNotesS[0];var setVoiceNotes=voiceNotesS[1];
 var caObjS=useState({});var caObj=caObjS[0];var setCaObj=caObjS[1];
 var crmS=useState({});var crm=crmS[0];var setCrm=crmS[1];
@@ -11743,7 +11779,7 @@ avertir("\u26a0\ufe0f \u00c9chec de la synchronisation cloud. D\u00e9tail : "+(e
 function exportUserData(){
 var data={
 challenges:challenges,tasks:tasksApp,tdgs:tdgsApp,team:team,decisions:decisions,
-events:events,cmd_hidden:cmdHidden,favs:favs,tips_state:tipsState,widgets_config:widgets,cmd_passed:cmdPassed,voice_notes:voiceNotes,
+events:events,cmd_hidden:cmdHidden,favs:favs,tips_state:tipsState,widgets_config:widgets,cmd_passed:cmdPassed,cmd_retires:cmdRetires,voice_notes:voiceNotes,
 ca_objectif:caObj,crm_delegues:crm,palmares:palmares,fiche_vendeur_exp:fvExp,conditions_labos:conditions,promos_ajoutees:promosAj,univers_metres:metres,univers_labos:univOvr,univers_codes:univCodes,reglages_google:reglG,alertes_ignorees:alIgn,projets_gammes:projGammes,duels_categories:duelCats,regroupements_labos:regLabos,univers_regles:univRegles,
 exportDate:new Date().toISOString(),version:APP_VERSION};
 var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
@@ -11761,7 +11797,7 @@ if(data.tdgs)setTdgsApp(data.tdgs);
 if(data.team)setTeam(data.team);
 if(data.decisions)setDecisions(data.decisions);
 if(data.events)setEvents(data.events);if(data.cmd_hidden)setCmdHidden(data.cmd_hidden);if(data.favs)setFavs(data.favs);
-if(data.tips_state)setTipsState(data.tips_state);if(data.widgets_config)setWidgets(data.widgets_config);if(data.cmd_passed)setCmdPassed(data.cmd_passed);
+if(data.tips_state)setTipsState(data.tips_state);if(data.widgets_config)setWidgets(data.widgets_config);if(data.cmd_passed)setCmdPassed(data.cmd_passed);if(data.cmd_retires)setCmdRetires(data.cmd_retires);
 if(data.voice_notes)setVoiceNotes(data.voice_notes);if(data.ca_objectif)setCaObj(data.ca_objectif);if(data.crm_delegues)setCrm(data.crm_delegues);
 if(data.palmares)setPalmares(data.palmares);if(data.fiche_vendeur_exp)setFvExp(data.fiche_vendeur_exp);if(data.conditions_labos)setConditions(data.conditions_labos);if(data.promos_ajoutees)setPromosAj(data.promos_ajoutees);if(data.univers_metres)setMetres(data.univers_metres);if(data.univers_labos)setUnivOvr(data.univers_labos);if(data.univers_codes)setUnivCodes(data.univers_codes);if(data.reglages_google)setReglG(data.reglages_google);if(data.alertes_ignorees)setAlIgn(data.alertes_ignorees);if(data.projets_gammes)setProjGammes(data.projets_gammes);if(data.duels_categories)setDuelCats(data.duels_categories);if(data.regroupements_labos)setRegLabos(data.regroupements_labos);if(data.univers_regles)setUnivRegles(data.univers_regles);
 avertir("\u2705 Donn\u00e9es restaur\u00e9es (sauvegarde du "+new Date(data.exportDate).toLocaleDateString("fr-FR")+")")}
@@ -11876,6 +11912,12 @@ p.then(function(r){var v=null;
 if(r&&typeof r==="object"&&!Array.isArray(r)){v=r;SYNC_BASE["entretiens_reglages"]=r}
 else{try{var x=localStorage.getItem("ps_entretiens");if(x){x=JSON.parse(x);if(x&&typeof x==="object")v=x}}catch(e){}}
 if(v)setEntCfg(v);entPret.current=true})},[]);
+/* Propositions de commande retirees (v9.03) : partagees entre appareils */
+useEffect(function(){var p=supaClient?supaLoad("cmd_retires").catch(function(){return null}):Promise.resolve(null);
+p.then(function(r){if(r&&typeof r==="object"&&!Array.isArray(r)){SYNC_BASE["cmd_retires"]=r;
+setCmdRetires(function(loc){var o=Object.assign({},r);Object.keys(loc||{}).forEach(function(k){if(!o[k])o[k]=loc[k]});return o})}
+cmdRetPret.current=true})},[]);
+useEffect(function(){try{localStorage.setItem("ps_cmd_retires2",JSON.stringify(cmdRetires))}catch(e){};if(!cmdRetPret.current)return;syncSave("cmd_retires",cmdRetires,setCmdRetires)},[cmdRetires]);
 useEffect(function(){if(!entPret.current||!entCfg)return;try{localStorage.setItem("ps_entretiens",JSON.stringify(entCfg))}catch(e){};if(!auth||auth.role!=="admin")return;syncSave("entretiens_reglages",entCfg,setEntCfg)},[entCfg]);
 useEffect(function(){var p=supaClient?supaLoad("noms_produits").catch(function(){return null}):Promise.resolve(null);
 p.then(function(r){if(r&&typeof r==="object"&&!Array.isArray(r)){SYNC_BASE["noms_produits"]=r;setNomsExt(function(o){return Object.assign({},o||{},r)})}nxPret.current=true})},[]);
@@ -11945,7 +11987,7 @@ useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_decision
 
 /* Mise a jour depuis les autres appareils */
 var syncLive=useRef({});
-syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos],univers_regles:[univRegles,setUnivRegles],campagne_sante:[campCS,setCampCS],campagne_reglages:[campCf,setCampCf],potentiel_culottes:[pcmCfg,setPcmCfg]};
+syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],cmd_retires:[cmdRetires,setCmdRetires],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos],univers_regles:[univRegles,setUnivRegles],campagne_sante:[campCS,setCampCS],campagne_reglages:[campCf,setCampCf],potentiel_culottes:[pcmCfg,setPcmCfg]};
 var supaLoadedRef=useRef(false);supaLoadedRef.current=supaLoaded;
 useEffect(function(){
 if(!supaClient)return;
@@ -12072,6 +12114,8 @@ try{
 var lastU=localStorage.getItem("ps_last_upd");
 var vieux=Object.keys(cmdPassed).filter(function(k){var d=new Date((cmdPassed[k]||"")+"T12:00:00");return !isNaN(d.getTime())&&(Date.now()-d.getTime())>30*86400000});
 if(vieux.length){var cpN={};Object.keys(cmdPassed).forEach(function(k){if(vieux.indexOf(k)<0)cpN[k]=cmdPassed[k]});setCmdPassed(cpN)}
+var vieuxR=Object.keys(cmdRetires||{}).filter(function(k){var r=retireInfo(cmdRetires[k]);return !r||aujIso()>=isoAjoute(r.d,30)});
+if(vieuxR.length){var crN={};Object.keys(cmdRetires).forEach(function(k){if(vieuxR.indexOf(k)<0)crN[k]=cmdRetires[k]});setCmdRetires(crN)}
 localStorage.setItem("ps_last_upd",pd.UPD)}catch(e){}
 },[pd,supaLoaded]);
 var pagePrecRef=useRef("home");
@@ -12114,7 +12158,7 @@ if(page==="labdetail"&&hs&&hs.ps&&hs.p==="labdetail"&&window.history.length>1){t
 setActiveTab(null);setPage(pagePrecRef.current||"home")}}
 }
 
-PD_REF.pd=pd;
+PD_REF.pd=pd;CMD_RET.v=cmdRetires||{};
 var pdCal=pdC?Object.assign({},pdC,{CAL:(pdC.CAL||[]).concat(events).concat(gcalEvents),S:computeSeasonality(pdC)}):pdC;
 /* Nav badges */
 var badgeCmd=pd?compteCritiques(pd,cmdPassed,cmdHidden):0;
@@ -12153,7 +12197,7 @@ content=React.createElement(AffluencePage,{pd:pdCal,setPage:setPage});
 }else if(page==="assoc"){
 content=React.createElement(VentesAssocieesPage,{pd:pdCal,setPage:setPage});
 }else if(page==="commandes"){
-content=React.createElement(CommandesPage,{conditions:conditions,key:"cmd-"+(pd?1:0)+"-"+(pd&&pd.STKU&&Object.keys(pd.STKU).length?1:0)+"-"+(Object.keys(commandesDe(pd)).length?1:0),pd:pdCal,cmdHidden:cmdHidden,setCmdHidden:setCmdHidden,cmdPassed:cmdPassed,setCmdPassed:setCmdPassed});
+content=React.createElement(CommandesPage,{conditions:conditions,key:"cmd-"+(pd?1:0)+"-"+(pd&&pd.STKU&&Object.keys(pd.STKU).length?1:0)+"-"+(Object.keys(commandesDe(pd)).length?1:0),pd:pdCal,cmdHidden:cmdHidden,setCmdHidden:setCmdHidden,cmdPassed:cmdPassed,setCmdPassed:setCmdPassed,cmdRetires:cmdRetires,setCmdRetires:setCmdRetires});
 }else if(page==="compare"){
 content=React.createElement(ComparePage,{ld:ldLive,pd:pdCal});
 }else if(page==="avis"){
