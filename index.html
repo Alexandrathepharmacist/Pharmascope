@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.06">
+<meta name="ps-version" content="v9.07">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -421,7 +421,7 @@ return new Response(stream).text().then(function(t){return JSON.parse(t)})
 
 /* Etat de la derniere sauvegarde cloud, diffuse a l'ecran */
 var CLOUD_ETAT={ok:null,msg:""};
-var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",tresorerie_reglages:"r\u00e9glages de tr\u00e9sorerie",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
+var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",tresorerie_reglages:"r\u00e9glages de tr\u00e9sorerie",bilans_comptables:"bilans comptables",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
 function avertir(msg){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg}}))}catch(e){}}
 function proposerAnnulation(msg,annuler){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg,undo:annuler}}))}catch(e){}}
 function notifierCloud(ok,msg){CLOUD_ETAT={ok:ok,msg:msg||""};try{window.dispatchEvent(new CustomEvent("ps-cloud",{detail:CLOUD_ETAT}))}catch(e){}}
@@ -1705,7 +1705,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.06";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.07";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -1723,6 +1723,7 @@ var NAVG=[
 {id:"alertes",label:"Alertes",icon:"\ud83d\udd14"},
 {id:"moisprec",label:"Mois pr\u00e9c\u00e9dent",icon:"\ud83d\udcc5"},
 {id:"tresorerie",label:"Tr\u00e9sorerie",icon:"\ud83d\udcb6"},
+{id:"bilan",label:"Bilan & r\u00e9sultat",icon:"\ud83d\udcd2"},
 {id:"univers",label:"Univers",icon:"\ud83c\udfea"}]},
 {id:"achats",label:"Achats",icon:"\ud83d\uded2",items:[
 {id:"commandes",label:"Commandes",icon:"\ud83d\udce6"},
@@ -8073,6 +8074,185 @@ React.createElement("span",{style:{textDecoration:c.done?"line-through":"none",c
 /* ===== PROMOS PAGE (Leader Sant\u00e9) ===== */
 /* (PromosPage : ancien ecran retire en v8.0, jamais affiche) */
 
+/* ===== BILAN & RESULTAT (v9.07) =====
+   Historique des comptes annuels (exercice du 1er avril au 31 mars) et estimation de
+   l'exercice en cours a partir des ventes Winpharma.
+   Les chiffres viennent des comptes annuels transmis (SELARL CDPHARMA, devenue Pharmacie
+   de Veyrier : meme SIRET 525 223 327 00012). EBE calcule partout de la meme facon :
+   marge brute - charges externes - impots et taxes - charges de personnel ; les reprises
+   et transferts de charges sont comptes apres l'EBE (presentation des comptes 2026). */
+var BILANS_HIST=[
+{ex:"2019-20",fin:"2020-03-31",ca:1881013,mbg:573896,ext:95652,imp:2821,pers:292204,ebe:183220,rep:17751,dot:3900,autP:29,autC:3003,re:194097,rfin:-5887,exc:610,is:47914,rn:140907,stock:167308,dispo:112744,cp:975331,emp:307463,fourn:199619,src:"Comptes 2020-21 (colonne N-1), Alter Conseil"},
+{ex:"2020-21",fin:"2021-03-31",ca:2052723,mbg:627662,ext:108661,imp:3832,pers:264409,ebe:250760,rep:15498,dot:3094,autP:20,autC:1757,re:261427,rfin:-4336,exc:189,is:66799,rn:190481,stock:127651,dispo:128734,cp:1165811,emp:233875,fourn:140096,src:"Comptes 2020-21, Alter Conseil"},
+{ex:"2021-22",fin:"2022-03-31",ca:2217873,mbg:747940,ext:174369,imp:5656,pers:308343,ebe:259573,rep:24570,dot:4119,autP:67,autC:1481,re:278611,rfin:-1630,exc:100,is:69043,rn:208038,stock:200855,dispo:66368,cp:1373849,emp:138741,fourn:211177,src:"Comptes 2021-22, Alter Conseil"},
+{ex:"2022-23",fin:"2023-03-31",ca:2446465,mbg:661606,ext:136344,imp:3285,pers:378540,ebe:143437,rep:21799,dot:6526,autP:62,autC:27,re:158745,rfin:-803,exc:0,is:35235,rn:122707,stock:180571,dispo:48668,cp:1496556,emp:21336,fourn:178093,src:"Comptes 2022-23, Alter Conseil"},
+{ex:"2023-24",fin:"2024-03-31",ca:2345113,mbg:691944,ext:137096,imp:5282,pers:427948,ebe:121618,rep:16279,dot:6416,autP:32,autC:3121,re:128392,rfin:-139,exc:-1686,is:27392,rn:99176,stock:185636,dispo:136703,cp:1595731,emp:6430,fourn:178929,src:"Comptes 2023-24, Alter Conseil"},
+{ex:"2024-25",fin:"2025-03-31",ca:2809109,mbg:702230,ext:136279,imp:4732,pers:419357,ebe:141861,rep:23616,dot:4414,autP:277,autC:4271,re:157070,rfin:343,exc:1026,is:35360,rn:123079,stock:170163,dispo:183456,cp:1718810,emp:0,fourn:289274,src:"Comptes 2025-26 (colonne N-1), Euralp Experts"},
+{ex:"2025-26",fin:"2026-03-31",ca:2836947,mbg:758631,ext:142607,imp:5145,pers:298020,ebe:312860,rep:0,dot:9007,autP:12,autC:9367,re:294498,rfin:102,exc:0,is:67601,rn:226999,stock:284474,dispo:27384,cp:1545809,emp:0,fourn:259466,src:"Comptes 2025-26, Euralp Experts"}];
+var BILAN_CHAMPS=[["ca","Chiffre d'affaires HT"],["mbg","Marge brute globale"],["ext","Charges externes"],["imp","Imp\u00f4ts et taxes"],["pers","Charges de personnel (salaires + cotisations)"],["ebe","EBE"],["rep","Reprises et transferts de charges"],["dot","Dotations aux amortissements"],["re","R\u00e9sultat d'exploitation"],["rfin","R\u00e9sultat financier"],["exc","R\u00e9sultat exceptionnel"],["is","Imp\u00f4t sur les b\u00e9n\u00e9fices"],["rn","B\u00e9n\u00e9fice net"],["stock","Stock au 31 mars"],["dispo","Tr\u00e9sorerie (disponibilit\u00e9s)"],["cp","Capitaux propres"],["emp","Emprunts bancaires"],["fourn","Dettes fournisseurs"]];
+function bilansListe(cfg){var m={};BILANS_HIST.forEach(function(b){m[b.ex]=b});((cfg&&cfg.exercices)||[]).forEach(function(b){if(b&&b.ex)m[b.ex]=Object.assign({},m[b.ex]||{},b)});
+return Object.keys(m).sort().map(function(k){return m[k]})}
+function bk(n){if(Math.abs(n||0)<10000)return Math.round(n||0).toLocaleString("fr-FR")+" \u20ac";var v=Math.round((n||0)/1000);return v.toLocaleString("fr-FR")+" k\u20ac"}
+function beur(n){return Math.round(n||0).toLocaleString("fr-FR")+" \u20ac"}
+function bpct(x,sig){if(x===null||x===undefined||!isFinite(x))return"\u2014";var v=Math.round(x*1000)/10;return (sig&&v>0?"+":v<0?"\u2212":"")+Math.abs(v).toLocaleString("fr-FR")+" %"}
+/* exercice en cours, estime a partir des ventes Winpharma */
+function bilanEnCours(pd,dernier,hyp){
+if(!pd||!pd.F||!pd.M||!dernier)return null;
+var dl=derniereDateVentes(pd);if(!dl)return null;
+var y=parseInt(dl.slice(0,4),10),mo=parseInt(dl.slice(5,7),10);var an0=mo>=4?y:y-1;
+var mois=[];for(var k=0;k<12;k++){var mm=((3+k)%12)+1;var yy=an0+(3+k>=12?1:0);mois.push(yy+"-"+("0"+mm).slice(-2))}
+var cur=dl.slice(0,7);var iCur=mois.indexOf(cur);if(iCur<0)return null;
+var nbj=new Date(y,mo,0).getDate();var frac=parseInt(dl.slice(8),10)/nbj;
+function F(m){return pd.F[m]||null}
+function moisN1(m){return (parseInt(m.slice(0,4),10)-1)+m.slice(4)}
+var ca=0,mg=0,caN1=0,cum=[],cumN1=[],cumProj=[];var manqueN1=false;
+mois.forEach(function(m,i){var f=F(m),f1=F(moisN1(m));
+if(i<=iCur){if(f){ca+=f.ca||0;mg+=f.marge||0}var c1=f1?(f1.ca||0):0;if(!f1)manqueN1=true;caN1+=i<iCur?c1:c1*frac}
+cum.push(i<=iCur?ca:null)});
+var g=caN1>0&&!manqueN1?ca/caN1:1;
+var mgN1d=0;mois.forEach(function(m,i){if(i>iCur)return;var f1=F(moisN1(m));if(f1)mgN1d+=i<iCur?(f1.marge||0):(f1.marge||0)*frac});
+var ex1=dernier;var caProj=ca,mgProj=mg;var tm=ca>0?mg/ca:0;
+var acc=0;mois.forEach(function(m,i){var f1=F(moisN1(m));var c1=f1?(f1.ca||0):0;
+if(i<iCur){acc=null}
+if(i===iCur){caProj+=c1*(1-frac)*g}
+if(i>iCur){caProj+=c1*g}});
+mgProj=caProj*tm;
+/* courbes cumulees : l'an dernier (complet) et projection */
+var s1=0;mois.forEach(function(m,i){var f1=F(moisN1(m));s1+=f1?(f1.ca||0):0;cumN1.push(f1?s1:null)});
+var sp=0;mois.forEach(function(m,i){var f=F(m),f1=F(moisN1(m));var c1=f1?(f1.ca||0):0;
+if(i<iCur)sp+=f?(f.ca||0):0;else if(i===iCur)sp+=(f?(f.ca||0):0)+c1*(1-frac)*g;else sp+=c1*g;cumProj.push(i>=iCur?sp:null)});
+/* marge Winpharma de l'exercice precedent (memes mois, un an avant) */
+var mgN1ex=0,caN1ex=0,okN1=true;mois.forEach(function(m){var f1=F(moisN1(m));if(!f1)okN1=false;else{mgN1ex+=f1.marge||0;caN1ex+=f1.ca||0}});
+var infl=(hyp&&hyp.infl!==undefined?hyp.infl:3)/100,tis=(hyp&&hyp.is!==undefined?hyp.is:25)/100;
+var res={tmN1:caN1>0?mgN1d/caN1:null,an0:an0,mois:mois,iCur:iCur,dl:dl,ca:ca,caN1:caN1,g:g,manqueN1:manqueN1,tm:tm,caProj:caProj,mgProj:mgProj,cum:cum,cumN1:cumN1,cumProj:cumProj,okN1:okN1,dernier:ex1};
+if(okN1&&ex1.mbg&&ex1.ebe!==undefined){
+var mbgEst=ex1.mbg+(mgProj-mgN1ex);var charges=(ex1.ext||0)+(ex1.imp||0)+(ex1.pers||0);var chEst=charges*(1+infl);
+if(hyp&&hyp.persEst)chEst=((ex1.ext||0)+(ex1.imp||0))*(1+infl)+Number(hyp.persEst);
+res.mbgEst=mbgEst;res.chEst=chEst;res.ebeEst=mbgEst-chEst;res.rnEst=(ex1.rn||0)+(res.ebeEst-ex1.ebe)*(1-tis);res.mgN1ex=mgN1ex;res.caN1ex=caN1ex}
+return res}
+/* courbes simples (lignes), avec l'an dernier en pointille */
+function BilanCourbe(props){
+var series=props.series,labels=props.labels;var etroit=window.innerWidth<600;
+var W=(etroit||props.petit)?420:720,H=props.h||((etroit||props.petit)?240:220),L=58,R=16,T=18,B=30;
+var vals=[];series.forEach(function(s){s.v.forEach(function(x){if(x!==null&&x!==undefined)vals.push(x)})});if(!vals.length)return null;
+var mn=Math.min(0,Math.min.apply(null,vals)),mx=Math.max.apply(null,vals);if(mx===mn)mx=mn+1;var pad=(mx-mn)*0.08;mx+=pad;
+var n=labels.length;function X(i){return L+(W-L-R)*(n>1?i/(n-1):0.5)}function Y(v){return T+(H-T-B)*(1-(v-mn)/(mx-mn))}
+function chemin(a){var d="",on=false;a.forEach(function(v,i){if(v===null||v===undefined){on=false;return}d+=(on?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1);on=true});return d}
+var ticks=[0,0.5,1].map(function(f){return mn+(mx-pad-mn)*f});
+return React.createElement("div",null,React.createElement("svg",{viewBox:"0 0 "+W+" "+H,style:{width:"100%",height:"auto",display:"block"}},
+ticks.map(function(v,i){return React.createElement("g",{key:i},React.createElement("line",{x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:"var(--border)"}),React.createElement("text",{x:L-6,y:Y(v)+4,textAnchor:"end",fontSize:11,fill:"var(--text3)"},props.fmt?props.fmt(v):bk(v)))}),
+mn<0?React.createElement("line",{x1:L,x2:W-R,y1:Y(0),y2:Y(0),stroke:"var(--text3)",strokeWidth:1}):null,
+series.map(function(s,k){return React.createElement("g",{key:"s"+k},React.createElement("path",{d:chemin(s.v),fill:"none",stroke:s.c,strokeWidth:s.ep||3,strokeDasharray:s.tir||null,strokeLinejoin:"round"}),
+s.points===false?null:s.v.map(function(v,i){if(v===null||v===undefined)return null;return React.createElement("circle",{key:i,cx:X(i),cy:Y(v),r:3.5,fill:"var(--bg2)",stroke:s.c,strokeWidth:2})}),
+s.etiq?s.v.map(function(v,i){if(v===null||v===undefined||(s.etiq==="dernier"&&i!==s.v.length-1))return null;var der=i===s.v.length-1;return React.createElement("text",{key:"e"+i,x:der?X(i)-6:X(i),y:k%2?Y(v)+17:Y(v)-9,textAnchor:der?"end":"middle",fontSize:12,fontWeight:700,fill:s.c},props.fmt?props.fmt(v):bk(v))}):null)}),
+labels.map(function(l,i){if(n>8&&i%2&&i!==n-1)return null;return React.createElement("text",{key:"l"+i,x:X(i),y:H-9,textAnchor:"middle",fontSize:11,fill:"var(--text3)"},l)})),
+React.createElement("div",{style:{display:"flex",gap:14,flexWrap:"wrap",fontSize:12,marginTop:4}},series.filter(function(s){return s.nom}).map(function(s,k){return React.createElement("span",{key:k,style:{color:s.c,fontWeight:600}},(s.tir?"- - ":"\u2014 ")+s.nom)})))}
+/* "ou vont 100 euros de ventes" : anneau */
+function BilanAnneau(props){var b=props.b;var divers=(b.ebe||0)-(b.rn||0)-(b.is||0);
+var parts=[["Achats de marchandises",(b.ca||0)-(b.mbg||0),"#94a3b8"],["Salaires et cotisations",b.pers||0,"#3b82f6"],["Charges externes",b.ext||0,"#8b5cf6"],["Imp\u00f4ts et taxes",b.imp||0,"#f59e0b"],["Amortissements, int\u00e9r\u00eats, divers",Math.max(0,divers),"#64748b"],["Imp\u00f4t sur les b\u00e9n\u00e9fices",b.is||0,"#ef4444"],["B\u00e9n\u00e9fice net",Math.max(0,b.rn||0),"#059669"]];
+var tot=parts.reduce(function(s,p){return s+p[1]},0)||1;var R=70,r=46,cx=90,cy=90;var a0=-Math.PI/2;
+function arc(a,b2){var x1=cx+R*Math.cos(a),y1=cy+R*Math.sin(a),x2=cx+R*Math.cos(b2),y2=cy+R*Math.sin(b2),x3=cx+r*Math.cos(b2),y3=cy+r*Math.sin(b2),x4=cx+r*Math.cos(a),y4=cy+r*Math.sin(a);var lg=b2-a>Math.PI?1:0;
+return "M"+x1+" "+y1+"A"+R+" "+R+" 0 "+lg+" 1 "+x2+" "+y2+"L"+x3+" "+y3+"A"+r+" "+r+" 0 "+lg+" 0 "+x4+" "+y4+"Z"}
+var segs=[];var a=a0;parts.forEach(function(p){var da=p[1]/tot*2*Math.PI;if(da>0.0001)segs.push({d:arc(a,a+da-0.004),c:p[2]});a+=da});
+return React.createElement("div",{style:{display:"flex",gap:16,alignItems:"center",flexWrap:"wrap"}},
+React.createElement("svg",{viewBox:"0 0 180 180",style:{width:170,height:170,flexShrink:0}},segs.map(function(s,i){return React.createElement("path",{key:i,d:s.d,fill:s.c})}),
+React.createElement("text",{x:90,y:86,textAnchor:"middle",fontSize:12,fill:"var(--text3)"},"sur 100 \u20ac"),React.createElement("text",{x:90,y:104,textAnchor:"middle",fontSize:12,fill:"var(--text3)"},"de ventes")),
+React.createElement("div",{style:{display:"grid",gap:4,flex:1,minWidth:220}},parts.map(function(p,i){return React.createElement("div",{key:i,style:{display:"flex",alignItems:"center",gap:8,fontSize:13}},
+React.createElement("span",{style:{width:12,height:12,borderRadius:3,background:p[2],flexShrink:0}}),React.createElement("span",{style:{flex:1}},p[0]),
+React.createElement("b",{style:{color:i===6?"var(--accent)":"var(--text)"}},(p[1]/tot*100).toLocaleString("fr-FR",{maximumFractionDigits:1})+" \u20ac"))})))}
+function BilanPage(props){
+var cfg=props.cfg||{};var setCfg=props.setCfg||function(){};
+var liste=bilansListe(cfg);var n=liste.length;
+var selS=useState(n-1);var sel=Math.min(selS[0],n-1);var setSel=selS[1];
+var voirS=useState(false);var voirTab=voirS[0];var setVoirTab=voirS[1];
+var ajS=useState(null);var aj=ajS[0];var setAj=ajS[1];
+var hyp=Object.assign({infl:3,is:25},cfg.hyp||{});
+var dernier=liste[n-1];
+var cours=useMemo(function(){try{return bilanEnCours(props.pd,dernier,hyp)}catch(e){console.warn("bilan",e);return null}},[props.pd,n,JSON.stringify(hyp)]);
+var b=liste[sel],b1=sel>0?liste[sel-1]:null;
+var carte={background:"var(--bg2)",borderRadius:14,border:"1px solid var(--border)",padding:16,marginBottom:14};
+function tuile(lbl,val,sub,col,big){return React.createElement("div",{style:{background:"var(--bg)",borderRadius:12,border:"1px solid var(--border)",padding:"10px 12px"}},
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",fontWeight:600,textTransform:"uppercase"}},lbl),
+React.createElement("div",{style:{fontSize:big?24:20,fontWeight:800,color:col||"var(--text)",marginTop:2}},val),
+sub?React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:2}},sub):null)}
+function evol(a,c){return c?a/c-1:null}
+function colE(x){return x===null?"var(--text3)":x>=0?"var(--accent)":"var(--red)"}
+/* --- exercice en cours --- */
+var blocCours=null;
+if(cours){var MO=["avr","mai","juin","juil","ao\u00fbt","sept","oct","nov","d\u00e9c","janv","f\u00e9vr","mars"];
+var ev=cours.manqueN1?null:cours.g-1;
+blocCours=React.createElement("div",{style:carte},
+React.createElement("div",{style:{fontWeight:800,fontSize:16,marginBottom:2}},"\ud83d\udcc8 Exercice en cours : avril "+cours.an0+" \u2192 mars "+(cours.an0+1)),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:10}},"Ventes Winpharma connues jusqu'au "+tdgFr(cours.dl)+" ("+(cours.iCur+1)+"\u1d49 mois sur 12)."),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10,marginBottom:12}},
+tuile("CA HT depuis le 1er avril",bk(cours.ca),ev!==null?bpct(ev,true)+" vs m\u00eame date l'an dernier":"",colE(ev),true),
+tuile("CA projet\u00e9 au 31 mars",bk(cours.caProj),"exercice pr\u00e9c\u00e9dent : "+bk(dernier.ca),null,true),
+cours.ebeEst!==undefined?tuile("EBE estim\u00e9",bk(cours.ebeEst),"exercice pr\u00e9c\u00e9dent : "+bk(dernier.ebe),colE(evol(cours.ebeEst,dernier.ebe)),true):null,
+cours.rnEst!==undefined?tuile("B\u00e9n\u00e9fice net estim\u00e9",bk(cours.rnEst),"exercice pr\u00e9c\u00e9dent : "+bk(dernier.rn),colE(evol(cours.rnEst,dernier.rn)),true):null),
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)",marginBottom:12,padding:"8px 12px",borderRadius:10,background:"var(--bg)"}},"Marge Winpharma depuis le 1er avril : ",React.createElement("b",null,bpct(cours.tm)+" du CA"),cours.tmN1!==null?" (contre "+bpct(cours.tmN1)+" l'an dernier \u00e0 la m\u00eame date"+(cours.tm<cours.tmN1-0.003?" : les ventes progressent plus vite que la marge, d'o\u00f9 un EBE estim\u00e9 sans hausse":"")+").":""),
+React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:4}},"Chiffre d'affaires cumul\u00e9 depuis le 1er avril"),
+React.createElement(BilanCourbe,{labels:MO,series:[{nom:"l'an dernier",v:cours.cumN1,c:"var(--text3)",tir:"5 4",ep:2,points:false},{nom:"projection",v:cours.cumProj,c:"var(--accent)",tir:"3 4",ep:2,points:false},{nom:"cette ann\u00e9e",v:cours.cum,c:"var(--accent)",etiq:"dernier"}]}),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:8,lineHeight:1.5}},
+"Projection : mois restants de l'an dernier \u00d7 "+bpct(cours.g-1,true)+" (rythme depuis avril). EBE estim\u00e9 = marge brute de l'exercice pr\u00e9c\u00e9dent + la marge en plus (ou en moins) vue dans Winpharma, moins les charges de l'exercice pr\u00e9c\u00e9dent augment\u00e9es de "+hyp.infl+" %. B\u00e9n\u00e9fice net = celui de l'exercice pr\u00e9c\u00e9dent + l'\u00e9cart d'EBE apr\u00e8s imp\u00f4t ("+hyp.is+" %). C'est un ordre de grandeur : le r\u00e9sultat r\u00e9el d\u00e9pendra aussi des remises de fin d'ann\u00e9e, de la valeur du stock au 31 mars et des r\u00e9mun\u00e9rations.",
+" ",React.createElement("span",{style:{whiteSpace:"nowrap"}},"Hausse des charges ",React.createElement("input",{type:"number",value:hyp.infl,onChange:function(e){var o=Object.assign({},cfg);o.hyp=Object.assign({},hyp,{infl:Number(e.target.value)||0});setCfg(o)},style:{width:48,padding:"2px 4px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)"}})," % \u00b7 imp\u00f4t ",React.createElement("input",{type:"number",value:hyp.is,onChange:function(e){var o=Object.assign({},cfg);o.hyp=Object.assign({},hyp,{is:Number(e.target.value)||0});setCfg(o)},style:{width:48,padding:"2px 4px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)"}})," %")))}
+/* --- historique --- */
+var labs=liste.map(function(x){return x.ex.slice(2)});
+var histo=React.createElement("div",{style:carte},
+React.createElement("div",{style:{fontWeight:800,fontSize:16,marginBottom:8}},"\ud83d\udcca "+n+" ans de comptes"),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:16}},
+React.createElement("div",null,React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:2}},"Chiffre d'affaires HT"),
+React.createElement(BilanCourbe,{petit:true,labels:labs,series:[{nom:"CA",v:liste.map(function(x){return x.ca}),c:"var(--blue)",etiq:"dernier"}]})),
+React.createElement("div",null,React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:2}},"EBE et b\u00e9n\u00e9fice net"),
+React.createElement(BilanCourbe,{petit:true,labels:labs,series:[{nom:"EBE",v:liste.map(function(x){return x.ebe}),c:"#8b5cf6",etiq:"dernier"},{nom:"B\u00e9n\u00e9fice net",v:liste.map(function(x){return x.rn}),c:"var(--accent)",etiq:"dernier"}]})),
+React.createElement("div",null,React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:2}},"Rentabilit\u00e9 (en % du CA)"),
+React.createElement(BilanCourbe,{petit:true,labels:labs,fmt:function(v){return (Math.round(v*1000)/10).toLocaleString("fr-FR")+" %"},series:[{nom:"marge brute",v:liste.map(function(x){return x.mbg/x.ca}),c:"var(--blue)",etiq:"dernier"},{nom:"EBE",v:liste.map(function(x){return x.ebe/x.ca}),c:"#8b5cf6",etiq:"dernier"},{nom:"b\u00e9n\u00e9fice net",v:liste.map(function(x){return x.rn/x.ca}),c:"var(--accent)",etiq:"dernier"}]})),
+React.createElement("div",null,React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:2}},"Tr\u00e9sorerie et stock au 31 mars"),
+React.createElement(BilanCourbe,{petit:true,labels:labs,series:[{nom:"tr\u00e9sorerie",v:liste.map(function(x){return x.dispo}),c:"#0ea5e9",etiq:"dernier"},{nom:"stock",v:liste.map(function(x){return x.stock}),c:"#f59e0b",etiq:"dernier"}]}))));
+/* --- un exercice en detail --- */
+var chips=React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}},liste.map(function(x,i){return React.createElement("button",{key:x.ex,onClick:function(){setSel(i)},style:{padding:"6px 12px",borderRadius:16,fontSize:13,fontWeight:i===sel?700:500,background:i===sel?"var(--accent)":"var(--bg3)",color:i===sel?"#fff":"var(--text2)"}},x.ex)}));
+/* ce qui a le plus pese sur l'EBE par rapport a l'annee d'avant */
+var leviers=[];if(b1){leviers=[["Marge brute",(b.mbg||0)-(b1.mbg||0),1],["Charges de personnel",(b.pers||0)-(b1.pers||0),-1],["Charges externes",(b.ext||0)-(b1.ext||0),-1],["Imp\u00f4ts et taxes",(b.imp||0)-(b1.imp||0),-1]].map(function(l){return{nom:l[0],delta:l[1],effet:l[1]*l[2]}}).sort(function(x,y){return Math.abs(y.effet)-Math.abs(x.effet)})}
+var cascade=[["Chiffre d'affaires HT",b.ca,null],["\u2212 Achats consomm\u00e9s",-((b.ca||0)-(b.mbg||0)),null],["= Marge brute",b.mbg,"b"],["\u2212 Charges externes",-(b.ext||0),null],["\u2212 Imp\u00f4ts et taxes",-(b.imp||0),null],["\u2212 Salaires et cotisations",-(b.pers||0),null],["= EBE",b.ebe,"b"],["+ Reprises, transferts, divers",(b.rep||0)+(b.autP||0)-(b.autC||0),null],["\u2212 Amortissements",-(b.dot||0),null],["= R\u00e9sultat d'exploitation",b.re,"b"],["\u00b1 Financier et exceptionnel",(b.rfin||0)+(b.exc||0),null],["\u2212 Imp\u00f4t sur les b\u00e9n\u00e9fices",-(b.is||0),null],["= B\u00e9n\u00e9fice net",b.rn,"g"]];
+var detail=React.createElement("div",{style:carte},
+React.createElement("div",{style:{fontWeight:800,fontSize:16,marginBottom:8}},"\ud83d\udd0e Un exercice en d\u00e9tail"),chips,
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}},
+tuile("CA HT",bk(b.ca),b1?bpct(evol(b.ca,b1.ca),true)+" vs "+b1.ex:"",b1?colE(evol(b.ca,b1.ca)):null),
+tuile("Marge brute",bk(b.mbg),bpct(b.mbg/b.ca)+" du CA",null),
+tuile("EBE",bk(b.ebe),bpct(b.ebe/b.ca)+" du CA"+(b1?" \u00b7 "+bpct(evol(b.ebe,b1.ebe),true):""),b1?colE(evol(b.ebe,b1.ebe)):null),
+tuile("B\u00e9n\u00e9fice net",bk(b.rn),bpct(b.rn/b.ca)+" du CA"+(b1?" \u00b7 "+bpct(evol(b.rn,b1.rn),true):""),"var(--accent)"),
+tuile("Tr\u00e9sorerie au 31/03",bk(b.dispo),b1?"l'ann\u00e9e d'avant : "+bk(b1.dispo):"",null)),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(300px,1fr))",gap:18}},
+React.createElement("div",null,React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:6}},"De la vente au b\u00e9n\u00e9fice"),
+React.createElement("div",{style:{display:"grid",gap:2}},cascade.map(function(l,i){var fort=l[2];return React.createElement("div",{key:i,style:{display:"flex",justifyContent:"space-between",gap:10,fontSize:13,padding:"5px 10px",borderRadius:8,background:fort==="g"?"var(--accent-bg)":fort?"var(--bg3)":"transparent",fontWeight:fort?700:400,color:fort==="g"?"var(--accent)":l[1]<0&&!fort?"var(--text2)":"var(--text)"}},
+React.createElement("span",null,l[0]),React.createElement("span",null,beur(l[1]),React.createElement("span",{style:{fontSize:11,color:"var(--text3)",fontWeight:400,marginLeft:8,display:"inline-block",minWidth:44,textAlign:"right"}},b.ca?(Math.round(Math.abs(l[1])/b.ca*1000)/10).toLocaleString("fr-FR")+" %":"")))}))),
+React.createElement("div",null,React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:6}},"O\u00f9 vont 100 \u20ac de ventes ?"),React.createElement(BilanAnneau,{b:b}),
+b1?React.createElement("div",{style:{marginTop:14}},React.createElement("div",{style:{fontSize:13,fontWeight:700,marginBottom:6}},"Ce qui a fait bouger l'EBE (vs "+b1.ex+")"),
+leviers.map(function(l,i){return React.createElement("div",{key:i,style:{display:"flex",justifyContent:"space-between",fontSize:13,padding:"4px 0",borderBottom:"1px solid var(--border)"}},
+React.createElement("span",null,(l.effet>=0?"\u2197 ":"\u2198 ")+l.nom+" "+(l.delta>=0?"+":"\u2212")+bk(Math.abs(l.delta))),
+React.createElement("b",{style:{color:l.effet>=0?"var(--accent)":"var(--red)"}},(l.effet>=0?"+":"\u2212")+bk(Math.abs(l.effet))+" d'EBE"))}),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:6}},"Les charges de personnel varient aussi selon la fa\u00e7on dont les titulaires sont r\u00e9mun\u00e9r\u00e9s (salaire ou dividendes) : \u00e0 garder en t\u00eate pour comparer les ann\u00e9es.")):null)),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:10}},"Source : "+(b.src||"saisie dans PharmaScope")+"."));
+/* --- tableau complet + ajout d'un exercice --- */
+var tableau=React.createElement("div",{style:carte},
+React.createElement("button",{onClick:function(){setVoirTab(!voirTab)},style:{fontWeight:700,fontSize:14,color:"var(--text)"}},(voirTab?"\u25be":"\u25b8")+" Tableau complet des comptes"),
+voirTab?React.createElement("div",{style:{overflowX:"auto",marginTop:10}},React.createElement("table",{style:{borderCollapse:"collapse",fontSize:12,minWidth:640,width:"100%"}},
+React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",{style:{textAlign:"left",padding:"4px 6px"}},""),liste.map(function(x){return React.createElement("th",{key:x.ex,style:{textAlign:"right",padding:"4px 6px",color:"var(--text3)"}},x.ex)}))),
+React.createElement("tbody",null,BILAN_CHAMPS.map(function(c){var fort=["ca","ebe","rn"].indexOf(c[0])>=0;return React.createElement("tr",{key:c[0],style:{borderTop:"1px solid var(--border)",fontWeight:fort?700:400}},
+React.createElement("td",{style:{padding:"4px 6px",whiteSpace:"nowrap"}},c[1]),liste.map(function(x){return React.createElement("td",{key:x.ex,style:{textAlign:"right",padding:"4px 6px",whiteSpace:"nowrap"}},x[c[0]]===undefined?"\u2014":bk(x[c[0]]))}))})))):null,
+React.createElement("div",{style:{marginTop:10}},aj?React.createElement("div",{style:{display:"grid",gap:6,background:"var(--bg)",padding:12,borderRadius:10,border:"1px solid var(--accent)"}},
+React.createElement("div",{style:{fontWeight:700}},"Nouvel exercice (ex. 2026-27)"),
+React.createElement("input",{value:aj.ex||"",placeholder:"2026-27",onChange:function(e){setAj(Object.assign({},aj,{ex:e.target.value}))},style:{padding:"6px 8px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg2)",color:"var(--text)",width:120}}),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))",gap:6}},BILAN_CHAMPS.map(function(c){return React.createElement("label",{key:c[0],style:{fontSize:12,color:"var(--text3)"}},c[1],React.createElement("input",{type:"number",value:aj[c[0]]===undefined?"":aj[c[0]],onChange:function(e){var o=Object.assign({},aj);o[c[0]]=e.target.value===""?undefined:Number(e.target.value);setAj(o)},style:{width:"100%",padding:"6px 8px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg2)",color:"var(--text)"}}))})),
+React.createElement("div",{style:{display:"flex",gap:8}},React.createElement("button",{onClick:function(){if(!/^\d{4}-\d{2}$/.test(aj.ex||"")||!aj.ca)return;var o=Object.assign({},cfg);var l=((cfg.exercices)||[]).filter(function(x){return x.ex!==aj.ex});var y=parseInt(aj.ex.slice(0,4),10)+1;
+o.exercices=l.concat([Object.assign({fin:y+"-03-31",src:"saisi dans PharmaScope"},aj)]);setCfg(o);setAj(null)},style:{padding:"8px 14px",borderRadius:8,background:"var(--accent)",color:"#fff",fontWeight:700}},"Enregistrer"),
+React.createElement("button",{onClick:function(){setAj(null)},style:{padding:"8px 14px",borderRadius:8,color:"var(--text2)"}},"Annuler"))):
+React.createElement("button",{onClick:function(){setAj({})},style:{fontSize:13,color:"var(--accent)",fontWeight:600}},"+ Ajouter un exercice (ou envoyez-moi le bilan)")));
+return React.createElement("div",null,
+React.createElement("h2",{style:{fontSize:22,fontWeight:700,marginBottom:2}},"\ud83d\udcd2 Bilan & r\u00e9sultat"),
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)",marginBottom:14}},"Vos comptes annuels (exercice du 1er avril au 31 mars) et une estimation de l'exercice en cours \u00e0 partir des ventes."),
+blocCours,detail,histo,tableau)}
+
+
 /* ===== ALERTES SUR LE TELEPHONE (v9.04) =====
    Notifications "push" : l'appareil s'abonne une fois ; les alertes arrivent ensuite meme
    appli fermee. Sujets : commandes critiques (envoyees par l'appli apres l'import du jour),
@@ -12125,6 +12305,7 @@ var pcmS=useState(PCM_INIT);var pcmCfg=pcmS[0];var setPcmCfg=pcmS[1];var pcmPret
 var potS=useState({});var potCfg=potS[0];var setPotCfg=potS[1];var potPret=useRef(false);
 var entS=useState({});var entCfg=entS[0];var setEntCfg=entS[1];var entPret=useRef(false);
 var trS=useState({});var trCfg=trS[0];var setTrCfg=trS[1];var trPret=useRef(false);
+var biS=useState({});var biCfg=biS[0];var setBiCfg=biS[1];var biPret=useRef(false);
 var reaRS=useState(function(){try{var x=localStorage.getItem("ps_reassort_regles");return x?JSON.parse(x):null}catch(e){return null}});var reaReg=reaRS[0];var setReaReg=reaRS[1];
 var reaDS=useState({});var reaDer=reaDS[0];var setReaDer=reaDS[1];var reaPret=useRef(false);
 var dcS=useState([]);var duelCats=dcS[0];var setDuelCats=dcS[1];
@@ -12472,6 +12653,11 @@ useEffect(function(){var p=supaClient?supaLoad("tresorerie_reglages").catch(func
 p.then(function(r){var v=null;if(r&&typeof r==="object"&&!Array.isArray(r)){v=r;SYNC_BASE["tresorerie_reglages"]=r}else{try{var x=localStorage.getItem("ps_tresorerie");if(x){x=JSON.parse(x);if(x&&typeof x==="object")v=x}}catch(e){}}
 if(v)setTrCfg(v);trPret.current=true})},[]);
 useEffect(function(){if(!trPret.current||!trCfg)return;try{localStorage.setItem("ps_tresorerie",JSON.stringify(trCfg))}catch(e){};if(!auth||auth.role!=="admin")return;syncSave("tresorerie_reglages",trCfg,setTrCfg)},[trCfg]);
+/* Bilan & resultat (v9.07) : exercices ajoutes et hypotheses, synchronises */
+useEffect(function(){var p=supaClient?supaLoad("bilans_comptables").catch(function(){return null}):Promise.resolve(null);
+p.then(function(r){var v=null;if(r&&typeof r==="object"&&!Array.isArray(r)){v=r;SYNC_BASE["bilans_comptables"]=r}else{try{var x=localStorage.getItem("ps_bilans");if(x){x=JSON.parse(x);if(x&&typeof x==="object")v=x}}catch(e){}}
+if(v)setBiCfg(v);biPret.current=true})},[]);
+useEffect(function(){if(!biPret.current||!biCfg)return;try{localStorage.setItem("ps_bilans",JSON.stringify(biCfg))}catch(e){};if(!auth||auth.role!=="admin")return;syncSave("bilans_comptables",biCfg,setBiCfg)},[biCfg]);
 /* Propositions de commande retirees (v9.03) : partagees entre appareils */
 useEffect(function(){var p=supaClient?supaLoad("cmd_retires").catch(function(){return null}):Promise.resolve(null);
 p.then(function(r){if(r&&typeof r==="object"&&!Array.isArray(r)){SYNC_BASE["cmd_retires"]=r;
@@ -12792,6 +12978,8 @@ content=React.createElement(EntretiensPage,{pd:pdCal,cfg:entCfg,setCfg:setEntCfg
 content=React.createElement(NotifsPage,{});
 }else if(page==="question"){
 content=React.createElement(QuestionPage,{key:"q-"+QUESTION_REF.n,pd:pdCal,ia:true});
+}else if(page==="bilan"){
+content=React.createElement(BilanPage,{pd:pdCal,cfg:biCfg,setCfg:setBiCfg});
 }else if(page==="tresorerie"){
 content=React.createElement(TresoreriePage,{pd:pdCal,cfg:trCfg,setCfg:setTrCfg});
 }else if(page==="potentiels"){
