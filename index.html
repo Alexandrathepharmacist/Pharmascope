@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.09">
+<meta name="ps-version" content="v9.10">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -421,7 +421,7 @@ return new Response(stream).text().then(function(t){return JSON.parse(t)})
 
 /* Etat de la derniere sauvegarde cloud, diffuse a l'ecran */
 var CLOUD_ETAT={ok:null,msg:""};
-var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",tresorerie_reglages:"r\u00e9glages de tr\u00e9sorerie",bilans_comptables:"bilans comptables",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
+var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",tresorerie_reglages:"r\u00e9glages de tr\u00e9sorerie",bilans_comptables:"bilans comptables",tdg_emplacements:"emplacements de TDG",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
 function avertir(msg){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg}}))}catch(e){}}
 function proposerAnnulation(msg,annuler){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg,undo:annuler}}))}catch(e){}}
 function notifierCloud(ok,msg){CLOUD_ETAT={ok:ok,msg:msg||""};try{window.dispatchEvent(new CustomEvent("ps-cloud",{detail:CLOUD_ETAT}))}catch(e){}}
@@ -1705,7 +1705,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.09";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.10";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -4008,6 +4008,300 @@ React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:
 React.createElement(Anneau,{parts:labs.slice(0,10).map(function(l,i){return{n:l.lab,v:l[cle],c:TOP_COUL[i],cle:l.lab}}).concat([{n:"Tous les autres",v:Math.max(0,tot-sTop),c:"#cbd5e1"}]),centre:Math.round(partTop)+" %",sous:"top 10",titre:"Poids du top 10",onSel:function(k){if(props.openLab)props.openLab(k)}})),
 React.createElement("div",{style:{fontSize:11,color:"var(--text3)",lineHeight:1.5}},"Mini-courbes : CA hors rembours\u00e9 des 12 derniers mois pleins (trait plein) et de l'ann\u00e9e d'avant (tirets). Les labos sont ceux de Winpharma, avec vos regroupements de marques."),
 React.createElement(LienExpert,null))}
+
+
+/* ===== EMPLACEMENTS DE MISE EN AVANT (v9.10) =====
+   Tetes de gondole, intercomptoirs et rayons promo nommes ou numerotes.
+   Chaque TDG porte l'identifiant de son emplacement (champ empl).
+   Cle cloud : tdg_emplacements = [{id,type,nom}] */
+var EMPL_TYPES=[
+{k:"tg",l:"T\u00eates de gondole",s:"TG",un:"t\u00eate de gondole",ic:"\ud83d\uddc4\ufe0f",c:"#2563eb",bg:"rgba(37,99,235,.08)"},
+{k:"ic",l:"Intercomptoirs",s:"Intercomptoir",un:"intercomptoir",ic:"\ud83d\udece\ufe0f",c:"#9333ea",bg:"rgba(147,51,234,.08)"},
+{k:"rp",l:"Rayons promo",s:"Rayon promo",un:"rayon promo",ic:"\ud83c\udff7\ufe0f",c:"#ea580c",bg:"rgba(234,88,12,.08)"}];
+function emplType(k){for(var i=0;i<EMPL_TYPES.length;i++){if(EMPL_TYPES[i].k===k)return EMPL_TYPES[i]}return EMPL_TYPES[0]}
+function emplNom(e){if(!e)return"";return emplType(e.type).s+" "+(e.nom||"")}
+function emplDe(empls,id){if(!id)return null;for(var i=0;i<(empls||[]).length;i++){if(empls[i].id===id)return empls[i]}return null}
+function emplTri(empls){var ord={tg:0,ic:1,rp:2};return(empls||[]).slice().sort(function(a,b){var d=(ord[a.type]||0)-(ord[b.type]||0);if(d)return d;return String(a.nom||"").localeCompare(String(b.nom||""),"fr",{numeric:true})})}
+function empAuj(){var d=new Date();return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function tdgEnPlace(t,auj){return !t.demo&&!!t.debut&&t.statut!=="termine"&&t.debut<=auj&&(!t.fin||t.fin>=auj)}
+function tdgDepassee(t,auj){return !t.demo&&t.statut!=="termine"&&!!t.fin&&t.fin<auj}
+function tdgAVenir(t,auj){return !t.demo&&!!t.debut&&t.debut>auj&&t.statut!=="termine"}
+function tdgTitre(t){return (t.lab||"Sans nom")+(t.produit?" \u00b7 "+t.produit:"")}
+/* resultats de vente de chaque TDG (au moins 7 jours en place) */
+function emplResultats(tdgs,ventes){var out={};(tdgs||[]).forEach(function(t){if(t.demo)return;var r=null;try{r=tdgCardRes(t,ventes)}catch(e){}if(r&&!r.err&&r.D>=7)out[t.id]=r});return out}
+function emplStats(e,tdgs,resMap,auj){
+var ts=(tdgs||[]).filter(function(t){return !t.demo&&t.empl===e.id});
+var valid=ts.filter(function(t){return resMap[t.id]});
+var sl=0,sn=0;valid.forEach(function(t){sl+=Math.min(3,resMap[t.id].liftQ);sn+=resMap[t.id].note});
+var n=valid.length;
+/* occupation sur les 6 derniers mois (ou depuis la premiere TDG enregistree) */
+var a=tdgDayNum(auj);var deb0=null;(tdgs||[]).forEach(function(t){if(!t.demo&&t.debut&&(!deb0||t.debut<deb0))deb0=t.debut});
+var w0=Math.max(a-182,deb0?tdgDayNum(deb0):a);var occ=null;
+if(a-w0>=14){var jours={};ts.forEach(function(t){if(!t.debut)return;var s=Math.max(w0,tdgDayNum(t.debut));var f=t.fin?tdgDayNum(t.fin):(t.statut==="termine"?tdgDayNum(t.debut):a);f=Math.min(f,a);for(var d=s;d<=f;d++)jours[d]=1});occ=Object.keys(jours).length/(a-w0+1)}
+var act=ts.filter(function(t){return tdgEnPlace(t,auj)}).sort(function(x,y){return y.debut.localeCompare(x.debut)});
+var dep=ts.filter(function(t){return tdgDepassee(t,auj)});
+var proch=ts.filter(function(t){return tdgAVenir(t,auj)}).sort(function(x,y){return x.debut.localeCompare(y.debut)});
+return{ts:ts,valid:valid,n:n,lift:n?sl/n:null,note:n?sn/n:null,occ:occ,act:act,dep:dep,proch:proch}}
+function emplTemp(st){if(!st||!st.n)return null;var no=st.note;
+if(no>=6)return{ic:"\ud83d\udd25",l:"Point chaud",c:"#dc2626",bg:"rgba(220,38,38,.10)"};
+if(no>=4)return{ic:"\ud83c\udf24\ufe0f",l:"Ti\u00e8de",c:"#d97706",bg:"var(--orange-bg)"};
+return{ic:"\ud83e\uddca",l:"Point froid",c:"#2563eb",bg:"var(--blue-bg)"}}
+function emplPctTxt(l){if(l===null||l===undefined)return"\u2014";var v=Math.round(l*100);return(v>0?"+":"")+v+" %"}
+function EmplBadgeTemp(props){var tp=props.tp;if(!tp)return null;
+return React.createElement("span",{title:props.n?(props.n+" mise"+(props.n>1?"s":"")+" en avant mesur\u00e9e"+(props.n>1?"s":"")):"",style:{display:"inline-flex",alignItems:"center",gap:3,padding:"2px 8px",borderRadius:10,fontSize:11,fontWeight:700,background:tp.bg,color:tp.c,whiteSpace:"nowrap"}},tp.ic+" "+tp.l+(props.n===1?" ?":""))}
+function EmplChip(props){var e=props.e;if(!e)return props.vide?React.createElement("span",{style:{padding:"2px 9px",borderRadius:12,fontSize:12,border:"1px dashed var(--border)",color:"var(--text3)"}},"sans emplacement"):null;var ty=emplType(e.type);
+return React.createElement("span",{style:{padding:"2px 9px",borderRadius:12,fontSize:12,fontWeight:700,background:ty.bg,color:ty.c,border:"1px solid "+ty.c,whiteSpace:"nowrap"}},ty.ic+" "+emplNom(e))}
+/* liste deroulante groupee par type */
+function selectEmpl(props){
+var liste=emplTri(props.empls);
+return React.createElement("select",{value:props.value||"",onChange:function(ev){props.onChange(ev.target.value)},onClick:function(ev){ev.stopPropagation()},style:props.style},
+React.createElement("option",{value:""},props.vide||"\u2014 Choisir l'emplacement \u2014"),
+EMPL_TYPES.map(function(ty){var l=liste.filter(function(e){return e.type===ty.k});if(!l.length)return null;
+return React.createElement("optgroup",{key:ty.k,label:ty.l},l.map(function(e){return React.createElement("option",{key:e.id,value:e.id},emplNom(e))}))}))}
+function photoOk(p){return typeof p==="string"&&(p.indexOf("data:")===0||p.indexOf("http")===0)}
+
+/* --- gestion des emplacements --- */
+function GestionEmpl(props){
+var empls=props.empls||[];var tdgs=props.tdgs||[];
+var nS=useState({tg:"",ic:"",rp:""});var noms=nS[0];var setNoms=nS[1];
+function suivant(type){var mx=0;empls.forEach(function(e){if(e.type===type){var v=parseInt(e.nom,10);if(!isNaN(v)&&String(v)===String(e.nom).trim()&&v>mx)mx=v}});return String(mx+1)}
+function ajouter(type){var nom=(noms[type]||"").trim()||suivant(type);
+props.setEmpls(empls.concat([{id:"e"+Date.now()+Math.floor(Math.random()*1000),type:type,nom:nom}]));var o=Object.assign({},noms);o[type]="";setNoms(o)}
+function renommer(id,nom){props.setEmpls(empls.map(function(e){return e.id===id?Object.assign({},e,{nom:nom}):e}))}
+function changerType(id,type){props.setEmpls(empls.map(function(e){return e.id===id?Object.assign({},e,{type:type}):e}))}
+function supprimer(id){var n=tdgs.filter(function(t){return t.empl===id}).length;if(n)return;props.setEmpls(empls.filter(function(e){return e.id!==id}))}
+var chp={padding:"7px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:14,minWidth:0};
+return React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:"14px 16px",marginBottom:16}},
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:4}},
+React.createElement("div",{style:{fontWeight:700,fontSize:15}},"\u2699 Vos emplacements"),
+props.onFermer?React.createElement("button",{onClick:props.onFermer,style:{fontSize:13,fontWeight:700,color:"var(--accent)"}},"Terminer"):null),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:12,lineHeight:1.45}},"Donnez un num\u00e9ro (1, 2, 3...) ou un nom (Entr\u00e9e, Caisse 2, Vitrine...). Laissez vide pour num\u00e9roter automatiquement. Un emplacement qui a d\u00e9j\u00e0 un historique ne peut pas \u00eatre supprim\u00e9, seulement renomm\u00e9."),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",gap:12}},
+EMPL_TYPES.map(function(ty){var l=emplTri(empls).filter(function(e){return e.type===ty.k});
+return React.createElement("div",{key:ty.k,style:{border:"1px solid var(--border)",borderTop:"4px solid "+ty.c,borderRadius:12,padding:"10px 12px",background:"var(--bg)"}},
+React.createElement("div",{style:{fontWeight:700,color:ty.c,marginBottom:8}},ty.ic+" "+ty.l+" ("+l.length+")"),
+l.map(function(e){var n=tdgs.filter(function(t){return t.empl===e.id}).length;
+return React.createElement("div",{key:e.id,style:{display:"flex",gap:6,alignItems:"center",marginBottom:6}},
+React.createElement("span",{style:{fontSize:13,color:"var(--text3)",whiteSpace:"nowrap"}},ty.s),
+React.createElement("input",{value:e.nom||"",onChange:function(ev){renommer(e.id,ev.target.value)},style:Object.assign({},chp,{flex:1,width:60})}),
+React.createElement("select",{value:e.type,onChange:function(ev){changerType(e.id,ev.target.value)},title:"Changer de type",style:Object.assign({},chp,{width:44,padding:"7px 2px"})},EMPL_TYPES.map(function(t2){return React.createElement("option",{key:t2.k,value:t2.k},t2.s)})),
+n?React.createElement("span",{title:n+" TDG enregistr\u00e9e"+(n>1?"s":"")+" ici",style:{fontSize:11,color:"var(--text3)",minWidth:22,textAlign:"center"}},n):
+React.createElement("button",{onClick:function(){supprimer(e.id)},title:"Supprimer",style:{color:"var(--red)",fontSize:16,minWidth:22}},"\u00d7"))}),
+React.createElement("div",{style:{display:"flex",gap:6,marginTop:4}},
+React.createElement("input",{value:noms[ty.k],placeholder:"n\u00b0 "+suivant(ty.k)+" ou nom",onChange:function(ev){var o=Object.assign({},noms);o[ty.k]=ev.target.value;setNoms(o)},onKeyDown:function(ev){if(ev.key==="Enter")ajouter(ty.k)},style:Object.assign({},chp,{flex:1,width:60})}),
+React.createElement("button",{onClick:function(){ajouter(ty.k)},style:{padding:"7px 12px",borderRadius:8,background:ty.c,color:"#fff",fontWeight:700,fontSize:13,whiteSpace:"nowrap"}},"+ Ajouter")))})))}
+
+/* --- tuile d'un emplacement (vue En ce moment) --- */
+function TuileEmpl(props){
+var e=props.e,st=props.st,auj=props.auj;var ty=emplType(e.type);var tp=emplTemp(st);
+var cur=st.act[0]||null;var proch=st.proch[0]||null;var ph=cur?props.photos[cur.id]:null;
+var prog=null,reste=null;
+if(cur&&cur.fin){var a=tdgDayNum(cur.debut),b=tdgDayNum(cur.fin),n=tdgDayNum(auj);prog=b>a?Math.max(0,Math.min(1,(n-a)/(b-a))):1;reste=b-n}
+return React.createElement("div",{onClick:function(){props.onOuvrir(e.id)},style:{cursor:"pointer",background:cur?"var(--bg2)":"var(--bg)",border:"1px solid var(--border)",borderTop:"4px solid "+ty.c,borderRadius:14,padding:"12px 14px",display:"flex",flexDirection:"column",gap:8,minWidth:0,boxShadow:cur?"var(--shadow)":"none"}},
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4,flexWrap:"wrap"}},
+React.createElement("div",{style:{fontWeight:800,fontSize:16,color:ty.c,lineHeight:1.2,minWidth:0,wordBreak:"break-word"}},emplNom(e)),
+React.createElement(EmplBadgeTemp,{tp:tp,n:st.n})),
+cur?React.createElement("div",{style:{display:"flex",gap:10,alignItems:"flex-start"}},
+photoOk(ph)?React.createElement("img",{src:ph,alt:"",style:{width:54,height:54,objectFit:"cover",borderRadius:8,flex:"0 0 auto",border:"1px solid var(--border)"}}):null,
+React.createElement("div",{style:{minWidth:0,flex:1}},
+React.createElement("div",{style:{fontWeight:700,fontSize:14,lineHeight:1.25}},cur.lab||"Sans nom"),
+cur.produit?React.createElement("div",{style:{fontSize:12,color:"var(--text2)"}},cur.produit):null,
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:2}},"depuis le "+tdgFr(cur.debut).slice(0,5)+(cur.fin?" \u00b7 jusqu'au "+tdgFr(cur.fin).slice(0,5):" \u00b7 sans date de fin")))):
+React.createElement("div",{style:{fontSize:14,fontWeight:600,color:"var(--text3)",padding:"6px 0"}},"\u25cb Libre"),
+cur&&prog!==null?React.createElement("div",null,
+React.createElement("div",{style:{height:6,borderRadius:3,background:"var(--bg3)",overflow:"hidden"}},React.createElement("div",{style:{height:"100%",width:Math.round(prog*100)+"%",background:reste<=3?"var(--orange)":ty.c}})),
+React.createElement("div",{style:{fontSize:11,color:reste<=3?"var(--orange)":"var(--text3)",marginTop:3,fontWeight:reste<=3?700:400}},reste<=0?"dernier jour":"encore "+reste+" jour"+(reste>1?"s":""))):null,
+st.act.length>1?React.createElement("div",{style:{fontSize:11,color:"var(--orange)",fontWeight:700}},"\u26a0 "+st.act.length+" TDG en place en m\u00eame temps"):null,
+st.dep.length?React.createElement("div",{style:{fontSize:11,color:"var(--orange)",fontWeight:700}},"\u23f0 "+st.dep.length+" TDG avec date de fin d\u00e9pass\u00e9e"):null,
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:6,marginTop:"auto",flexWrap:"wrap"}},
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",minWidth:0}},proch?"Ensuite : "+(proch.lab||"")+" ("+tdgFr(proch.debut).slice(0,5)+")":(st.n?"effet moyen "+emplPctTxt(st.lift):"")),
+!cur?React.createElement("button",{onClick:function(ev){ev.stopPropagation();props.onInstaller(e.id)},style:{fontSize:12,fontWeight:700,padding:"5px 10px",borderRadius:8,background:ty.c,color:"#fff"}},"+ Installer"):null))}
+
+/* --- vue En ce moment --- */
+function TdgMoment(props){
+var empls=emplTri(props.empls);var tdgs=props.tdgs||[];var auj=props.auj;var resMap=props.resMap;
+var gS=useState(empls.length===0);var gerer=gS[0];var setGerer=gS[1];
+var vS=useState(false);var voirAnc=vS[0];var setVoirAnc=vS[1];
+var stats={};empls.forEach(function(e){stats[e.id]=emplStats(e,tdgs,resMap,auj)});
+var nOcc=empls.filter(function(e){return stats[e.id].act.length}).length;
+var reels=tdgs.filter(function(t){return !t.demo});
+var sansCour=reels.filter(function(t){return !emplDe(empls,t.empl)&&(tdgEnPlace(t,auj)||tdgAVenir(t,auj)||tdgDepassee(t,auj))});
+var sansAnc=reels.filter(function(t){return !emplDe(empls,t.empl)&&sansCour.indexOf(t)<0});
+var depassees=reels.filter(function(t){return tdgDepassee(t,auj)});
+var chp={padding:"6px 8px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13,maxWidth:200};
+function ligneSans(t){return React.createElement("div",{key:t.id,style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",padding:"8px 0",borderTop:"1px solid var(--border)"}},
+React.createElement("div",{style:{flex:"1 1 180px",minWidth:0}},React.createElement("div",{style:{fontWeight:700,fontSize:13}},tdgTitre(t)),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},(t.debut?tdgFr(t.debut):"?")+" \u2192 "+(t.fin?tdgFr(t.fin):"sans fin")+(t.notes?" \u00b7 "+String(t.notes).split("\n")[0].slice(0,60):""))),
+empls.length?selectEmpl({empls:empls,value:"",vide:"\u2192 Attribuer \u00e0...",onChange:function(v){if(v)props.upd(t.id,"empl",v)},style:chp}):null)}
+return React.createElement("div",null,
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,flexWrap:"wrap",marginBottom:12}},
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},empls.length?React.createElement("span",null,React.createElement("b",null,nOcc+" emplacement"+(nOcc>1?"s":"")+" occup\u00e9"+(nOcc>1?"s":"")),
+" sur "+empls.length+(empls.length-nOcc>0?" \u00b7 ":""),empls.length-nOcc>0?React.createElement("b",{style:{color:"var(--orange)"}},(empls.length-nOcc)+" libre"+(empls.length-nOcc>1?"s":"")):null,". Touchez un emplacement pour son historique."):"Commencez par cr\u00e9er vos emplacements."),
+!gerer?React.createElement("button",{onClick:function(){setGerer(true)},style:{fontSize:13,padding:"6px 12px",borderRadius:20,border:"1px dashed var(--border)",color:"var(--text2)"}},"\u2699 G\u00e9rer les emplacements"):null),
+gerer?React.createElement(GestionEmpl,{empls:props.empls,setEmpls:props.setEmpls,tdgs:tdgs,onFermer:empls.length?function(){setGerer(false)}:null}):null,
+depassees.length?React.createElement("div",{style:{background:"var(--orange-bg)",border:"1px solid var(--orange)",borderRadius:12,padding:"10px 14px",marginBottom:14}},
+React.createElement("div",{style:{fontWeight:700,fontSize:13,color:"var(--orange)",marginBottom:4}},"\u23f0 Date de fin d\u00e9pass\u00e9e : toujours en place ?"),
+depassees.map(function(t){var e=emplDe(empls,t.empl);return React.createElement("div",{key:t.id,style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",padding:"4px 0",fontSize:13}},
+React.createElement("span",{style:{flex:"1 1 200px"}},React.createElement("b",null,tdgTitre(t)),(e?" \u00b7 "+emplNom(e):"")+" \u00b7 fin pr\u00e9vue le "+tdgFr(t.fin)),
+React.createElement("button",{onClick:function(){props.upd(t.id,"statut","termine")},style:{fontSize:12,fontWeight:700,padding:"4px 10px",borderRadius:8,background:"var(--accent)",color:"#fff"}},"\u2713 Retir\u00e9e"),
+React.createElement("button",{onClick:function(){props.onOuvrirTdg(t.id,true)},style:{fontSize:12,padding:"4px 10px",borderRadius:8,border:"1px solid var(--border)",color:"var(--text2)"}},"Prolonger"))})):null,
+EMPL_TYPES.map(function(ty){var l=empls.filter(function(e){return e.type===ty.k});if(!l.length)return null;
+var occ=l.filter(function(e){return stats[e.id].act.length}).length;
+return React.createElement("div",{key:ty.k,style:{marginBottom:18}},
+React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:8}},
+React.createElement("span",{style:{fontWeight:800,fontSize:15,color:ty.c}},ty.ic+" "+ty.l),
+React.createElement("span",{style:{fontSize:12,color:"var(--text3)"}},occ+"/"+l.length+" occup\u00e9"+(occ>1?"s":"")),
+React.createElement("div",{style:{flex:1,height:1,background:"var(--border)"}})),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(165px,1fr))",gap:10}},
+l.map(function(e){return React.createElement(TuileEmpl,{key:e.id,e:e,st:stats[e.id],auj:auj,photos:props.photos||{},onOuvrir:props.onOuvrirEmpl,onInstaller:props.onInstaller})})))}),
+sansCour.length?React.createElement("div",{style:{background:"var(--bg2)",border:"1px dashed var(--border)",borderRadius:12,padding:"10px 14px",marginBottom:14}},
+React.createElement("div",{style:{fontWeight:700,fontSize:13}},"\ud83d\udccd En cours ou \u00e0 venir, sans emplacement ("+sansCour.length+")"),
+!empls.length?React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:4}},"Cr\u00e9ez vos emplacements ci-dessus pour pouvoir les y ranger."):null,
+sansCour.map(ligneSans)):null,
+sansAnc.length?React.createElement("div",{style:{background:"var(--bg2)",border:"1px dashed var(--border)",borderRadius:12,padding:"10px 14px",marginBottom:14}},
+React.createElement("button",{onClick:function(){setVoirAnc(!voirAnc)},style:{fontWeight:700,fontSize:13,color:"var(--text2)",padding:0,textAlign:"left"}},(voirAnc?"\u25be ":"\u25b8 ")+"Anciennes TDG sans emplacement ("+sansAnc.length+")"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:2}},"Rangez-les pour qu'elles comptent dans l'historique et les points chauds / froids."),
+voirAnc?sansAnc.map(ligneSans):null):null)}
+
+/* --- petite courbe des notes d'un emplacement --- */
+function EmplCourbeNotes(props){
+var pts=props.pts;if(pts.length<1)return null;var W=520,H=150,L=26,R=12,T=10,B=22;
+var t0=tdgDayNum(pts[0].d),t1=tdgDayNum(pts[pts.length-1].d);if(t1-t0<30){t0-=15;t1+=15}
+function X(d){return L+(W-L-R)*(tdgDayNum(d)-t0)/(t1-t0)}function Y(v){return T+(H-T-B)*(1-v/10)}
+var el=[];
+el.push(React.createElement("rect",{key:"b1",x:L,y:Y(10),width:W-L-R,height:Y(6)-Y(10),fill:"rgba(220,38,38,.06)"}));
+el.push(React.createElement("rect",{key:"b3",x:L,y:Y(4),width:W-L-R,height:Y(0)-Y(4),fill:"rgba(37,99,235,.06)"}));
+[0,4,6,10].forEach(function(v){el.push(React.createElement("line",{key:"g"+v,x1:L,x2:W-R,y1:Y(v),y2:Y(v),stroke:"var(--border)",strokeDasharray:v===4||v===6?"3 3":"0"}));el.push(React.createElement("text",{key:"gt"+v,x:L-5,y:Y(v)+4,fontSize:10,textAnchor:"end",fill:"var(--text3)"},v))});
+el.push(React.createElement("text",{key:"lc",x:W-R-2,y:Y(10)+11,fontSize:10,textAnchor:"end",fill:"#dc2626"},"\ud83d\udd25 chaud"));
+el.push(React.createElement("text",{key:"lf",x:W-R-2,y:Y(0)-4,fontSize:10,textAnchor:"end",fill:"#2563eb"},"\ud83e\uddca froid"));
+if(pts.length>1)el.push(React.createElement("polyline",{key:"l",points:pts.map(function(p){return X(p.d)+","+Y(p.v)}).join(" "),fill:"none",stroke:"var(--text3)",strokeWidth:1.5}));
+pts.forEach(function(p,i){var c=tdgScoreStyle(p.v).c;el.push(React.createElement("g",{key:"p"+i,style:{cursor:"pointer"},onClick:function(){props.onClic(p.id)}},React.createElement("title",null,p.l+" : "+String(p.v).replace(".",",")+"/10"),
+React.createElement("circle",{cx:X(p.d),cy:Y(p.v),r:6,fill:c,stroke:"#fff",strokeWidth:2})))});
+var m0=pts[0].d,m1=pts[pts.length-1].d;
+el.push(React.createElement("text",{key:"x0",x:L,y:H-6,fontSize:10,fill:"var(--text3)"},tdgFr(m0)));
+if(m1!==m0)el.push(React.createElement("text",{key:"x1",x:W-R,y:H-6,fontSize:10,textAnchor:"end",fill:"var(--text3)"},tdgFr(m1)));
+return React.createElement("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",style:{display:"block",maxHeight:190}},el)}
+
+/* --- fiche historique d'un emplacement --- */
+function EmplDetail(props){
+var e=props.e;var ty=emplType(e.type);var auj=props.auj;var resMap=props.resMap;
+var st=emplStats(e,props.tdgs,resMap,auj);var tp=emplTemp(st);
+var hist=st.ts.slice().sort(function(a,b){return String(b.debut||"").localeCompare(String(a.debut||""))});
+var pts=st.valid.slice().sort(function(a,b){return a.debut.localeCompare(b.debut)}).map(function(t){return{d:t.debut,v:resMap[t.id].note,id:t.id,l:t.lab||""}});
+var SC={a_venir:["\u00c0 venir","var(--blue)"],en_cours:["En cours","var(--orange)"],termine:["Termin\u00e9e","var(--accent)"]};
+var tuile=function(k,v,l,c){return React.createElement("div",{key:k,style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:"10px 12px"}},
+React.createElement("div",{style:{fontSize:22,fontWeight:800,color:c||"var(--text)"}},v),React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},l))};
+return React.createElement("div",null,
+React.createElement("button",{onClick:props.onRetour,style:{fontSize:13,fontWeight:600,color:"var(--accent)",padding:0,marginBottom:10}},"\u2190 Tous les emplacements"),
+React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:4}},
+React.createElement("span",{style:{fontSize:30}},ty.ic),
+React.createElement("div",{style:{fontSize:22,fontWeight:800,color:ty.c}},emplNom(e)),
+React.createElement(EmplBadgeTemp,{tp:tp,n:st.n}),
+React.createElement("span",{style:{flex:1}}),
+st.act.length?null:React.createElement("button",{onClick:function(){props.onInstaller(e.id)},style:{fontSize:13,fontWeight:700,padding:"6px 12px",borderRadius:8,background:ty.c,color:"#fff"}},"+ Installer une TDG ici")),
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)",marginBottom:14}},st.act.length?"En place : "+st.act.map(tdgTitre).join(" + "):"Libre en ce moment"),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:10,marginBottom:14}},
+tuile("n",st.ts.length+"","mise"+(st.ts.length>1?"s":"")+" en avant enregistr\u00e9e"+(st.ts.length>1?"s":"")),
+tuile("l",emplPctTxt(st.lift),"effet moyen sur les ventes",st.lift===null?null:(st.lift>=0?"var(--accent)":"var(--red)")),
+tuile("no",st.note===null?"\u2014":String(Math.round(st.note*10)/10).replace(".",",")+"/10","note moyenne"+(st.n?" ("+st.n+" mesur\u00e9e"+(st.n>1?"s":"")+")":""),st.note===null?null:tdgScoreStyle(st.note).c),
+tuile("o",st.occ===null?"\u2014":Math.round(st.occ*100)+" %","du temps occup\u00e9 (6 mois)",st.occ===null?null:(st.occ>=0.7?"var(--accent)":st.occ>=0.4?"var(--orange)":"var(--red)"))),
+pts.length?React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:"12px 14px",marginBottom:14}},
+React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:2}},"\ud83c\udf21\ufe0f Notes des mises en avant successives"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:6}},"Chaque point = une TDG ici. Touchez un point pour l'ouvrir."),
+React.createElement(EmplCourbeNotes,{pts:pts,onClic:function(id){props.onOuvrirTdg(id)}})):
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:14,lineHeight:1.45}},"Pas encore de note : il faut une TDG d'au moins 7 jours avec des produits reconnus et les ventes import\u00e9es (bouton \u00ab Importer les ventes \u00bb ou synchronisation automatique)."),
+React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:8}},"\ud83d\udcdc Historique"),
+!hist.length?React.createElement("div",{style:{fontSize:13,color:"var(--text3)",padding:"14px",background:"var(--bg2)",borderRadius:12,border:"1px dashed var(--border)"}},"Aucune TDG enregistr\u00e9e \u00e0 cet emplacement. Rangez vos anciennes TDG depuis \u00ab En ce moment \u00bb, ou choisissez l'emplacement dans la fiche d'une TDG."):
+React.createElement("div",{style:{position:"relative",paddingLeft:18}},
+React.createElement("div",{style:{position:"absolute",left:6,top:6,bottom:6,width:2,background:"var(--border)"}}),
+hist.map(function(t){var r=resMap[t.id];var s=SC[t.statut]||SC.a_venir;var enP=tdgEnPlace(t,auj);var ph=props.photos[t.id];
+return React.createElement("div",{key:t.id,onClick:function(){props.onOuvrirTdg(t.id)},style:{position:"relative",cursor:"pointer",background:"var(--bg2)",border:"1px solid "+(enP?ty.c:"var(--border)"),borderRadius:12,padding:"10px 12px",marginBottom:8,display:"flex",gap:10,alignItems:"center",flexWrap:"wrap"}},
+React.createElement("span",{style:{position:"absolute",left:-17,top:16,width:12,height:12,borderRadius:6,background:enP?ty.c:(r?tdgScoreStyle(r.note).c:"var(--bg3)"),border:"2px solid var(--bg)"}}),
+photoOk(ph)?React.createElement("img",{src:ph,alt:"",style:{width:44,height:44,objectFit:"cover",borderRadius:8}}):null,
+React.createElement("div",{style:{flex:"1 1 180px",minWidth:0}},
+React.createElement("div",{style:{fontWeight:700,fontSize:14}},tdgTitre(t)),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},(t.debut?tdgFr(t.debut):"?")+" \u2192 "+(t.fin?tdgFr(t.fin):"sans fin")+" \u00b7 ",React.createElement("span",{style:{color:s[1],fontWeight:600}},enP?"En place":s[0]))),
+r?React.createElement("div",{style:{textAlign:"right"}},
+React.createElement("div",{style:{fontWeight:800,color:tdgScoreStyle(r.note).c}},tdgScoreStyle(r.note).e+" "+String(r.note).replace(".",",")+"/10"),
+React.createElement("div",{style:{fontSize:12,fontWeight:700,color:r.liftQ>=0?"var(--accent)":"var(--red)"}},emplPctTxt(Math.min(3,r.liftQ))+" de ventes")):
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},"pas de mesure"))})))}
+
+/* --- points chauds / points froids --- */
+function TdgChaud(props){
+var empls=emplTri(props.empls);var auj=props.auj;var resMap=props.resMap;var tdgs=props.tdgs||[];
+var rows=empls.map(function(e){return{e:e,st:emplStats(e,tdgs,resMap,auj)}});
+var mes=rows.filter(function(r){return r.st.n>0}).sort(function(a,b){return b.st.lift-a.st.lift});
+var sans=rows.filter(function(r){return !r.st.n});
+var tous=[];tdgs.forEach(function(t){if(resMap[t.id]&&emplDe(empls,t.empl))tous.push(Math.min(3,resMap[t.id].liftQ))});
+var moy=tous.length?tous.reduce(function(s,x){return s+x},0)/tous.length:null;
+var mx=0.2;mes.forEach(function(r){mx=Math.max(mx,Math.abs(r.st.lift))});if(moy!==null)mx=Math.max(mx,Math.abs(moy));mx*=1.15;
+function P(v){return 50+v/mx*50}
+var parType=EMPL_TYPES.map(function(ty){var v=[],no=[];tdgs.forEach(function(t){var e=emplDe(empls,t.empl);if(e&&e.type===ty.k&&resMap[t.id]){v.push(Math.min(3,resMap[t.id].liftQ));no.push(resMap[t.id].note)}});
+return{ty:ty,n:v.length,l:v.length?v.reduce(function(s,x){return s+x},0)/v.length:null,no:no.length?no.reduce(function(s,x){return s+x},0)/no.length:null}}).filter(function(x){return x.n});
+return React.createElement("div",null,
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)",lineHeight:1.5,marginBottom:14,maxWidth:780}},
+"Pour chaque mise en avant, on compare les ventes par jour de ses produits pendant qu'ils sont en place \u00e0 leurs ventes des 8 semaines d'avant. Chaque produit est compar\u00e9 \u00e0 lui-m\u00eame : le r\u00e9sultat ne d\u00e9pend donc pas du type de produit ni de son prix. La moyenne par emplacement montre o\u00f9 vos clients voient le mieux ce que vous mettez en avant."),
+!mes.length?React.createElement("div",{style:{padding:"24px 18px",textAlign:"center",background:"var(--bg2)",border:"1px dashed var(--border)",borderRadius:12,fontSize:13,color:"var(--text2)",lineHeight:1.5}},
+React.createElement("div",{style:{fontSize:32,marginBottom:6}},"\ud83c\udf21\ufe0f"),
+!empls.length?"Cr\u00e9ez d'abord vos emplacements (onglet \u00ab En ce moment \u00bb).":"Aucun emplacement n'a encore de TDG mesur\u00e9e. Rangez vos TDG pass\u00e9es dans leur emplacement : d\u00e8s qu'une TDG d'au moins 7 jours a des produits reconnus et des ventes import\u00e9es, son effet compte ici."):
+React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:"14px 16px",marginBottom:14}},
+React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:2}},"\ud83d\udd25 Du plus chaud au plus froid"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:10}},"Effet moyen sur les ventes (unit\u00e9s par jour) des TDG pass\u00e9es \u00e0 chaque emplacement"+(moy!==null?" \u00b7 trait pointill\u00e9 = moyenne de la pharmacie ("+emplPctTxt(moy)+")":"")+". Touchez une ligne pour l'historique."),
+mes.map(function(r,i){var tp=emplTemp(r.st);var ty=emplType(r.e.type);var v=r.st.lift;var x=P(v);
+return React.createElement("div",{key:r.e.id,onClick:function(){props.onOuvrirEmpl(r.e.id)},style:{cursor:"pointer",display:"grid",gridTemplateColumns:"minmax(110px,170px) 1fr minmax(78px,auto)",gap:10,alignItems:"center",padding:"8px 0",borderTop:i?"1px solid var(--border)":"none"}},
+React.createElement("div",{style:{minWidth:0}},React.createElement("div",{style:{fontWeight:700,fontSize:13,color:ty.c,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}},ty.ic+" "+emplNom(r.e)),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},r.st.n+" TDG mesur\u00e9e"+(r.st.n>1?"s":"")+(r.st.n===1?" \u00b7 \u00e0 confirmer":"")+(r.st.occ!==null?" \u00b7 occup\u00e9 "+Math.round(r.st.occ*100)+" %":""))),
+React.createElement("div",{style:{position:"relative",height:22}},
+React.createElement("div",{style:{position:"absolute",left:"50%",top:0,bottom:0,width:1,background:"var(--text3)",opacity:0.5}}),
+moy!==null?React.createElement("div",{style:{position:"absolute",left:P(moy)+"%",top:0,bottom:0,width:0,borderLeft:"1.5px dashed var(--text3)"}}):null,
+React.createElement("div",{style:{position:"absolute",top:10,height:3,borderRadius:2,background:tp.c,opacity:0.6,left:Math.min(50,x)+"%",width:Math.abs(x-50)+"%"}}),
+React.createElement("div",{style:{position:"absolute",top:2,width:18,height:18,borderRadius:9,background:tp.c,color:"#fff",fontSize:11,display:"flex",alignItems:"center",justifyContent:"center",left:"calc("+x+"% - 9px)",boxShadow:"0 0 0 2px var(--bg2)"}},"")),
+React.createElement("div",{style:{textAlign:"right"}},React.createElement("div",{style:{fontWeight:800,fontSize:14,color:tp.c}},tp.ic+" "+emplPctTxt(v)),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},String(Math.round(r.st.note*10)/10).replace(".",",")+"/10")))}),
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",fontSize:11,color:"var(--text3)",marginTop:6,paddingLeft:"min(170px,30%)"}},React.createElement("span",null,"\ud83e\uddca les ventes baissent"),React.createElement("span",null,"0"),React.createElement("span",null,"les ventes montent \ud83d\udd25"))),
+parType.length>1?React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:10,marginBottom:14}},
+parType.map(function(x){return React.createElement("div",{key:x.ty.k,style:{background:x.ty.bg,border:"1px solid var(--border)",borderRadius:12,padding:"10px 12px"}},
+React.createElement("div",{style:{fontWeight:700,color:x.ty.c,fontSize:13}},x.ty.ic+" "+x.ty.l),
+React.createElement("div",{style:{fontSize:22,fontWeight:800,color:x.l>=0?"var(--accent)":"var(--red)"}},emplPctTxt(x.l)),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},"effet moyen \u00b7 "+x.n+" TDG \u00b7 note "+String(Math.round(x.no*10)/10).replace(".",",")+"/10"))})):null,
+sans.length&&mes.length?React.createElement("div",{style:{fontSize:12,color:"var(--text3)",lineHeight:1.5}},"Pas encore mesur\u00e9s : "+sans.map(function(r){return emplNom(r.e)}).join(", ")+"."):null,
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",lineHeight:1.5,marginTop:10}},"\ud83d\udd25 point chaud = note moyenne \u2265 6/10 \u00b7 \ud83c\udf24\ufe0f ti\u00e8de = 4 \u00e0 6 \u00b7 \ud83e\uddca point froid = moins de 4. Une seule TDG mesur\u00e9e = tendance \u00e0 confirmer. Les effets sup\u00e9rieurs \u00e0 +300 % sont plafonn\u00e9s pour qu'un seul produit ne fausse pas la moyenne."))}
+
+/* --- planning par emplacement --- */
+function PlanningEmpl(props){
+var empls=emplTri(props.empls);var tdgs=(props.tdgs||[]).filter(function(t){return !t.demo&&t.debut});
+var d0=new Date();d0.setDate(1);d0.setMonth(d0.getMonth()-2);
+var mois=[];for(var i=0;i<12;i++){var d=new Date(d0.getFullYear(),d0.getMonth()+i,1);mois.push(d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2))}
+var mc=moisCle();
+function finDe(t){return t.fin||(t.statut==="termine"?t.debut:"2999-12-31")}
+function dans(t,m){return t.debut.slice(0,7)<=m&&finDe(t).slice(0,7)>=m}
+var lignes=empls.map(function(e){return{e:e,ts:tdgs.filter(function(t){return t.empl===e.id})}});
+var orph=tdgs.filter(function(t){return !emplDe(empls,t.empl)&&t.debut.slice(0,7)<=mois[11]&&finDe(t).slice(0,7)>=mois[0]});
+if(orph.length)lignes.push({e:null,ts:orph});
+var col="minmax(150px,1.6fr) repeat(12,minmax(30px,1fr))";
+var libres=0;lignes.forEach(function(l){if(!l.e)return;mois.forEach(function(m){if(m>=mc&&!l.ts.some(function(t){return dans(t,m)}))libres++})});
+return React.createElement("div",null,
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)",marginBottom:10,lineHeight:1.5}},"Qui occupe chaque emplacement, mois par mois (2 mois pass\u00e9s, 10 \u00e0 venir). Les cases en pointill\u00e9 sont libres : cr\u00e9ez une TDG avec des dates futures pour les r\u00e9server. Touchez une case pour ouvrir la TDG."),
+libres&&empls.length?React.createElement("div",{style:{padding:"8px 12px",borderRadius:8,background:"var(--orange-bg)",color:"var(--orange)",fontSize:13,fontWeight:600,marginBottom:10}},libres+" mois-emplacement encore libres d'ici "+moisCourt(mois[11])):null,
+React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:12,overflowX:"auto"}},
+React.createElement("div",{style:{minWidth:560}},
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:col,gap:3,marginBottom:6}},React.createElement("div",null,""),
+mois.map(function(m){return React.createElement("div",{key:m,style:{textAlign:"center",fontSize:11,fontWeight:m===mc?800:600,color:m===mc?"var(--accent)":"var(--text3)"}},MOIS_COURTS[parseInt(m.slice(5),10)-1].replace(".",""))})),
+!lignes.length?React.createElement("div",{style:{padding:16,fontSize:13,color:"var(--text3)"}},"Cr\u00e9ez vos emplacements dans \u00ab En ce moment \u00bb."):
+lignes.map(function(l,li){var ty=l.e?emplType(l.e.type):null;
+return React.createElement("div",{key:l.e?l.e.id:"orph",style:{display:"grid",gridTemplateColumns:col,gap:3,alignItems:"center",padding:"3px 0",borderTop:"1px solid var(--border)"}},
+React.createElement("button",{title:l.e?emplNom(l.e):"",onClick:function(){if(l.e)props.onOuvrirEmpl(l.e.id)},style:{textAlign:"left",fontSize:12,fontWeight:700,color:ty?ty.c:"var(--text3)",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",padding:"0 6px 0 0"}},l.e?ty.ic+" "+emplNom(l.e):"Sans emplacement"),
+mois.map(function(m){var occ=l.ts.filter(function(t){return dans(t,m)});var c=ty?ty.c:"#64748b";
+if(!occ.length)return React.createElement("div",{key:m,style:{height:26,borderRadius:5,border:m>=mc&&l.e?"1px dashed var(--border)":"none"}});
+var t=occ[0];var lib=String(t.lab||"?").replace(/^TG\s+/i,"").slice(0,4);
+return React.createElement("button",{key:m,title:occ.map(tdgTitre).join(" + "),onClick:function(){props.onOuvrirTdg(t.id)},style:{height:26,borderRadius:5,background:c,opacity:m<mc?0.5:0.9,color:"#fff",fontSize:9,fontWeight:700,overflow:"hidden",whiteSpace:"nowrap",padding:"0 2px",boxShadow:occ.length>1?"inset 0 0 0 2px var(--orange)":"none"}},occ.length>1?occ.length+"\u00d7":lib)}))}))))}
+
+/* --- barre d'onglets du module --- */
+function TdgOnglets(props){
+var o=[["moment","\ud83d\uddfa\ufe0f En ce moment"],["chaud","\ud83c\udf21\ufe0f Points chauds / froids"],["planning","\ud83d\udcc6 Planning"],["liste","\ud83d\udccb Toutes les TDG ("+props.nb+")"]];
+return React.createElement("div",{style:{display:"flex",gap:6,marginBottom:14,overflowX:"auto",paddingBottom:2}},
+o.map(function(x){var on=props.vue===x[0]||(x[0]==="moment"&&props.vue==="empl");
+return React.createElement("button",{key:x[0],onClick:function(){props.setVue(x[0])},style:{padding:"8px 14px",borderRadius:20,fontSize:13,whiteSpace:"nowrap",flexShrink:0,fontWeight:on?700:500,background:on?"var(--accent)":"var(--bg3)",color:on?"#fff":"var(--text2)"}},x[1])}))}
 
 
 class GardeEcran extends React.Component{
@@ -8299,6 +8593,15 @@ if(!lab){avertir("Aucun laboratoire adapt\u00e9 pour la d\u00e9monstration.");re
 var top=pd.P[lab].filter(function(p){return p.c&&p.n}).slice().sort(function(a,b){return (b.q||0)-(a.q||0)}).slice(0,6);
 setTdgs(tdgs.concat([{id:Date.now(),demo:true,produits:top.map(function(p){return{n:p.n,c:p.c,lab:lab}}),lab:"[D\u00c9MO] "+lab,responsable:teamNames[0]||"",debut:"2025-09-15",fin:"2025-10-12",notes:"TDG fictive cr\u00e9\u00e9e pour tester l'analyse. Les ventes sont r\u00e9elles, mais aucune t\u00eate de gondole n'a eu lieu : la note n'a donc pas de sens commercial.",facing:0,photoFaite:false,photoLieu:"",checks:CHECKLIST.map(function(c){return{label:c,done:false}}),statut:"termine"}]))}
 var tdgs=props.tdgs||[];var setTdgs=props.setTdgs||function(){};
+var empls=props.empls||[];var setEmpls=props.setEmpls||function(){};var aujT=empAuj();
+var vueS=useState(PS_FOCUS.v&&PS_FOCUS.v.type==="TDG"?"liste":"moment");var vue=vueS[0];var setVue=vueS[1];
+var emOS=useState(null);var emplOuvert=emOS[0];var setEmplOuvert=emOS[1];
+var fEmS=useState("");var fEmpl=fEmS[0];var setFEmpl=fEmS[1];
+var foEmS=useState("");var formEmpl=foEmS[0];var setFormEmpl=foEmS[1];
+var resMap=useMemo(function(){return emplResultats(tdgs,props.ventes||null)},[tdgs,props.ventes]);
+function ouvrirEmpl(id){setEmplOuvert(id);setVue("empl");try{scrollHaut()}catch(e){}}
+function installer(id){setFormEmpl(id);setShowForm(true);try{scrollHaut(true)}catch(e){}}
+function ouvrirTdg(id,edit){setVue("liste");setChTab("tous");setFEmpl("");setTdgFLab("");setTdgFMois("");var o=Object.assign({},expTdg);o[id]=true;setExpTdg(o);if(edit)setEditTdg(id);setTimeout(function(){try{flashFocus("ps-f-t"+id)}catch(e){}},120)}
 var showFormS=useState(false);var showForm=showFormS[0];var setShowForm=showFormS[1];
 var focT=PS_FOCUS.v&&PS_FOCUS.v.type==="TDG"?PS_FOCUS.v.id:null;
 var chTabS=useState(focT?"tous":"actif");var chTab=chTabS[0];var setChTab=chTabS[1];
@@ -8324,9 +8627,9 @@ if(!labRef.current.value.trim()&&!fProds.length)return;
 var newId=Date.now();if(fPhoto)setPhoto(newId,fPhoto);
 setTdgs(tdgs.concat([{id:newId,produits:fProds,lab:labRef.current.value.trim()||(fProds[0]&&fProds[0].lab)||"Multi-labos",produit:prodRef.current.value,
 responsable:respRef.current.value||teamNames[0]||"",debut:startRef.current.value,fin:endRef.current.value,
-notes:noteRef.current.value,facing:Number(facingRef.current.value)||0,photoFaite:false,photoLieu:"",
+empl:formEmpl||"",notes:noteRef.current.value,facing:Number(facingRef.current.value)||0,photoFaite:false,photoLieu:"",
 checks:CHECKLIST.map(function(c){return{label:c,done:false}}),statut:"a_venir"}]));
-labRef.current.value="";prodRef.current.value="";noteRef.current.value="";facingRef.current.value="";setFPhoto(null);setFProds([]);setShowForm(false)}
+labRef.current.value="";prodRef.current.value="";noteRef.current.value="";facingRef.current.value="";setFPhoto(null);setFProds([]);setFormEmpl("");setShowForm(false)}
 function startFromIdea(idea){ideaPrefillRef.current=idea.lab;setFProds(idea.produits||[]);setShowForm(true);setShowIdees(false)}
 useEffect(function(){if(showForm&&ideaPrefillRef.current&&labRef.current){labRef.current.value=ideaPrefillRef.current;ideaPrefillRef.current=null}},[showForm]);
 function toggleCheck(tdgId,ci){setTdgs(tdgs.map(function(t){if(t.id!==tdgId)return t;
@@ -8347,6 +8650,7 @@ var tdgFiltered=tdgs.filter(function(t){
 if(chTab==="actif"&&t.statut==="termine")return false;
 if(chTab==="termine"&&t.statut!=="termine")return false;
 if(tdgFLab&&t.lab!==tdgFLab)return false;
+if(fEmpl&&t.empl!==fEmpl)return false;
 if(tdgFMois&&(t.debut||"").slice(0,7)!==tdgFMois)return false;
 return true});
 var grpMap={};
@@ -8363,7 +8667,7 @@ function moisLabel(mk){var pp=mk.split("-");return MOIS_TDG[parseInt(pp[1],10)-1
 
 return React.createElement("div",null,
 React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}},
-React.createElement("h2",{style:{fontSize:22,fontWeight:700}},"\ud83d\udecb T\u00eates de Gondole"),
+React.createElement("h2",{style:{fontSize:22,fontWeight:700}},"\ud83d\udecb TDG & mises en avant"),
 React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"flex-end"}},
 React.createElement("button",{onClick:function(){setShowIdees(!showIdees)},style:{padding:"8px 14px",borderRadius:8,border:"1px solid var(--accent)",background:showIdees?"var(--accent)":"var(--accent-bg)",color:showIdees?"#fff":"var(--accent)",fontWeight:600,fontSize:13}},"\ud83d\udca1 Id\u00e9es de TDG"+(tdgIdees.length?" ("+tdgIdees.length+")":"")),
 React.createElement("button",{onClick:makeDemo,style:{padding:"8px 14px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg2)",color:"var(--text2)",fontWeight:600,fontSize:13}},"\ud83e\uddea TDG de d\u00e9monstration"),
@@ -8385,6 +8689,7 @@ React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(aut
 React.createElement("input",{ref:labRef,placeholder:"Laboratoire",style:{padding:"8px 12px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13}}),
 React.createElement("input",{ref:prodRef,placeholder:"Produit phare",style:{padding:"8px 12px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13}})),
 React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))",gap:8}},
+champT("Emplacement",selectEmpl({empls:empls,value:formEmpl,onChange:setFormEmpl,style:chpT})),
 champT("Responsable",React.createElement("select",{ref:respRef,style:{padding:"8px 12px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13}},teamNames.map(function(o){return React.createElement("option",{key:o,value:o},o)}))),
 champT("D\u00e9but (mise en place)",React.createElement("input",{ref:startRef,type:"date",style:chpT})),
 champT("Fin",React.createElement("input",{ref:endRef,type:"date",style:chpT})),
@@ -8396,24 +8701,27 @@ React.createElement(TDGPhotoBox,{photo:fPhoto,onChange:setFPhoto}),
 React.createElement("div",null,React.createElement("div",{style:{fontSize:12,fontWeight:600,color:"var(--text3)",marginBottom:4}},"Produits pr\u00e9sents sur la photo ("+fProds.length+")"),
 React.createElement(TDGProdPicker,{prods:fProds,idx:prodIdx,onChange:setFProds}))),
 React.createElement("button",{onClick:addTDG,style:{padding:"8px 16px",borderRadius:8,background:"var(--accent)",color:"#fff",fontWeight:600,fontSize:13,justifySelf:"start"}},"Cr\u00e9er la TDG")):null,
-tdgs.length>0?React.createElement("div",{style:{display:"flex",gap:6,marginBottom:12,overflowX:"auto"}},
-["actif","termine","tous","planning"].map(function(tb){
-var labels={actif:"\u2b50 Actives",termine:"\u2705 Termin\u00e9es",tous:"\ud83d\udccb Toutes",planning:"\ud83d\udcc6 Planning"};
-var counts={actif:tdgs.filter(function(t){return t.statut!=="termine"}).length,
-termine:tdgs.filter(function(t){return t.statut==="termine"}).length,tous:tdgs.length};
-var isA=chTab===tb;
-return React.createElement("button",{key:tb,onClick:function(){setChTab(tb)},style:{padding:"8px 14px",borderRadius:20,fontSize:13,whiteSpace:"nowrap",flexShrink:0,fontWeight:isA?600:400,background:isA?"var(--accent)":"var(--bg3)",color:isA?"#fff":"var(--text2)"}},
-labels[tb]+(tb==="planning"?"":" ("+counts[tb]+")"))})):null,
-tdgs.length>0&&chTab!=="planning"?React.createElement("div",{style:{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}},
+React.createElement(TdgOnglets,{vue:vue,setVue:function(v){setVue(v);setEmplOuvert(null)},nb:tdgs.filter(function(t){return !t.demo}).length}),
+vue==="liste"&&tdgs.length>0?React.createElement("div",null,
+React.createElement("div",{style:{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}},
+["actif","termine","tous"].map(function(tb){var labels={actif:"Actives",termine:"Termin\u00e9es",tous:"Toutes"};
+var counts={actif:tdgs.filter(function(t){return t.statut!=="termine"}).length,termine:tdgs.filter(function(t){return t.statut==="termine"}).length,tous:tdgs.length};var isA=chTab===tb;
+return React.createElement("button",{key:tb,onClick:function(){setChTab(tb)},style:{padding:"5px 12px",borderRadius:16,fontSize:12,fontWeight:isA?700:500,border:"1px solid "+(isA?"var(--text)":"var(--border)"),background:isA?"var(--text)":"transparent",color:isA?"var(--bg2)":"var(--text2)"}},labels[tb]+" ("+counts[tb]+")")})),
+React.createElement("div",{style:{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap",alignItems:"center"}},
 React.createElement("span",{style:{fontSize:12,fontWeight:600,color:"var(--text3)"}},"\ud83d\udd0e Filtrer :"),
+selectEmpl({empls:empls,value:fEmpl,vide:"Tous les emplacements",onChange:setFEmpl,style:{padding:"6px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg2)",color:"var(--text)",fontSize:13}}),
 React.createElement("select",{value:tdgFMois,onChange:function(e){setTdgFMois(e.target.value)},style:{padding:"6px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg2)",color:"var(--text)",fontSize:13}},
 React.createElement("option",{value:""},"Tous les mois"),
 tdgMois.map(function(mk){return React.createElement("option",{key:mk,value:mk},moisLabel(mk))})),
 React.createElement("select",{value:tdgFLab,onChange:function(e){setTdgFLab(e.target.value)},style:{padding:"6px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg2)",color:"var(--text)",fontSize:13}},
 React.createElement("option",{value:""},"Tous les laboratoires"),
 tdgLabs.map(function(l){return React.createElement("option",{key:l,value:l},l)})),
-(tdgFLab||tdgFMois)?React.createElement("button",{onClick:function(){setTdgFLab("");setTdgFMois("")},style:{padding:"6px 12px",borderRadius:8,fontSize:12,background:"var(--red-bg)",color:"var(--red)",border:"1px solid var(--red)",fontWeight:600}},"\u2715 Effacer"):null):null,
-chTab==="planning"&&tdgs.length>0?React.createElement(PlanningTDG,{tdgs:tdgs}):
+(tdgFLab||tdgFMois||fEmpl)?React.createElement("button",{onClick:function(){setTdgFLab("");setTdgFMois("");setFEmpl("")},style:{padding:"6px 12px",borderRadius:8,fontSize:12,background:"var(--red-bg)",color:"var(--red)",border:"1px solid var(--red)",fontWeight:600}},"\u2715 Effacer"):null)):null,
+(vue==="moment"||(vue==="empl"&&!emplDe(empls,emplOuvert)))?React.createElement(TdgMoment,{empls:empls,setEmpls:setEmpls,tdgs:tdgs,auj:aujT,resMap:resMap,photos:photos,upd:upd,onOuvrirEmpl:ouvrirEmpl,onInstaller:installer,onOuvrirTdg:ouvrirTdg}):
+vue==="empl"?React.createElement(EmplDetail,{e:emplDe(empls,emplOuvert),tdgs:tdgs,auj:aujT,resMap:resMap,photos:photos,onRetour:function(){setVue("moment");setEmplOuvert(null)},onInstaller:installer,onOuvrirTdg:ouvrirTdg}):
+vue==="chaud"?React.createElement(TdgChaud,{empls:empls,tdgs:tdgs,auj:aujT,resMap:resMap,onOuvrirEmpl:ouvrirEmpl}):
+vue==="planning"?React.createElement(PlanningEmpl,{empls:empls,tdgs:tdgs,onOuvrirEmpl:ouvrirEmpl,onOuvrirTdg:ouvrirTdg}):
+
 tdgs.length===0?React.createElement("div",{style:{textAlign:"center",padding:60,color:"var(--text3)",background:"var(--bg2)",borderRadius:10}},
 React.createElement("div",{style:{fontSize:40,marginBottom:8}},"\ud83d\udecb"),
 React.createElement("div",{style:{fontWeight:600,marginBottom:4}},"Aucune t\u00eate de gondole"),
@@ -8433,6 +8741,7 @@ React.createElement("div",{style:{flex:"1 1 220px",minWidth:0}},
 React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}},
 React.createElement("span",{style:{fontSize:12,color:"var(--text3)"}},isExp?"\u25b2":"\u25bc"),
 React.createElement("span",{style:{fontWeight:700,fontSize:16}},t.lab),
+React.createElement(EmplChip,{e:emplDe(empls,t.empl),vide:!t.demo}),
 React.createElement("span",{style:{padding:"2px 10px",borderRadius:12,fontSize:12,fontWeight:600,background:sc.bg,color:sc.c}},sc.l),
 t.facing?React.createElement("span",{style:{padding:"2px 10px",borderRadius:12,fontSize:12,background:"var(--blue-bg)",color:"var(--blue)"}},t.facing+" facing"):null,
 (t.produits&&(t.produits||[]).length)?React.createElement("span",{style:{padding:"2px 10px",borderRadius:12,fontSize:12,background:"var(--accent-bg)",color:"var(--accent)"}},(t.produits||[]).length+" produit"+((t.produits||[]).length>1?"s":"")):null,
@@ -8445,6 +8754,7 @@ return React.createElement("button",{key:s,onClick:function(ev){ev.stopPropagati
 React.createElement("button",{onClick:function(ev){ev.stopPropagation();var o=editTdg===t.id?null:t.id;setEditTdg(o);if(o&&!isExp)toggleExpTdg(t.id)},style:{padding:"2px 8px",borderRadius:8,fontSize:12,marginLeft:6,background:editTdg===t.id?"var(--accent)":"transparent",color:editTdg===t.id?"#fff":"var(--text2)",border:"1px solid "+(editTdg===t.id?"var(--accent)":"var(--border)")}},editTdg===t.id?"\u2713 OK":"\u270f\ufe0f Modifier"),
 React.createElement("button",{onClick:function(ev){ev.stopPropagation();delTDG(t.id)},style:{color:"var(--red)",fontSize:14,marginLeft:8}},"\u00d7"))),
 ].concat(isExp&&editTdg===t.id?[React.createElement("div",{key:"ed"+t.id,style:{background:"var(--bg3)",borderRadius:10,padding:12,marginBottom:12,display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:10}},
+champT("Emplacement",selectEmpl({empls:empls,value:t.empl||"",vide:"Sans emplacement",onChange:function(v){upd(t.id,"empl",v)},style:chpT})),
 champT("Laboratoire",React.createElement("input",{value:t.lab||"",onChange:function(e){upd(t.id,"lab",e.target.value)},style:chpT})),
 champT("Produit phare",React.createElement("input",{value:t.produit||"",onChange:function(e){upd(t.id,"produit",e.target.value)},style:chpT})),
 champT("Responsable",React.createElement("select",{value:t.responsable||"",onChange:function(e){upd(t.id,"responsable",e.target.value)},style:chpT},(teamNames.indexOf(t.responsable)<0&&t.responsable?[t.responsable]:[]).concat(teamNames).map(function(o){return React.createElement("option",{key:o,value:o},o)}))),
@@ -12707,6 +13017,7 @@ var potS=useState({});var potCfg=potS[0];var setPotCfg=potS[1];var potPret=useRe
 var entS=useState({});var entCfg=entS[0];var setEntCfg=entS[1];var entPret=useRef(false);
 var trS=useState({});var trCfg=trS[0];var setTrCfg=trS[1];var trPret=useRef(false);
 var biS=useState({});var biCfg=biS[0];var setBiCfg=biS[1];var biPret=useRef(false);
+var emS=useState([]);var tdgEmpls=emS[0];var setTdgEmpls=emS[1];var emPret=useRef(false);
 var reaRS=useState(function(){try{var x=localStorage.getItem("ps_reassort_regles");return x?JSON.parse(x):null}catch(e){return null}});var reaReg=reaRS[0];var setReaReg=reaRS[1];
 var reaDS=useState({});var reaDer=reaDS[0];var setReaDer=reaDS[1];var reaPret=useRef(false);
 var dcS=useState([]);var duelCats=dcS[0];var setDuelCats=dcS[1];
@@ -12915,7 +13226,7 @@ avertir("\u26a0\ufe0f \u00c9chec de la synchronisation cloud. D\u00e9tail : "+(e
 
 function exportUserData(){
 var data={
-challenges:challenges,tasks:tasksApp,tdgs:tdgsApp,team:team,decisions:decisions,
+challenges:challenges,tasks:tasksApp,tdgs:tdgsApp,tdg_emplacements:tdgEmpls,team:team,decisions:decisions,
 events:events,cmd_hidden:cmdHidden,favs:favs,tips_state:tipsState,widgets_config:widgets,cmd_passed:cmdPassed,cmd_retires:cmdRetires,voice_notes:voiceNotes,
 ca_objectif:caObj,crm_delegues:crm,palmares:palmares,fiche_vendeur_exp:fvExp,conditions_labos:conditions,promos_ajoutees:promosAj,univers_metres:metres,univers_labos:univOvr,univers_codes:univCodes,reglages_google:reglG,alertes_ignorees:alIgn,projets_gammes:projGammes,duels_categories:duelCats,regroupements_labos:regLabos,univers_regles:univRegles,
 exportDate:new Date().toISOString(),version:APP_VERSION};
@@ -13059,6 +13370,11 @@ useEffect(function(){var p=supaClient?supaLoad("bilans_comptables").catch(functi
 p.then(function(r){var v=null;if(r&&typeof r==="object"&&!Array.isArray(r)){v=r;SYNC_BASE["bilans_comptables"]=r}else{try{var x=localStorage.getItem("ps_bilans");if(x){x=JSON.parse(x);if(x&&typeof x==="object")v=x}}catch(e){}}
 if(v)setBiCfg(v);biPret.current=true})},[]);
 useEffect(function(){if(!biPret.current||!biCfg)return;try{localStorage.setItem("ps_bilans",JSON.stringify(biCfg))}catch(e){};if(!auth||auth.role!=="admin")return;syncSave("bilans_comptables",biCfg,setBiCfg)},[biCfg]);
+/* Emplacements de TDG (v9.10) : partages entre appareils */
+useEffect(function(){var p=supaClient?supaLoad("tdg_emplacements").catch(function(){return null}):Promise.resolve(null);
+p.then(function(r){var v=null;if(Array.isArray(r)){v=r;SYNC_BASE["tdg_emplacements"]=r}else{try{var x=localStorage.getItem("ps_tdg_empl");if(x){x=JSON.parse(x);if(Array.isArray(x))v=x}}catch(e){}}
+if(v)setTdgEmpls(v);emPret.current=true})},[]);
+useEffect(function(){if(!emPret.current)return;try{localStorage.setItem("ps_tdg_empl",JSON.stringify(tdgEmpls))}catch(e){};syncSave("tdg_emplacements",tdgEmpls,setTdgEmpls)},[tdgEmpls]);
 /* Propositions de commande retirees (v9.03) : partagees entre appareils */
 useEffect(function(){var p=supaClient?supaLoad("cmd_retires").catch(function(){return null}):Promise.resolve(null);
 p.then(function(r){if(r&&typeof r==="object"&&!Array.isArray(r)){SYNC_BASE["cmd_retires"]=r;
@@ -13136,7 +13452,7 @@ useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_decision
 
 /* Mise a jour depuis les autres appareils */
 var syncLive=useRef({});
-syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],cmd_retires:[cmdRetires,setCmdRetires],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos],univers_regles:[univRegles,setUnivRegles],campagne_sante:[campCS,setCampCS],campagne_reglages:[campCf,setCampCf],potentiel_culottes:[pcmCfg,setPcmCfg]};
+syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],tdg_emplacements:[tdgEmpls,setTdgEmpls],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],cmd_retires:[cmdRetires,setCmdRetires],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos],univers_regles:[univRegles,setUnivRegles],campagne_sante:[campCS,setCampCS],campagne_reglages:[campCf,setCampCf],potentiel_culottes:[pcmCfg,setPcmCfg]};
 var supaLoadedRef=useRef(false);supaLoadedRef.current=supaLoaded;
 useEffect(function(){
 if(!supaClient)return;
@@ -13428,7 +13744,7 @@ content=React.createElement(ActuPage,{});
 }else if(page==="promos"){
 content=React.createElement(PromoPage,{pd:pdCal,promosAjoutees:promosAj,setPromosAjoutees:setPromosAj,ventes:tdgVentes});
 }else if(page==="tdg"){
-content=React.createElement(TDGPage,{team:team,tdgs:tdgsApp,setTdgs:setTdgsApp,pd:pd,photos:tdgPhotos,setPhoto:setTdgPhoto,ventes:tdgVentes,setVentes:setTdgVentesSafe});
+content=React.createElement(TDGPage,{empls:tdgEmpls,setEmpls:setTdgEmpls,team:team,tdgs:tdgsApp,setTdgs:setTdgsApp,pd:pd,photos:tdgPhotos,setPhoto:setTdgPhoto,ventes:tdgVentes,setVentes:setTdgVentesSafe});
 }else if(page==="fiches"){
 content=React.createElement(FichesPage,{fiches:fiches,setFiches:setFiches,pd:pd,ventes:tdgVentes,drive:driveProps,onImportJour:importerSuiviJour});
 }else if(page==="import"){
