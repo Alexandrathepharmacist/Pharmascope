@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.26">
+<meta name="ps-version" content="e1.27">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -1251,6 +1251,34 @@ if(!p.moi)return h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:6}},
 if(!p.r)return null;
 return h("div",{style:{fontSize:13,marginTop:6,padding:"6px 10px",borderRadius:8,background:"var(--accent-bg)",color:"var(--accent)",fontWeight:700}},
 "\ud83d\udc64 "+p.moi+" : "+p.r.q+" bo\u00eete"+(p.r.q>1?"s":"")+" vendue"+(p.r.q>1?"s":"")+(p.r.jusqua?" (ventes jusqu'au "+dateFr(p.r.jusqua)+")":""))}
+/* ===== Courbe d'un challenge (e1.27, comme PharmaScope v9.15) : ventes cumulees face au rythme ideal ===== */
+function chalSerieE(vd,codes,debut,jusqua){if(!vd||!vd.S||!codes||!codes.length||!debut||!jusqua||jusqua<debut)return null;
+var a=jn(debut),b=jn(jusqua);var par={};
+codes.forEach(function(k){var s=vd.S[k];if(!s)return;Object.keys(s).forEach(function(d){if(d>=debut&&d<=jusqua)par[d]=(par[d]||0)+(s[d][0]||0)})});
+var out=[],cum=0;for(var d=a;d<=b;d++){cum+=par[js(d)]||0;out.push(cum)}return out}
+function CourbeChallenge(p){
+var c=p.c,serie=p.serie;var obj=Number(c.objectif)||0;if(!serie||serie.length<2||!obj)return null;
+var a=jn(c.debut);var nTot=c.fin?Math.max(serie.length,jn(c.fin)-a+1):serie.length;
+var last=serie[serie.length-1];var rythme=last/serie.length;var proj=c.fin&&nTot>serie.length?last+rythme*(nTot-serie.length):null;
+var W=520,H=140,L=34,R=12,T=12,B=22;var mx=Math.max(obj,last,proj||0)*1.08;
+function X(i){return L+(W-L-R)*(nTot>1?i/(nTot-1):0)}function Y(v){return T+(H-T-B)*(1-v/mx)}
+function cible(i){return obj*(i+1)/nTot}
+var el=[];
+el.push(h("line",{key:"o",x1:L,x2:W-R,y1:Y(obj),y2:Y(obj),stroke:"var(--text3)",strokeDasharray:"2 3"}));
+el.push(h("text",{key:"ot",x:L-4,y:Y(obj)+4,fontSize:10,textAnchor:"end",fill:"var(--text3)"},obj));
+el.push(h("line",{key:"ax",x1:L,x2:W-R,y1:Y(0),y2:Y(0),stroke:"var(--border)"}));
+for(var i=0;i<serie.length-1;i++){var av=(serie[i]+serie[i+1])>=(cible(i)+cible(i+1));
+el.push(h("polygon",{key:"z"+i,points:X(i)+","+Y(serie[i])+" "+X(i+1)+","+Y(serie[i+1])+" "+X(i+1)+","+Y(cible(i+1))+" "+X(i)+","+Y(cible(i)),fill:av?"var(--accent-bg)":"var(--red-bg)"}))}
+el.push(h("line",{key:"c",x1:X(0),y1:Y(cible(0)),x2:X(nTot-1),y2:Y(obj),stroke:"var(--text3)",strokeWidth:1.5,strokeDasharray:"6 4"}));
+if(proj!==null)el.push(h("line",{key:"pj",x1:X(serie.length-1),y1:Y(last),x2:X(nTot-1),y2:Y(proj),stroke:proj>=obj?"var(--accent)":"var(--orange)",strokeWidth:2,strokeDasharray:"2 4",strokeLinecap:"round"}));
+el.push(h("polyline",{key:"s",points:serie.map(function(v,i){return X(i)+","+Y(v)}).join(" "),fill:"none",stroke:last>=obj?"var(--accent)":"var(--violet)",strokeWidth:2.5,strokeLinejoin:"round"}));
+el.push(h("circle",{key:"pt",cx:X(serie.length-1),cy:Y(last),r:4,fill:last>=obj?"var(--accent)":"var(--violet)"}));
+el.push(h("text",{key:"d0",x:L,y:H-6,fontSize:10,fill:"var(--text3)"},dateFr(c.debut)));
+if(c.fin)el.push(h("text",{key:"d1",x:W-R,y:H-6,fontSize:10,textAnchor:"end",fill:"var(--text3)"},dateFr(c.fin)));
+return h("div",{style:{marginTop:8}},
+h("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",style:{display:"block",maxHeight:160},role:"img","aria-label":"Progression du challenge"},el),
+h("div",{style:{fontSize:11,color:"var(--text3)",marginTop:2}},"Trait plein : ventes cumul\u00e9es \u00b7 tirets : rythme pour finir pile \u00e0 l'objectif \u00b7 vert = en avance, rouge = en retard"))}
+
 function ChiffresChallenge(p){
 var c=p.c;var auj=aujIso();var obj=Number(c.objectif)||0,pr=Number(c.progres)||0;
 if(!obj||!c.debut||c.debut>auj)return null;
@@ -1262,6 +1290,7 @@ lignes.push(h("div",{key:"p",style:{marginTop:2}},"\u00c0 ce rythme : environ ",
 else if(pr>=obj){lignes.push(h("span",{key:"o"}," \u00b7 objectif d\u00e9pass\u00e9 de ",h("b",null,(pr-obj)+" bo\u00eete"+(pr-obj>1?"s":""))))}
 var codesC=p.vd?codesChallenge(c,p.vd,p.cat):[];
 return h("div",null,h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:8,lineHeight:1.5}},lignes),
+p.vd&&p.vd.cov&&p.vd.cov[1]?h(CourbeChallenge,{c:c,serie:chalSerieE(p.vd,codesC,c.debut,c.fin&&c.fin<p.vd.cov[1]?c.fin:p.vd.cov[1])}):null,
 p.vd&&p.vd.V?h(RepartitionEquipe,{vd:p.vd,codes:codesC,d0:c.debut,d1:c.fin,moi:p.moi}):null)}
 function Challenges(p){
 var auj=aujIso();
