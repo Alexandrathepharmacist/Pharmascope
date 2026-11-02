@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.25">
+<meta name="ps-version" content="e1.26">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -182,7 +182,7 @@ var CAMP_CATS=[
 function campCfg(c){var o=Object.assign({},CAMP_DEF,c||{});o.actes=Object.assign({},CAMP_DEF.actes,(c&&c.actes)||{});["trodA","trodC"].forEach(function(k){if(!o.actes[k]||!o.actes[k].length)o.actes[k]=CAMP_DEF.actes[k]});o.obj=Object.assign({},(c&&c.obj)||{});return o}
 function campCompter(CS,cfg,d0,d1){
 var A=campCfg(cfg).actes;var kinds=(CS&&CS.K)||{};
-var res={};CAMP_CATS.forEach(function(c){res[c.k]={n:0,V:{},ici:0,info:0,p65:0,m65:0,coll:0,VD:{},code:{}}});var hon=0;
+var res={};CAMP_CATS.forEach(function(c){res[c.k]={n:0,V:{},ici:0,info:0,p65:0,m65:0,coll:0,coll65:0,VD:{},code:{}}});var hon=0;
 function set(a){var m={};(a||[]).forEach(function(c){m[String(c).trim()]=1});return m}
 var sG=set(A.grippe),sC=set(A.covid),sAu=set(A.autres),sTA=set(A.trodA),sTC=set(A.trodC);
 var grAct=Object.keys(sG).length>0,covAct=Object.keys(sC).length>0;
@@ -195,7 +195,7 @@ if(sG[code]){add("grippe",q,V);hon+=ca}
 else if(sC[code]){add("covid",q,V);hon+=ca}
 else if(sTA[code]||sTC[code]){var kt=sTA[code]?"trodA":"trodC";add(kt,q,V);hon+=ca;var pc=res[kt].code[code]||(res[kt].code[code]={q:0,ca:0});pc.q+=q;pc.ca+=ca}
 else if(sAu[code]){hon+=ca}
-if(k==="eflu"||k==="fl65"){if(!grAct)add("grippe",q,V);res.grippe.info+=q;res.grippe.p65+=q;addVD(V);if(q-qa>=25)res.grippe.coll+=q-qa}
+if(k==="eflu"||k==="fl65"){if(!grAct)add("grippe",q,V);res.grippe.info+=q;res.grippe.p65+=q;addVD(V);if(q-qa>=25){res.grippe.coll+=q-qa;res.grippe.coll65+=q-qa}}
 else if(k==="grMix"){res.grippe.info+=q;res.grippe.m65+=q;addVD(V);if(q-qa>=25)res.grippe.coll+=q-qa}
 else if(k==="zona"){add("zona",q,V);res.zona.ici+=qa}
 else if(k==="pnA"){add("pneumo",q,V);res.pneumo.ici+=qa}
@@ -232,8 +232,8 @@ var finA=dernJour<auj?dernJour:auj;var debA=finA.slice(0,4)+"-01-01";
 var annee=sansDonnees?null:campCompter(CS,C,debA,finA);var anneeN1=sansDonnees?null:campCompter(CS,C,isoMoinsAn(debA),isoMoinsAn(finA));var aN1ok=CS&&CS.cov&&CS.cov[0]<=isoMoinsAn(debA);
 var memeDateAn=avant?null:campCompter(CS,C,isoMoinsAn(C.debut),isoMoinsAn(fin));
 var oo=campObjectifs(CS,C);var obj=oo.obj;var dern=oo.dern;
-var totObj=obj.grippe||0,totDern=Math.round(dern.cats.grippe.info);
-var totI=saison?campGrippe(saison):0;var totS=saison?Math.round(saison.cats.grippe.info):0;var totAn=memeDateAn?Math.round(memeDateAn.cats.grippe.info):0;
+var totObj=obj.grippe||0,totDern=Math.round(dern.cats.grippe.info-dern.cats.grippe.coll);
+var totI=saison?campGrippe(saison):0;var totS=saison?Math.round(saison.cats.grippe.info-saison.cats.grippe.coll):0;var totAn=memeDateAn?Math.round(memeDateAn.cats.grippe.info-memeDateAn.cats.grippe.coll):0;
 var pct=totObj>0?totS/totObj*100:0;
 var carte={background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:14,marginBottom:12};
 var sansDonnees=!CS||!CS.D||!Object.keys(CS.D).length;
@@ -271,7 +271,7 @@ sansDonnees?null:React.createElement("button",{onClick:function(){ouvrir("grippe
 
 /* --- tuiles --- */
 function tuile(c){var an=!!(c.annee&&annee);var av=an?false:avant;var src=an?annee:saison;
-var vN=function(r){return c.k==="grippe"?r.cats.grippe.info:r.cats[c.k].n};var n=src?Math.round(vN(src)):0;var o=obj[c.k];var a=an?(aN1ok?Math.round(vN(anneeN1)):null):(memeDateAn?Math.round(vN(memeDateAn)):null);var d=Math.round(vN(dern));
+var vN=function(r){return c.k==="grippe"?r.cats.grippe.info-r.cats.grippe.coll:r.cats[c.k].n};var n=src?Math.round(vN(src)):0;var o=obj[c.k];var a=an?(aN1ok?Math.round(vN(anneeN1)):null):(memeDateAn?Math.round(vN(memeDateAn)):null);var d=Math.round(vN(dern));
 var pc=o?Math.min(100,n/o*100):0;var hum=av?"\u23f3":campHumeur(n,a);
 var sous=an?((a!==null&&a>0?(n>=a?"+"+(n-a):String(n-a))+" vs l'an dernier \u00e0 date \u00b7 ":"")+"depuis le 1er janvier"):avant?(d>0?"L'an dernier : "+d+" sur la saison":"Pas de donn\u00e9es l'an dernier"):(a!==null&&a>0?(n>=a?"+"+(n-a)+" vs l'an dernier \u00e0 date":(n-a)+" vs l'an dernier \u00e0 date"):"");
 var info="";if(!av&&src){var s=src.cats[c.k];
@@ -380,7 +380,7 @@ var n0=tdgDayNum(D0),n1=tdgDayNum(D1);
 for(var w=0;n0+7*w<=n1;w++){var a=tdgDayStr(n0+7*w),b=tdgDayStr(Math.min(n0+7*w+6,n1));
 T.push({a:a,b:b,lab:campDdMm(a),nom:"Semaine du "+campDdMm(a)+" au "+campDdMm(b),nomP:"la m\u00eame semaine l'an dernier",finNom:"au "+campDdMm(b),finNomP:"au "+campDdMm(b)})}
 return{d0:D0,T:T,sem:true}}
-function campVals(c,rr){return[rr.n,c.k==="grippe"||c.k==="dtcp"||c.k==="hpv"?rr.info:(c.k==="zona"||c.k==="pneumo"?rr.ici:0),rr.p65||0,rr.m65||0]}
+function campVals(c,rr){var g=c.k==="grippe",co=g?(rr.coll||0):0,c65=g?(rr.coll65||0):0;return[rr.n,g?rr.info-co:(c.k==="dtcp"||c.k==="hpv"?rr.info:(c.k==="zona"||c.k==="pneumo"?rr.ici:0)),(rr.p65||0)-c65,(rr.m65||0)-(co-c65)]}
 function campNiceMax(v){if(v<=4)return 4;var p=Math.pow(10,Math.floor(Math.log(v)/Math.LN10));var r=v/p;var t=p>=100?[1,1.2,1.5,2,2.5,3,4,5,6,8,10]:[1,2,4,6,8,10];for(var i=0;i<t.length;i++){if(r<=t[i]+1e-9)return t[i]*p}return 10*p}
 function campSeries(CS,C,c){
 var fin=CS.cov[1];var DEB=CS.cov[0]>CAMP_DEBUT_DONNEES?CS.cov[0]:CAMP_DEBUT_DONNEES;var P=campPeriode(c,C,fin);
@@ -394,7 +394,7 @@ return{P:P,fin:fin,DEB:DEB,cur:cur,prev:prev,prevAd:prevAd,iP:iP,lastI:lastI,pre
 function CourbeCampagne(props){
 var CS=props.cs,C=props.cfg,c=props.cat;var th=useContext(ThemeCtx);var dark=th&&th.dark;
 var modeS=useState("cumul");var mode=modeS[0];var setMode=modeS[1];
-var miS=useState(c.k==="grippe"?1:0);var mi=miS[0];var setMi=miS[1];
+var miS=useState(c.k==="grippe"||c.k==="dtcp"||c.k==="hpv"?1:0);var mi=miS[0];var setMi=miS[1];
 var hS=useState(-1);var hv=hS[0];var setHv=hS[1];
 var S=useMemo(function(){return CS&&CS.cov&&CS.cov[1]?campSeries(CS,C,c):null},[CS,C,c.k]);
 if(!S||S.lastI<0)return React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Pas encore de ventes sur la p\u00e9riode pour tracer une courbe.");
@@ -445,7 +445,7 @@ function pill(act,txt,fn){return React.createElement("button",{onClick:fn,style:
 var grp={display:"inline-flex",gap:2,background:"var(--bg3)",borderRadius:18,padding:2};
 var boutons=React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:8}},
 React.createElement("div",{style:grp},pill(mode==="cumul","Cumul\u00e9",function(){setMode("cumul")}),pill(mode!=="cumul",sem?"Semaine par semaine":"Mois par mois",function(){setMode("detail")})),
-a2?React.createElement("div",{style:grp},pill(m===0,court[0],function(){setMi(0)}),pill(m>=1,court[1],function(){setMi(1)})):null,
+a2?React.createElement("div",{style:grp},(c.k==="grippe"||c.k==="dtcp"||c.k==="hpv")?pill(m>=1,court[1],function(){setMi(1)}):pill(m===0,court[0],function(){setMi(0)}),(c.k==="grippe"||c.k==="dtcp"||c.k==="hpv")?pill(m===0,court[0],function(){setMi(0)}):pill(m>=1,court[1],function(){setMi(1)})):null,
 gr&&m>=1?React.createElement("div",{style:grp},pill(m===1,"Tous",function(){setMi(1)}),pill(m===2,"65 ans et +",function(){setMi(2)}),pill(m===3,"Moins de 65 ans",function(){setMi(3)})):null);
 /* graphique */
 var W=largeurGraphe(),L=40,R=14,TP=12,ph=W<600?165:185;var yAx=TP+ph+15,yE=yAx+17,H=yE+6;var pw=W-L-R,st=pw/(n-1);
@@ -486,6 +486,7 @@ if(gr&&m>=2)notes.push("65 ans et + : Efluelda et Fluad. Moins de 65 ans : Vaxig
 if(sansP)notes.push("Pas de comparaison possible : les ventes ne sont connues qu'\u00e0 partir du "+tdgFr(S.DEB)+".");
 else if(S.prevPartiel)notes.push("Les ventes ne sont connues qu'\u00e0 partir du "+tdgFr(S.DEB)+" : l'an dernier est incomplet avant cette date, l'\u00e9cart est donc flatteur.");
 if(sem)notes.push("Campagne du "+tdgFr(S.P.d0)+" au "+tdgFr(T[n-1].b)+(sansP?".":", compar\u00e9e aux m\u00eames dates l'an dernier."));
+if(gr&&m>=1){var cP=campCompter(CS,C,isoMoinsAn(S.P.d0),isoMoinsAn(T[n-1].b)).cats.grippe.coll,cC=campCompter(CS,C,S.P.d0,S.fin).cats.grippe.coll;if(cP>0||cC>0)notes.push("Vaccins d\u00e9livr\u00e9s compt\u00e9s hors livraisons collectives (EHPAD)"+(cP>0?" : "+Math.round(cP)+" sur la campagne pr\u00e9c\u00e9dente":"")+(cC>0?(cP>0?", ":" : ")+Math.round(cC)+" cette ann\u00e9e":"")+".")}
 if(iP>=0)notes.push((sem?"Semaine":"Mois")+" en cours compt\u00e9"+(sem?"e":"")+" jusqu'au "+tdgFr(S.fin)+(sansP?" (point creux).":" et compar\u00e9"+(sem?"e":"")+" \u00e0 la m\u00eame date l'an dernier (point creux)."));
 return React.createElement("div",null,bandeau,oBox,boutons,legende,
 React.createElement("svg",{viewBox:"0 0 "+W+" "+H,width:"100%",style:{display:"block"},role:"img","aria-label":c.nom+" : "+libC+" face \u00e0 "+libP},el),
@@ -504,7 +505,7 @@ return out}
 function campHexA(h,a){var x=parseInt(String(h).slice(1),16);return"rgba("+(x>>16)+","+((x>>8)&255)+","+(x&255)+","+a+")"}
 function JoursCampagne(props){
 var CS=props.cs,C=props.cfg,c=props.cat;var th=useContext(ThemeCtx);var dark=th&&th.dark;var gr=c.k==="grippe";
-var mS=useState(0);var mi=gr?mS[0]:0;var setMi=mS[1];
+var mS=useState(1);var mi=gr?mS[0]:0;var setMi=mS[1];
 var vS=useState("cur");var vue=vS[0];var setVue=vS[1];
 var Z=useMemo(function(){if(!CS||!CS.cov||!CS.cov[1]||!CS.D)return null;var fin=CS.cov[1];var DEB=CS.cov[0]>CAMP_DEBUT_DONNEES?CS.cov[0]:CAMP_DEBUT_DONNEES;
 var D0=C.debut,D1=C.fin;if(fin<D0){D0=isoMoinsAn(D0);D1=isoMoinsAn(D1)}
@@ -553,7 +554,7 @@ React.createElement("div",{style:{fontWeight:700,fontSize:15,marginBottom:4}},"\
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},"Plus la case est fonc\u00e9e, plus il y a eu de "+lib+" ce jour-l\u00e0."),
 React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}},
 React.createElement("div",{style:grp},pill(vue==="cur","Cette campagne",function(){setVue("cur")}),pill(vue==="prev","Campagne pr\u00e9c\u00e9dente",function(){setVue("prev")})),
-gr?React.createElement("div",{style:grp},pill(mi===0,"Injections ici",function(){setMi(0)}),pill(mi===1,"Vaccins d\u00e9livr\u00e9s",function(){setMi(1)})):null),
+gr?React.createElement("div",{style:grp},pill(mi===1,"Vaccins d\u00e9livr\u00e9s",function(){setMi(1)}),pill(mi===0,"Injections ici",function(){setMi(0)})):null),
 entete,lignes,
 React.createElement("div",{style:{fontSize:11,fontWeight:700,color:ink,margin:"10px 0 4px"}},"Moyenne par jour"),
 ligneMoy("mc",y0+"-"+String(y0+1).slice(2),mC,eC,assezC),
@@ -663,7 +664,7 @@ var C=campCfg(props.cfg);var auj=aujIso();if(auj>isoPlusJours(C.fin,14))return n
 var avant=auj<C.debut;var j=tdgDayNum(C.debut)-tdgDayNum(auj);
 var txt,sous;
 if(avant){txt=j===0?"C'est aujourd'hui !":"J-"+j;sous="avant le d\u00e9but de la campagne grippe ("+tdgFr(C.debut).slice(0,5)+")"}
-else{var CS=props.cs;var fin=auj<C.fin?auj:C.fin;var r=campCompter(CS,C,C.debut,fin);var n=Math.round(r.cats.grippe.info);var oo=campObjectifs(CS,C);var t=oo.obj.grippe||0;
+else{var CS=props.cs;var fin=auj<C.fin?auj:C.fin;var r=campCompter(CS,C,C.debut,fin);var n=Math.round(r.cats.grippe.info-r.cats.grippe.coll);var oo=campObjectifs(CS,C);var t=oo.obj.grippe||0;
 txt=n+" vaccin"+(n>1?"s":"")+" grippe d\u00e9livr\u00e9"+(n>1?"s":"");sous=t?Math.round(n/t*100)+" % de l'objectif grippe de la saison":"depuis le d\u00e9but de la campagne"}
 return React.createElement("button",{onClick:function(){if(props.setPage)props.setPage("vaccins")},style:{display:"flex",alignItems:"center",gap:12,width:"100%",textAlign:"left",background:"linear-gradient(135deg,#0f766e,#1e3a8a)",color:"#fff",borderRadius:14,padding:"12px 14px",marginBottom:14,boxShadow:"0 4px 14px rgba(15,118,110,.22)"}},
 React.createElement("span",{style:{fontSize:30}},"\ud83d\ude80"),
@@ -837,7 +838,7 @@ var db=null;
 try{if(window.supabase&&window.supabase.createClient)db=window.supabase.createClient(SUPA_URL,SUPA_KEY)}catch(e){}
 var CLES=["tasks","tdgs","challenges","team","equipe_reassort_faits","events","reassort_dernier"];
 /* lus seulement (jamais modifies depuis l'appli equipe) */
-var CLES_VAC=["campagne_sante","campagne_reglages","potentiel_culottes","reassort_regles"];
+var CLES_VAC=["campagne_sante","campagne_reglages","potentiel_culottes","reassort_regles","tdg_emplacements"];
 var SYNC_BASE={},SYNC_TS={};
 var ENVOIS={n:0};
 
@@ -1102,6 +1103,32 @@ if(t.fin&&t.fin<auj)return "demonter";
 if(t.statut==="en_cours"||(t.debut&&t.debut<=auj))return "encours";
 if(t.debut&&t.debut>auj&&t.debut<=plusJours(14))return "bientot";
 return null}
+/* ===== Emplacements de TG (e1.26, comme PharmaScope v9.10) : lus depuis le cloud ===== */
+var EMPL_T={tg:{s:"TG",l:"T\u00eates de gondole",ic:"\ud83d\uddc4\ufe0f",c:"#2563eb",bg:"rgba(37,99,235,.10)"},ic:{s:"Intercomptoir",l:"Intercomptoirs",ic:"\ud83d\udece\ufe0f",c:"#9333ea",bg:"rgba(147,51,234,.10)"},rp:{s:"Rayon promo",l:"Rayons promo",ic:"\ud83c\udff7\ufe0f",c:"#ea580c",bg:"rgba(234,88,12,.10)"}};
+function emplTy(e){return EMPL_T[e&&e.type]||EMPL_T.tg}
+function emplNomE(e){return e?emplTy(e).s+" "+(e.nom||""):""}
+function emplTriE(l){var o={tg:0,ic:1,rp:2};return(Array.isArray(l)?l:[]).slice().sort(function(a,b){return((o[a.type]||0)-(o[b.type]||0))||String(a.nom||"").localeCompare(String(b.nom||""),"fr",{numeric:true})})}
+function emplDeE(l,id){if(!id||!Array.isArray(l))return null;for(var i=0;i<l.length;i++){if(l[i].id===id)return l[i]}return null}
+function PuceEmpl(p){var e=p.e;if(!e)return null;var t=emplTy(e);return h(Pastille,{bg:t.bg,c:t.c},t.ic+" "+emplNomE(e))}
+function ChoixEmpl(p){var l=emplTriE(p.empls);
+return h("select",{value:p.value||"",onChange:function(e){p.onChange(e.target.value)},style:chp},
+h("option",{value:""},l.length?"\u2014 Choisir \u2014":"Aucun emplacement cr\u00e9\u00e9"),
+["tg","ic","rp"].map(function(k){var g=l.filter(function(e){return e.type===k});if(!g.length)return null;
+return h("optgroup",{key:k,label:EMPL_T[k].l},g.map(function(e){return h("option",{key:e.id,value:e.id},emplNomE(e))}))}))}
+/* Vue d'un coup d'oeil : chaque emplacement et ce qui y est en place */
+function BandeEmpl(p){var l=emplTriE(p.empls);if(!l.length)return null;var auj=aujIso();
+var tg=(p.tdgs||[]).filter(function(t){var e=tgEtat(t,auj);return e==="encours"||e==="demonter"});
+var libres=0;
+var cases=l.map(function(e){var t=tg.filter(function(x){return x.empl===e.id})[0]||null;var ty=emplTy(e);if(!t)libres++;
+return h("div",{key:e.id,style:{background:t?"var(--bg2)":"var(--bg)",border:"1px solid var(--border)",borderTop:"4px solid "+ty.c,borderRadius:12,padding:"8px 10px",minWidth:0,display:"flex",flexDirection:"column",gap:3}},
+h("div",{style:{fontWeight:800,fontSize:14,color:ty.c,lineHeight:1.2}},emplNomE(e)),
+t?h("div",{className:"coupe",style:{fontSize:13,fontWeight:700}},t.lab||"TG"):h("div",{style:{fontSize:13,color:"var(--text3)",fontWeight:600}},"\u25cb Libre"),
+t&&t.fin?h("div",{style:{fontSize:11,color:t.fin<auj?"var(--red)":"var(--text3)"}},t.fin<auj?"\u00e0 d\u00e9monter":"jusqu'au "+dateFr(t.fin)):null,
+!t&&p.onInstaller?h("button",{onClick:function(){p.onInstaller(e.id)},style:{marginTop:"auto",fontSize:12,fontWeight:700,color:"#fff",background:ty.c,borderRadius:8,padding:"4px 8px",alignSelf:"flex-start"}},"+ Installer"):null)});
+return h("div",{style:{marginBottom:14}},
+h("div",{style:{fontSize:13,fontWeight:700,color:"var(--text2)",marginBottom:6}},"\ud83d\uddfa\ufe0f Les emplacements en ce moment"+(libres?" \u00b7 "+libres+" libre"+(libres>1?"s":""):"")),
+h("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(130px,1fr))",gap:8}},cases))}
+
 function TetesGondole(p){
 var auj=aujIso();
 var liste=(p.tdgs||[]).map(function(t){return{t:t,e:tgEtat(t,auj)}}).filter(function(x){return !!x.e});
@@ -1128,7 +1155,7 @@ photo?h("img",{src:photo,alt:"",style:{width:54,height:54,objectFit:"cover",bord
 h("div",{style:{flex:1,minWidth:0}},
 h("div",{style:{fontWeight:800,fontSize:16}},t.lab||"T\u00eate de gondole"),
 t.produit?h("div",{className:"coupe",style:{fontSize:13,color:"var(--text2)"}},t.produit):null,
-h("div",{style:{display:"flex",gap:6,marginTop:5,flexWrap:"wrap"}},badge,
+h("div",{style:{display:"flex",gap:6,marginTop:5,flexWrap:"wrap"}},h(PuceEmpl,{e:emplDeE(p.empls,t.empl)}),badge,
 checks.length?h(Pastille,{bg:nOk===checks.length?"var(--accent-bg)":"var(--bg3)",c:nOk===checks.length?"var(--accent)":"var(--text2)"},"\u2713 "+nOk+"/"+checks.length):null,
 t.responsable?h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udc64 "+t.responsable):null)),
 h("span",{style:{color:"var(--text3)",fontSize:13}},ouvert?"\u25b2":"\u25bc")),
@@ -1262,7 +1289,7 @@ h("div",{style:{flex:1,minWidth:0}},
 h("div",{style:{fontWeight:800,fontSize:16}},c.lab),
 c.produit?h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:1}},c.produit):null),
 h("div",{style:{textAlign:"right",flexShrink:0}},
-h("div",{style:{fontSize:20,fontWeight:800,color:couleur,lineHeight:1}},gagne?"\ud83c\udf89":pct+"%"),
+h("div",{style:{fontSize:20,fontWeight:800,color:couleur,lineHeight:1}},gagne?"\ud83c\udf89 "+Math.round(pr/obj*100)+"%":pct+"%"),
 h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:2}},pr+" / "+obj))),
 h("div",{style:{height:10,borderRadius:6,background:"var(--bg3)",marginTop:10,overflow:"hidden"}},
 h("div",{style:{height:"100%",width:pct+"%",background:couleur,borderRadius:6,transition:"width .6s"}})),
@@ -1298,6 +1325,11 @@ function ChoixProduits(p){
 var qs=useState("");var q=qs[0],setQ=qs[1];
 var sel=p.value||[];
 var res=useMemo(function(){return chercherProduits(p.cat,q,12)},[p.cat,q]);
+var grp=useMemo(function(){var t=normTxt(q).trim();var D=[],Cn=[];if(t.length<3||!p.cat)return{D:D,C:Cn};var vd={},vc={};
+p.cat.forEach(function(x){var nn=normTxt(x.n);var pos=nn.indexOf(t);if(pos<0)return;var cle=x.c||nn;if(!vc[cle]){vc[cle]=1;Cn.push(x)}if(pos===0&&!vd[cle]){vd[cle]=1;D.push(x)}});return{D:D,C:Cn}},[p.cat,q]);
+function ajouterTous(l){var vus={};sel.forEach(function(s){if(s.c)vus["c"+s.c]=1;vus["n"+normTxt(s.n)]=1});var aj=[];
+l.forEach(function(x){if((x.c&&vus["c"+x.c])||vus["n"+normTxt(x.n)])return;if(x.c)vus["c"+x.c]=1;vus["n"+normTxt(x.n)]=1;aj.push({n:x.n,c:x.c,lab:x.lab})});if(aj.length)p.onChange(sel.concat(aj));setQ("")}
+function btnTous(l,lib){return h("button",{type:"button",onClick:function(){ajouterTous(l)},style:{display:"block",width:"100%",textAlign:"left",padding:"9px 12px",borderBottom:"1px solid var(--border)",fontSize:14,fontWeight:800,color:"var(--accent)",background:"var(--accent-bg)"}},"\u2795 "+lib)}
 function ajouter(x){if(sel.some(function(s){return s.c&&s.c===x.c}))return;p.onChange(sel.concat([{n:x.n,c:x.c,lab:x.lab}]));setQ("")}
 function retirer(i){p.onChange(sel.filter(function(s,j){return j!==i}))}
 return h("div",null,
@@ -1305,8 +1337,11 @@ sel.length?h("div",{style:{display:"flex",flexWrap:"wrap",gap:6,marginBottom:8}}
 return h("span",{key:i,style:{display:"inline-flex",alignItems:"center",gap:6,fontSize:13,padding:"4px 6px 4px 10px",borderRadius:8,background:s.c?"var(--accent-bg)":"var(--orange-bg)",color:s.c?"var(--accent)":"var(--orange)",fontWeight:600}},s.n,
 h("button",{type:"button",onClick:function(){retirer(i)},"aria-label":"Retirer",style:{fontSize:14,padding:"0 4px",color:"inherit"}},"\u2715"))})):null,
 p.cat&&p.cat.length?h("div",null,
-h("input",{value:q,onChange:function(e){setQ(e.target.value)},placeholder:"Chercher un produit \u00e0 ajouter (nom ou labo)\u2026",style:chp}),
-res.length?h("div",{style:{border:"1px solid var(--border)",borderRadius:10,marginTop:6,maxHeight:220,overflowY:"auto",background:"var(--bg)"}},res.map(function(x){
+h("input",{value:q,onChange:function(e){setQ(e.target.value)},placeholder:"Chercher un produit, ou un d\u00e9but de nom (ex. podomia)\u2026",style:chp}),
+(res.length||grp.D.length>=2)?h("div",{style:{border:"1px solid var(--border)",borderRadius:10,marginTop:6,maxHeight:260,overflowY:"auto",background:"var(--bg)"}},
+grp.D.length>=2?btnTous(grp.D,"Ajouter les "+grp.D.length+" produits qui commencent par \u00ab "+q.trim()+" \u00bb"):null,
+grp.C.length>grp.D.length&&grp.C.length>=2?btnTous(grp.C,"Ajouter les "+grp.C.length+" produits qui contiennent \u00ab "+q.trim()+" \u00bb"):null,
+res.map(function(x){
 return h("button",{key:x.c+x.lab+x.n,type:"button",onClick:function(){ajouter(x)},style:{display:"block",width:"100%",textAlign:"left",padding:"9px 12px",borderBottom:"1px solid var(--border)",fontSize:14}},x.n,h("span",{style:{fontSize:12,color:"var(--text3)",marginLeft:6}},x.lab))})):null):
 h("div",{style:{fontSize:13,color:"var(--text3)"}},"Liste des produits en cours de chargement\u2026"))}
 
@@ -1341,20 +1376,21 @@ f.mode&&recF()?h("div",{style:{fontSize:13,color:"var(--text2)"}},"La t\u00e2che
 
 function FormTG(p){
 var t0=p.tg||{};
-var s=useState({lab:t0.lab||"",produit:t0.produit||"",responsable:t0.responsable||p.moi||"",debut:t0.debut||aujIso(),fin:t0.fin||"",facing:t0.facing?String(t0.facing):"",notes:t0.notes||"",statut:t0.statut||"a_venir",produits:(t0.produits||[]).slice(),checks:(t0.checks||CHECKLIST.map(function(c){return{label:c,done:false}})).slice(),photoLieu:t0.photoLieu||""});
+var s=useState({lab:t0.lab||"",produit:t0.produit||"",responsable:t0.responsable||p.moi||"",debut:t0.debut||aujIso(),fin:t0.fin||"",facing:t0.facing?String(t0.facing):"",notes:t0.notes||"",statut:t0.statut||"a_venir",empl:t0.empl||p.emplInit||"",produits:(t0.produits||[]).slice(),checks:(t0.checks||CHECKLIST.map(function(c){return{label:c,done:false}})).slice(),photoLieu:t0.photoLieu||""});
 var f=s[0],setF=s[1];
 var ns=useState("");var nouv=ns[0],setNouv=ns[1];
 function maj(k,v){var n=Object.assign({},f);n[k]=v;setF(n)}
 var ok=(f.lab.trim()||f.produits.length)&&!(f.fin&&f.debut&&f.fin<f.debut);
 function enreg(){if(!ok)return;
 var lab=f.lab.trim()||(f.produits[0]&&f.produits[0].lab)||"Multi-labos";
-p.onEnregistrer(Object.assign({},t0,{lab:lab,produit:f.produit.trim(),responsable:f.responsable,debut:f.debut,fin:f.fin,facing:Number(f.facing)||0,notes:f.notes,statut:f.statut,produits:f.produits,checks:f.checks,photoLieu:f.photoLieu,photoFaite:!!t0.photoFaite}))}
+p.onEnregistrer(Object.assign({},t0,{lab:lab,produit:f.produit.trim(),responsable:f.responsable,debut:f.debut,fin:f.fin,facing:Number(f.facing)||0,notes:f.notes,statut:f.statut,empl:f.empl||"",produits:f.produits,checks:f.checks,photoLieu:f.photoLieu,photoFaite:!!t0.photoFaite}))}
 return h(Fenetre,{titre:p.tg?"Modifier la t\u00eate de gondole":"Nouvelle t\u00eate de gondole",onFermer:p.onFermer,
 pied:[h(Bouton,{key:"ok",type:"primaire",disabled:!ok,onClick:enreg},"Enregistrer"),h(Bouton,{key:"an",onClick:p.onFermer},"Annuler"),
 p.tg?h(Bouton,{key:"su",type:"danger",style:{marginLeft:"auto"},onClick:p.onSupprimer},"Supprimer"):null]},
 h(Grille,{min:180},
 h(Champ,{l:"Laboratoire"},h("input",{value:f.lab,list:"pse-labs",onChange:function(e){maj("lab",e.target.value)},placeholder:"Ex. : Av\u00e8ne",style:chp})),
-h(Champ,{l:"Produit phare / th\u00e8me"},h("input",{value:f.produit,onChange:function(e){maj("produit",e.target.value)},placeholder:"Ex. : solaires",style:chp}))),
+h(Champ,{l:"Produit phare / th\u00e8me"},h("input",{value:f.produit,onChange:function(e){maj("produit",e.target.value)},placeholder:"Ex. : solaires",style:chp})),
+h(Champ,{l:"Emplacement"},h(ChoixEmpl,{empls:p.empls,value:f.empl,onChange:function(v){maj("empl",v)}}))),
 h(Grille,null,
 h(Champ,{l:"Mise en place"},h("input",{type:"date",value:f.debut,onChange:function(e){maj("debut",e.target.value)},style:chp})),
 h(Champ,{l:"Fin"},h("input",{type:"date",value:f.fin,onChange:function(e){maj("fin",e.target.value)},style:chp})),
@@ -1472,6 +1508,7 @@ function photo(t,e){var fl=e.target.files&&e.target.files[0];e.target.value="";i
 compresserPhoto(fl,function(d){setCharge(null);if(d)p.onPhoto(t.id,d);else p.montrer("Photo illisible, essaie avec une autre image")})}
 return h("div",null,
 h(EnTetePage,{icone:"\ud83d\udecd\ufe0f",titre:"T\u00eates de gondole",nouveau:"+ Nouvelle TG",onNouveau:function(){setEdit({})}}),
+h(BandeEmpl,{empls:p.empls,tdgs:tout,onInstaller:function(id){setEdit({empl:id})}}),
 h(Onglets,{value:ong,onChange:setOng,items:[["encours","En place",n.encours],["avenir","\u00c0 venir",n.avenir],["fini","Termin\u00e9es",n.fini]]}),
 !liste.length?h(Vide,null,"Aucune t\u00eate de gondole ici"):
 h("div",{style:{display:"grid",gap:10}},liste.map(function(t){
@@ -1485,6 +1522,7 @@ h("div",{style:{flex:1,minWidth:0}},
 h("div",{style:{fontWeight:800,fontSize:17}},t.lab||"T\u00eate de gondole"),
 t.produit?h("div",{style:{fontSize:13,color:"var(--text2)"}},t.produit):null,
 h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap"}},
+h(PuceEmpl,{e:emplDeE(p.empls,t.empl)}),
 e==="demonter"&&t.statut!=="termine"?h(Pastille,{bg:"var(--red-bg)",c:"var(--red)"},"\u00c0 d\u00e9monter"):null,
 h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udcc5 "+(t.debut?dateFr(t.debut):"?")+(t.fin?" \u2192 "+dateFr(t.fin):"")),
 t.responsable?h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udc64 "+t.responsable):null,
@@ -1506,7 +1544,7 @@ t.statut==="a_venir"?h(Bouton,{onClick:function(){p.onStatut(t,"en_cours")}},"\u
 t.statut!=="termine"?h(Bouton,{onClick:function(){p.onStatut(t,"termine")}},"D\u00e9mont\u00e9e / termin\u00e9e"):h(Bouton,{onClick:function(){p.onStatut(t,"en_cours")}},"Remettre en place")))})),
 grand?h("div",{onClick:function(){setGrand(null)},style:{position:"fixed",inset:0,background:"rgba(0,0,0,.88)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16}},
 h("img",{src:grand,alt:"Photo de la t\u00eate de gondole",style:{maxWidth:"100%",maxHeight:"100%",objectFit:"contain",borderRadius:8}})):null,
-edit?h(FormTG,{tg:edit.id?edit:null,noms:p.noms,moi:p.moi,cat:p.cat,onFermer:function(){setEdit(null)},
+edit?h(FormTG,{tg:edit.id?edit:null,emplInit:edit.empl||"",empls:p.empls,noms:p.noms,moi:p.moi,cat:p.cat,onFermer:function(){setEdit(null)},
 onEnregistrer:function(t){p.onEnregistrer(t);setEdit(null)},onSupprimer:function(){p.onSupprimer(edit);setEdit(null)}}):null)}
 
 function PageChallenges(p){
@@ -1534,7 +1572,7 @@ c.produit?h("div",{style:{fontSize:13,color:"var(--text2)"}},c.produit):null,
 h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap"}},
 h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udcc5 "+(c.debut?dateFr(c.debut):"?")+(c.fin?" \u2192 "+dateFr(c.fin):"")),
 c.assignee?h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udc64 "+c.assignee):null)),
-h("div",{style:{textAlign:"right",flexShrink:0}},h("div",{style:{fontSize:20,fontWeight:800,color:couleur,lineHeight:1}},gagne?"\ud83c\udf89":pct+"%"),h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:2}},pr+" / "+obj))),
+h("div",{style:{textAlign:"right",flexShrink:0}},h("div",{style:{fontSize:20,fontWeight:800,color:couleur,lineHeight:1}},gagne?"\ud83c\udf89 "+Math.round(pr/obj*100)+"%":pct+"%"),h("div",{style:{fontSize:12,color:"var(--text3)",marginTop:2}},pr+" / "+obj))),
 h("div",{style:{height:10,borderRadius:6,background:"var(--bg3)",marginTop:10,overflow:"hidden"}},h("div",{style:{height:"100%",width:pct+"%",background:couleur,borderRadius:6}})),
 h("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8,marginTop:10,flexWrap:"wrap"}},
 h("span",{style:{fontSize:13,fontWeight:600,color:"var(--text2)"}},gagne?"Objectif atteint, bravo !":ong==="fini"?"Termin\u00e9":ong==="avenir"?"Commence le "+dateFr(c.debut):reste===null?"Sans date de fin":reste<=0?"Dernier jour !":"Encore "+reste+" jour"+(reste>1?"s":"")),
@@ -1819,7 +1857,7 @@ function aller(v){setVue(v);window.scrollTo(0,0)}
 var cat=rea&&rea.CAT?rea.CAT:null;
 var blocs={
 taches:h(Taches,Object.assign({key:"t",tasks:d.tasks,onEtape:etapeFaite,onFait:function(t){tacheFaite(t,true)},onRefaire:function(t){tacheFaite(t,false)},onGerer:function(){aller("taches")}},props)),
-tg:h(TetesGondole,Object.assign({key:"g",tdgs:d.tdgs,photos:photos,ventes:ventes,onCheck:cocherTG,onGerer:function(){aller("tg")}},props)),
+tg:h(TetesGondole,Object.assign({key:"g",empls:vac.tdg_emplacements,tdgs:d.tdgs,photos:photos,ventes:ventes,onCheck:cocherTG,onGerer:function(){aller("tg")}},props)),
 challenges:h(Challenges,Object.assign({key:"c",challenges:d.challenges,ventes:ventes,cat:cat,onGerer:function(){aller("challenges")}},props)),
 reassort:h(Reassort,Object.assign({key:"r",rea:rea,reaCharge:reaCharge,faits:faits,regles:vac.reassort_regles,dernier:dernier,onFait:reassortFait,onFaitLabo:reassortFaitLabo},props))};
 
@@ -1855,7 +1893,7 @@ vue==="vaccins"&&PV?h("div",{style:{maxWidth:820}},h(PV.VaccinsEquipe,{cs:csV,cf
 vue==="culottes"&&PV?h("div",{style:{maxWidth:820}},rea||!reaCharge?h(PV.CulottesEquipe,{cfg:cfC,ext:culX}):h(Vide,null,"Chargement des ventes\u2026")):
 h("div",{style:{maxWidth:820}},
 vue==="taches"?h(PageTaches,{tasks:d.tasks,noms:noms,moi:moi,onFait:tacheFaite,onQui:quiFait,onEtape:etapeFaite,onEnregistrer:function(t){enregistrerEl("tasks",t)},onSupprimer:function(t){supprimerEl("tasks",t)}}):
-vue==="tg"?h(PageTG,{tdgs:d.tdgs,photos:photos,ventes:ventes,resp:resp,noms:noms,moi:moi,cat:cat,montrer:montrer,onCheck:cocherTG,onStatut:statutTG,onPhoto:photoTG,onEnregistrer:function(t){enregistrerEl("tdgs",t)},onSupprimer:function(t){supprimerEl("tdgs",t)}}):
+vue==="tg"?h(PageTG,{empls:vac.tdg_emplacements,tdgs:d.tdgs,photos:photos,ventes:ventes,resp:resp,noms:noms,moi:moi,cat:cat,montrer:montrer,onCheck:cocherTG,onStatut:statutTG,onPhoto:photoTG,onEnregistrer:function(t){enregistrerEl("tdgs",t)},onSupprimer:function(t){supprimerEl("tdgs",t)}}):
 vue==="challenges"?h(PageChallenges,{challenges:d.challenges,ventes:ventes,moi:moi,resp:resp,noms:noms,cat:cat,onEnregistrer:function(c){enregistrerEl("challenges",c)},onSupprimer:function(c){supprimerEl("challenges",c)}}):
 blocs[vue]),
 rea&&rea.LABS?h("datalist",{id:"pse-labs"},rea.LABS.map(function(l){return h("option",{key:l,value:l})})):null,
