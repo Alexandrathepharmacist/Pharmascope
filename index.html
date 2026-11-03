@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.20">
+<meta name="ps-version" content="v9.21">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -434,7 +434,7 @@ return new Response(stream).text().then(function(t){return JSON.parse(t)})
 
 /* Etat de la derniere sauvegarde cloud, diffuse a l'ecran */
 var CLOUD_ETAT={ok:null,msg:""};
-var NOMS_DONNEES={challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",tresorerie_reglages:"r\u00e9glages de tr\u00e9sorerie",bilans_comptables:"bilans comptables",tdg_emplacements:"emplacements de TDG",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
+var NOMS_DONNEES={rdv_prep:"pr\u00e9paration des RDV",challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",tresorerie_reglages:"r\u00e9glages de tr\u00e9sorerie",bilans_comptables:"bilans comptables",tdg_emplacements:"emplacements de TDG",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
 function avertir(msg){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg}}))}catch(e){}}
 function proposerAnnulation(msg,annuler){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg,undo:annuler}}))}catch(e){}}
 function notifierCloud(ok,msg){CLOUD_ETAT={ok:ok,msg:msg||""};try{window.dispatchEvent(new CustomEvent("ps-cloud",{detail:CLOUD_ETAT}))}catch(e){}}
@@ -1718,7 +1718,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.20";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.21";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -1754,7 +1754,7 @@ var NAVG=[
 {id:"avis",label:"Avis par marque",icon:"\ud83e\udded"},
 {id:"duels",label:"Leader & challenger",icon:"\ud83e\udd4a"},
 {id:"nouvgamme",label:"Nouvelle gamme ?",icon:"\ud83e\uddea"},
-{id:"memo",label:"Memo RDV",icon:"\ud83d\udcdd"},
+{id:"memo",label:"Pr\u00e9parer mes RDV",icon:"\ud83d\udcdd"},
 {id:"vnotes",label:"Notes vocales",icon:"\ud83c\udf99"}]},
 {id:"animer",label:"Animer",icon:"\ud83c\udfaf",items:[
 {id:"promos",label:"Promos",icon:"\ud83c\udf1f"},
@@ -1901,32 +1901,118 @@ React.createElement("div",{style:{padding:"8px",fontSize:12,color:"var(--text3)"
 
 /* ===== NAV GROUPS (shared desktop + mobile) ===== */
 function groupeDePage(page){var gid=null;NAVG.forEach(function(g){g.items.forEach(function(it){if(it.id===page)gid=g.id})});return gid}
+/* ===== MENU : MES RACCOURCIS ET PLUS D'OUTILS (v9.21) =====
+   Raccourcis : choisis par l'utilisateur, sinon les 6 ecrans les plus ouverts
+   sur cet appareil (150 dernieres visites), completes par une liste par defaut.
+   Plus d'outils : ecrans ranges a la main, ou (reglage automatique, a partir de
+   100 visites enregistrees) ecrans jamais ouverts recemment.
+   Reglage memorise sur l'appareil : ps_menu_perso = {racc:[ids]?, place:{id:"menu"|"plus"}?} */
+var RACC_DEFAUT=["aujourdhui","commandes","moisprec","tdg","challenges","toplabos"];
+var RACC_HORS={home:1,menu:1,labdetail:1};
+var RACC_MAX=8;
+function menuPersoLire(){var o=lsVal("ps_menu_perso",null);return o&&typeof o==="object"&&!Array.isArray(o)?o:{}}
+function menuPersoEcrire(o){try{if(o&&Object.keys(o).length)localStorage.setItem("ps_menu_perso",JSON.stringify(o));else localStorage.removeItem("ps_menu_perso")}catch(e){}try{window.dispatchEvent(new CustomEvent("ps-menu"))}catch(e){}}
+function visitesComptees(){var a=[];try{a=JSON.parse(localStorage.getItem("ps_visites")||"[]")}catch(e){}if(!Array.isArray(a))a=[];var c={};a.forEach(function(p){c[p]=(c[p]||0)+1});return{c:c,n:a.length}}
+function raccAuto(vis){var c=vis.c;var ids=Object.keys(c).filter(function(p){return navItem(p)&&!RACC_HORS[p]&&c[p]>=2}).sort(function(a,b){return c[b]-c[a]}).slice(0,6);
+RACC_DEFAUT.forEach(function(p){if(ids.length<6&&ids.indexOf(p)<0)ids.push(p)});return ids}
+function menuEtat(cfg,vis){
+var racc=Array.isArray(cfg.racc)?cfg.racc.filter(function(p){return !!navItem(p)}).slice(0,RACC_MAX):raccAuto(vis);
+var manuel=cfg.place&&typeof cfg.place==="object";var autoPlus=!manuel&&vis.n>=100;var plus={};
+NAVG.forEach(function(g){g.items.forEach(function(it){
+if(it.id==="home")return;
+if(manuel){if(cfg.place[it.id]==="plus")plus[it.id]=1;return}
+if(autoPlus&&!vis.c[it.id]&&racc.indexOf(it.id)<0)plus[it.id]=1})});
+return{racc:racc,plus:plus,raccAuto:!Array.isArray(cfg.racc),autoPlus:autoPlus,manuel:!!manuel}}
+
+function MenuPerso(props){
+var et=props.etat;
+var rS=useState(et.racc.slice());var racc=rS[0];var setRacc=rS[1];
+var pS=useState(function(){var o={};NAVG.forEach(function(g){g.items.forEach(function(it){o[it.id]=et.plus[it.id]?"plus":"menu"})});return o});var place=pS[0];var setPlace=pS[1];
+var mS=useState("");var msg=mS[0];var setMsg=mS[1];
+function etoile(id){if(racc.indexOf(id)>=0){setRacc(racc.filter(function(x){return x!==id}));setMsg("");return}
+if(racc.length>=RACC_MAX){setMsg("8 raccourcis au maximum : retirez-en un d'abord.");return}
+setRacc(racc.concat([id]));var p=Object.assign({},place);p[id]="menu";setPlace(p);setMsg("")}
+function ranger(id){var p=Object.assign({},place);p[id]=p[id]==="plus"?"menu":"plus";setPlace(p);if(p[id]==="plus"&&racc.indexOf(id)>=0)setRacc(racc.filter(function(x){return x!==id}))}
+function enregistrer(){menuPersoEcrire({racc:racc,place:place});props.onClose()}
+function auto(){menuPersoEcrire({});props.onClose()}
+var pill=function(on,col){return{padding:"5px 9px",borderRadius:16,fontSize:12,fontWeight:700,whiteSpace:"nowrap",border:"1px solid "+(on?col:"var(--border)"),background:on?col:"transparent",color:on?"#fff":"var(--text3)"}};
+return React.createElement("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:400,display:"flex",alignItems:"center",justifyContent:"center",padding:12}},
+React.createElement("div",{onClick:props.onClose,style:{position:"absolute",top:0,left:0,right:0,bottom:0,background:"rgba(15,23,42,.45)"}}),
+React.createElement("div",{role:"dialog","aria-label":"Personnaliser le menu",style:{position:"relative",background:"var(--bg2)",borderRadius:16,width:"100%",maxWidth:540,maxHeight:"88vh",display:"flex",flexDirection:"column",boxShadow:"0 12px 40px rgba(0,0,0,.25)"}},
+React.createElement("div",{style:{padding:"16px 18px 10px",borderBottom:"1px solid var(--border)"}},
+React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8}},
+React.createElement("div",{style:{fontWeight:800,fontSize:18,flex:1}},"\u270f\ufe0f Personnaliser le menu"),
+React.createElement("button",{onClick:props.onClose,"aria-label":"Fermer",style:{fontSize:18,color:"var(--text3)",padding:"2px 8px"}},"\u2715")),
+React.createElement("div",{style:{fontSize:12,color:"var(--text2)",lineHeight:1.5,marginTop:4}},"\u2b50 ajoute l'\u00e9cran \u00e0 \u00ab Mes raccourcis \u00bb, en haut du menu (8 au maximum). \u00ab Ranger \u00bb le d\u00e9place dans \u00ab Plus d'outils \u00bb, en bas. Tout reste trouvable avec la recherche."),
+msg?React.createElement("div",{style:{fontSize:12,color:"var(--orange)",fontWeight:700,marginTop:6}},msg):null),
+React.createElement("div",{style:{overflowY:"auto",padding:"6px 18px 10px"}},
+React.createElement("div",{style:{fontSize:12,fontWeight:800,color:"var(--accent)",textTransform:"uppercase",letterSpacing:".4px",margin:"10px 0 4px"}},"\u2b50 Mes raccourcis ("+racc.length+"/"+RACC_MAX+")"),
+racc.length?React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:6,marginBottom:6}},racc.map(function(id){var it=navItem(id);if(!it)return null;
+return React.createElement("button",{key:id,onClick:function(){etoile(id)},title:"Retirer des raccourcis",style:{padding:"5px 10px",borderRadius:16,fontSize:12,fontWeight:700,background:"var(--accent-bg)",color:"var(--accent)",border:"1px solid var(--accent)"}},it.icon+" "+it.label+"  \u2715")})):
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:6}},"Aucun raccourci : touchez \u2606 devant un \u00e9cran."),
+NAVG.map(function(g){return React.createElement("div",{key:g.id},
+React.createElement("div",{style:{fontSize:12,fontWeight:800,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".4px",margin:"12px 0 2px"}},g.icon+" "+g.label),
+g.items.map(function(it){var on=racc.indexOf(it.id)>=0;var pl=place[it.id]==="plus";
+return React.createElement("div",{key:it.id,style:{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid var(--border)",opacity:pl?0.6:1}},
+React.createElement("button",{onClick:function(){etoile(it.id)},"aria-label":on?"Retirer des raccourcis":"Ajouter aux raccourcis",style:{fontSize:18,padding:"0 4px",color:on?"#f59e0b":"var(--text3)"}},on?"\u2605":"\u2606"),
+React.createElement("span",{style:{fontSize:16}},it.icon),
+React.createElement("span",{style:{flex:1,minWidth:0,fontSize:14}},it.label),
+it.id==="home"?null:React.createElement("button",{onClick:function(){ranger(it.id)},style:pill(pl,"var(--text3)")},pl?"Rang\u00e9":"Ranger"))}))})),
+React.createElement("div",{style:{padding:"12px 18px",borderTop:"1px solid var(--border)",display:"flex",gap:8,flexWrap:"wrap",alignItems:"center"}},
+React.createElement("button",{onClick:auto,style:{fontSize:12,color:"var(--text3)",textDecoration:"underline",padding:0,marginRight:"auto"}},"R\u00e9glage automatique"),
+React.createElement("button",{onClick:props.onClose,style:{padding:"9px 14px",borderRadius:10,fontSize:14,fontWeight:600,background:"var(--bg3)",color:"var(--text2)"}},"Annuler"),
+React.createElement("button",{onClick:enregistrer,style:{padding:"9px 16px",borderRadius:10,fontSize:14,fontWeight:700,background:"var(--accent)",color:"#fff"}},"Enregistrer"))))}
+
 function NavGroups(props){
-var openGS=useState(groupeDePage(props.page));var openId=openGS[0];var setOpenId=openGS[1];
-useEffect(function(){var g=groupeDePage(props.page);if(g)setOpenId(g)},[props.page]);
-return React.createElement("nav",{style:{flex:1,minHeight:0,padding:"8px 0",overflowY:"auto"}},
-NAVG.map(function(g){
-var containsActive=false;
-g.items.forEach(function(it){if(it.id===props.page)containsActive=true});
-var isOpen=openId===g.id;
-var gBadge=0;g.items.forEach(function(it){gBadge+=(props.badges&&props.badges[it.id])||0});
-return React.createElement("div",{key:g.id,style:{marginBottom:2}},
-React.createElement("button",{onClick:function(){setOpenId(isOpen?null:g.id)},
-style:{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"10px 16px",fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.4px",color:containsActive?"var(--accent)":"var(--text2)",background:"transparent"}},
-React.createElement("span",{style:{fontSize:15}},g.icon),
-React.createElement("span",{style:{flex:1,textAlign:"left"}},g.label),
-!isOpen&&gBadge>0?React.createElement("span",{style:{minWidth:18,padding:"1px 5px",borderRadius:9,background:"var(--red)",color:"#fff",fontSize:11,fontWeight:700,textAlign:"center"}},gBadge):null,
-React.createElement("span",{style:{fontSize:11,color:"var(--text3)"}},isOpen?"\u25be":"\u25b8")),
-isOpen?React.createElement("div",null,
-g.items.map(function(n){
-var active=props.page===n.id;
-return React.createElement("button",{key:n.id,onClick:function(){props.setPage(n.id);if(props.onNavigate)props.onNavigate()},
-style:{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"9px 16px 9px 34px",fontSize:14,fontWeight:active?600:400,background:active?"var(--accent-bg)":"transparent",color:active?"var(--accent)":"var(--text2)",borderLeft:active?"3px solid var(--accent)":"3px solid transparent",transition:"all .15s"}},
+var vS=useState(0);var setV=vS[1];
+var visS=useState(visitesComptees);var vis=visS[0];
+useEffect(function(){function f(){setV(function(x){return x+1})}window.addEventListener("ps-menu",f);return function(){window.removeEventListener("ps-menu",f)}},[]);
+var et=menuEtat(menuPersoLire(),vis);
+function grpDe(p){if(et.plus[p])return"plus";return groupeDePage(p)}
+var openGS=useState(grpDe(props.page));var openId=openGS[0];var setOpenId=openGS[1];
+var edS=useState(false);var edit=edS[0];var setEdit=edS[1];
+useEffect(function(){var g=grpDe(props.page);if(g)setOpenId(g)},[props.page]);
+function badgeDe(id){return props.badges&&props.badges[id]?props.badges[id]:0}
+function pastille(n){return React.createElement("span",{style:{minWidth:18,padding:"1px 5px",borderRadius:9,background:"var(--red)",color:"#fff",fontSize:11,fontWeight:700,textAlign:"center"}},n)}
+function ligne(n,cle,retrait){var active=props.page===n.id;
+return React.createElement("button",{key:cle,onClick:function(){props.setPage(n.id);if(props.onNavigate)props.onNavigate()},
+style:{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"9px 16px 9px "+retrait+"px",fontSize:14,fontWeight:active?600:400,background:active?"var(--accent-bg)":"transparent",color:active?"var(--accent)":"var(--text2)",borderLeft:active?"3px solid var(--accent)":"3px solid transparent",transition:"all .15s"}},
 React.createElement("span",{style:{fontSize:16}},n.icon),
 React.createElement("span",{style:{flex:1,textAlign:"left"}},n.label),
-props.badges&&props.badges[n.id]?React.createElement("span",{style:{minWidth:18,padding:"1px 5px",borderRadius:9,background:"var(--red)",color:"#fff",fontSize:11,fontWeight:700,textAlign:"center"}},props.badges[n.id]):null)})):null)
-}))
-}
+badgeDe(n.id)?pastille(badgeDe(n.id)):null)}
+function entete(id,icon,label,containsActive,gBadge,isOpen){
+return React.createElement("button",{onClick:function(){setOpenId(isOpen?null:id)},
+style:{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"10px 16px",fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.4px",color:containsActive?"var(--accent)":"var(--text2)",background:"transparent"}},
+React.createElement("span",{style:{fontSize:15}},icon),
+React.createElement("span",{style:{flex:1,textAlign:"left"}},label),
+!isOpen&&gBadge>0?pastille(gBadge):null,
+React.createElement("span",{style:{fontSize:11,color:"var(--text3)"}},isOpen?"\u25be":"\u25b8"))}
+var racc=et.racc.map(navItem).filter(Boolean);
+var cachesParG=[];var nbPlus=0;var plusBadge=0;var plusActif=false;
+NAVG.forEach(function(g){var its=g.items.filter(function(it){return et.plus[it.id]});if(its.length){cachesParG.push({g:g,its:its});nbPlus+=its.length;its.forEach(function(it){plusBadge+=badgeDe(it.id);if(it.id===props.page)plusActif=true})}});
+var plusOuvert=openId==="plus";
+return React.createElement("nav",{style:{flex:1,minHeight:0,padding:"8px 0",overflowY:"auto"}},
+React.createElement("div",{style:{marginBottom:6,paddingBottom:6,borderBottom:"1px solid var(--border)"}},
+React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,padding:"8px 10px 4px 16px"}},
+React.createElement("span",{style:{fontSize:15}},"\u2b50"),
+React.createElement("span",{style:{flex:1,fontSize:13,fontWeight:700,textTransform:"uppercase",letterSpacing:"0.4px",color:"var(--text2)"}},"Mes raccourcis"),
+React.createElement("button",{onClick:function(){setEdit(true)},title:"Personnaliser le menu","aria-label":"Personnaliser le menu",style:{fontSize:12,fontWeight:700,color:"var(--accent)",padding:"4px 8px",borderRadius:8}},"\u270f\ufe0f Modifier")),
+racc.map(function(n){return ligne(n,"r-"+n.id,34)})),
+NAVG.map(function(g){
+var its=g.items.filter(function(it){return !et.plus[it.id]});if(!its.length)return null;
+var containsActive=false;its.forEach(function(it){if(it.id===props.page)containsActive=true});
+var isOpen=openId===g.id;var gBadge=0;its.forEach(function(it){gBadge+=badgeDe(it.id)});
+return React.createElement("div",{key:g.id,style:{marginBottom:2}},
+entete(g.id,g.icon,g.label,containsActive,gBadge,isOpen),
+isOpen?React.createElement("div",null,its.map(function(n){return ligne(n,n.id,34)})):null)}),
+nbPlus?React.createElement("div",{style:{marginTop:4,paddingTop:4,borderTop:"1px solid var(--border)"}},
+entete("plus","\ud83e\uddf0","Plus d'outils ("+nbPlus+")",plusActif,plusBadge,plusOuvert),
+plusOuvert?React.createElement("div",null,
+cachesParG.map(function(x){return React.createElement("div",{key:x.g.id},
+React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--text3)",padding:"6px 16px 2px 37px",textTransform:"uppercase",letterSpacing:".3px"}},x.g.label),
+x.its.map(function(n){return ligne(n,"p-"+n.id,34)}))}),
+et.autoPlus?React.createElement("div",{style:{fontSize:11,color:"var(--text3)",padding:"6px 16px 4px 37px",lineHeight:1.4}},"Rang\u00e9s automatiquement : pas ouverts r\u00e9cemment sur cet appareil. \u00ab Modifier \u00bb pour choisir."):null):null):null,
+edit?React.createElement(MenuPerso,{etat:et,onClose:function(){setEdit(false)}}):null)}
 
 /* ===== PROFIL DE FORCE LABO (radar + note globale) ===== */
 function computeLabScore(ld,st,evo){
@@ -9238,7 +9324,7 @@ blocCours,detail,histo,tableau)}
    export Winpharma manquant (controle du soir), demandes de conge (PharmaScope Planning).
    Sur iPhone, il faut d'abord ajouter PharmaScope a l'ecran d'accueil (iOS 16.4 minimum). */
 var PUSH_VAPID="BJwWco7h3NNv12xVbqJ9FqVihuMmY8gD_KcQR6FgDSBhj-4kjd5GytwBRZMNW8Yf8dpXI2vNryYIRkSPIcy8fNQ";
-var PUSH_SUJETS=[["commandes","\ud83d\udce6 Commandes critiques","quand de nouveaux labos passent en rupture sous 2 semaines (apr\u00e8s l'import du jour)"],["export","\ud83d\udcc1 Export Winpharma manquant","le soir \u00e0 19h35 si le fichier du jour n'est pas arriv\u00e9"],["conges","\ud83c\udfd6 Demandes de cong\u00e9","quand quelqu'un de l'\u00e9quipe fait une demande dans PharmaScope Planning"]];
+var PUSH_SUJETS=[["rdv","\ud83d\udcdd RDV labo du lendemain","la veille au soir, avec la fiche de pr\u00e9paration de chaque labo"],["commandes","\ud83d\udce6 Commandes critiques","quand de nouveaux labos passent en rupture sous 2 semaines (apr\u00e8s l'import du jour)"],["export","\ud83d\udcc1 Export Winpharma manquant","le soir \u00e0 19h35 si le fichier du jour n'est pas arriv\u00e9"],["conges","\ud83c\udfd6 Demandes de cong\u00e9","quand quelqu'un de l'\u00e9quipe fait une demande dans PharmaScope Planning"]];
 function pushCle(b){var p="=".repeat((4-b.length%4)%4);var s=atob((b+p).replace(/-/g,"+").replace(/_/g,"/"));var a=new Uint8Array(s.length);for(var i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a}
 function pushSupporte(){return "serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window}
 function pushIOS(){return /iPhone|iPad|iPod/.test(navigator.userAgent)}
@@ -9265,7 +9351,7 @@ var noms=nouveaux.slice(0,4).join(", ")+(nouveaux.length>4?" et "+(nouveaux.leng
 return pushAppel({action:"alerte",sujet:"commandes",titre:"\ud83d\udce6 "+nouveaux.length+" labo"+(nouveaux.length>1?"s":"")+" \u00e0 commander",texte:noms+" : rupture sous 2 semaines. "+crit.length+" labo"+(crit.length>1?"s":"")+" critique"+(crit.length>1?"s":"")+" au total.",page:"commandes"})})}).catch(function(e){console.warn("alerte commandes:",e)})}
 function NotifsPage(props){
 var stS=useState({etape:"verif"});var st=stS[0];var setSt=stS[1];
-var sjS=useState(["commandes","export","conges"]);var sujets=sjS[0];var setSujets=sjS[1];
+var sjS=useState(["rdv","commandes","export","conges"]);var sujets=sjS[0];var setSujets=sjS[1];
 var msgS=useState("");var msg=msgS[0];var setMsg=msgS[1];
 function verifier(){if(!pushSupporte()){setSt({etape:pushIOS()&&!pushInstallee()?"ios":"non"});return}
 if(pushIOS()&&!pushInstallee()){setSt({etape:"ios"});return}
@@ -12788,6 +12874,250 @@ props.setPage?React.createElement("button",{onClick:function(){props.setPage("co
 return React.createElement("div",null,entete,onglets,contenu,React.createElement(LienExpert,null))}
 
 /* ===== MEMO RDV LABO ===== */
+/* ===== PREPARER MES RDV LABO (v9.21) =====
+   Source des RDV : cle cloud agenda_rdv = {maj, events:[{id,titre,debut,fin,lieu}]},
+   ecrite chaque soir par une tache programmee qui lit l'agenda Google (RDV pros
+   seulement), + RDV saisis a la main + synchro Google manuelle (ancienne page).
+   Cle cloud rdv_prep = {liens:{titre normalise: labo | "-"}, notes:{labo:[{d,t}]}}. */
+var RDV_MOTS_VIDES={RDV:1,RENDEZ:1,VOUS:1,LABO:1,LABOS:1,LABORATOIRE:1,LABORATOIRES:1,LAB:1,DELEGUE:1,DELEGUEE:1,VISITE:1,REUNION:1,AVEC:1,POINT:1,COMMERCIAL:1,COMMERCIALE:1,FORMATION:1,MERCH:1,LES:1,DES:1,POUR:1,REF:1,FRANCE:1,PHARMA:1,SANTE:1,GROUPE:1,CONSEIL:1,DIV:1,SAS:1};
+function rdvCle(titre){return nomNorm(titre).trim()}
+function rdvLab(titre,labs,liens){var k=rdvCle(titre);if(liens&&Object.prototype.hasOwnProperty.call(liens,k))return liens[k]==="-"?"-":liens[k];
+var t=nomNorm(titre);var best=null,bl=0;
+labs.forEach(function(l){var mots=nomNorm(l).trim().split(" ").filter(function(w){return w.length>=3&&!RDV_MOTS_VIDES[w]});if(!mots.length)return;
+var full=" "+mots.join(" ")+" ";
+if(t.indexOf(full)>=0){if(full.length>bl){best=l;bl=full.length}return}
+if(mots[0].length>=5&&t.indexOf(" "+mots[0]+" ")>=0&&mots[0].length+2>bl){best=l;bl=mots[0].length+2}});
+return best}
+function rdvCleLab(obj,lab){if(!obj||!lab)return null;if(obj[lab])return lab;var r=null;Object.keys(obj).forEach(function(k){if(!r&&!/^(\u25c6|__)/.test(k)&&obj[k]&&memeLabo(k,lab))r=k});return r}
+function rdvJourFr(iso,auj){if(iso===auj)return"Aujourd'hui";var d=new Date(auj+"T12:00:00");d.setDate(d.getDate()+1);if(iso===isoLocal(d))return"Demain";
+var j=new Date(iso+"T12:00:00");return["Dim.","Lun.","Mar.","Mer.","Jeu.","Ven.","Sam."][j.getDay()]+" "+dateCourteFr(iso).slice(0,5)}
+function rdvListe(o){var auj=aujIso();var labs=o.labs;var liens=(o.prep&&o.prep.liens)||{};var vus={};var out=[];
+function ajoute(x){var k=x.date+"|"+rdvCle(x.titre);if(vus[k])return;vus[k]=1;out.push(x)}
+((o.agenda&&o.agenda.events)||[]).forEach(function(e){if(!e||!e.debut||!e.titre)return;var d=String(e.debut).slice(0,10);
+ajoute({k:"a"+(e.id||d+e.titre),date:d,heure:String(e.debut).length>10?String(e.debut).slice(11,16):"",titre:e.titre,lieu:e.lieu||"",detail:e.detail||"",lab:rdvLab(e.titre,labs,liens),src:"agenda"})});
+(o.events||[]).forEach(function(e){if(!e||!e.date)return;ajoute({k:"m"+e.id,id:e.id,date:e.date,heure:"",titre:e.lab,lab:trouveLabListe(labs,e.lab)||e.lab,src:"main",contact:e.contact})});
+(o.gcal||[]).forEach(function(e){if(!e||!e.date)return;ajoute({k:"g"+(e.gid||e.date+e.lab),date:e.date,heure:"",titre:e.lab,lab:rdvLab(e.lab,labs,liens),src:"google"})});
+out.sort(function(a,b){return (a.date+a.heure).localeCompare(b.date+b.heure)});
+return{auj:auj,futurs:out.filter(function(x){return x.date>=auj}),passes:out.filter(function(x){return x.date<auj}).reverse()}}
+function trouveLabListe(labs,nom){var r=null;labs.forEach(function(l){if(!r&&memeLabo(l,nom))r=l});return r}
+
+/* Tous les chiffres de la fiche, calcules a partir des ventes */
+function rdvDonnees(pd,lab,ctx){
+var r={lab:lab,ok:false,points:[]};if(!pd||!pd.M||!pd.L)return r;
+var sups=resolveSups(pd,lab);if(!sups.length)return r;r.ok=true;
+var n=pd.M.length;var lf=dernierMoisComplet(pd);if(lf<0)lf=n-1;var d0=Math.max(0,lf-11);
+var serCA=[],serMG=[];for(var i=0;i<n;i++){var a=0,b=0;sups.forEach(function(s){var x=pd.L[s]&&pd.L[s][i];if(x){a+=x[0]||0;b+=x[1]||0}});serCA.push(a);serMG.push(b)}
+var ca=0,mg=0,caC=0,ca1=0,mgC=0,mg1=0,nbC=0;
+for(var j=d0;j<=lf;j++){ca+=serCA[j];mg+=serMG[j];if(j-12>=0&&moisN1Ok(pd,j,j-12)){caC+=serCA[j];ca1+=serCA[j-12];mgC+=serMG[j];mg1+=serMG[j-12];nbC++}}
+r.periode=moisCourt(pd.M[d0])+" \u2192 "+moisCourt(pd.M[lf]);r.ca=ca;r.mg=mg;r.tx=ca>0?mg/ca*100:null;
+r.evCa=nbC>=3&&ca1>0?(caC-ca1)/ca1*100:null;r.evMg=nbC>=3&&mg1>0?(mgC-mg1)/mg1*100:null;r.nbC=nbC;
+r.txPharma=baselineMarge(pd);
+r.courbe=[];for(var k=d0;k<=lf;k++)r.courbe.push({m:pd.M[k],v:serCA[k],v1:k-12>=0&&moisN1Ok(pd,k,k-12)?serCA[k-12]:null});
+var prods=[];sups.forEach(function(s){(pd.P[s]||[]).forEach(function(p){prods.push(p)})});
+function s3(arr,end){var t=0;if(!arr)return 0;for(var q=Math.max(0,end-2);q<=end;q++)t+=arr[q]||0;return t}
+var n1=lf-14>=0&&moisN1Ok(pd,lf,lf-12);var ref=n1?lf-12:lf-3;
+r.refTexte=n1?"3 derniers mois vs m\u00eames mois l'an dernier":"3 derniers mois vs 3 mois d'avant";
+var mv=[];prods.forEach(function(p){if(!p.caM)return;var rc=s3(p.caM,lf),av=s3(p.caM,ref);if(rc+av<60)return;
+var stk=pd.STKU&&p.c?pd.STKU[p.c]:undefined;mv.push({n:p.n,c:p.c,rc:rc,av:av,d:rc-av,ev:av>0?(rc-av)/av*100:null,stk:stk})});
+r.montent=mv.filter(function(x){return x.d>0}).sort(function(a,b){return b.d-a.d}).slice(0,5);
+r.baissent=mv.filter(function(x){return x.d<0}).sort(function(a,b){return a.d-b.d}).slice(0,5);
+r.arretes=mv.filter(function(x){return x.rc===0&&x.av>=100}).sort(function(a,b){return b.av-a.av}).slice(0,3);
+/* stock dormant : en stock, sans vente depuis 6 mois ou plus */
+var dorm=[],dormV=0;
+if(pd.STKU){prods.forEach(function(p){if(!p.c)return;var q=pd.STKU[p.c];if(!(q>0))return;
+var der=-1;if(p.qm){for(var z=p.qm.length-1;z>=0;z--){if(p.qm[z]>0){der=z;break}}}var mois=der<0?n:(n-1-der);if(mois<6)return;
+var sv=pd.STKV?pd.STKV[p.c]:undefined;var val=Array.isArray(sv)?sv[0]:(typeof sv==="number"?sv:(p.q>0?q*Math.max(0,((p.ca||0)-(p.m||0))/p.q):0));
+dormV+=val||0;dorm.push({n:p.n,q:q,v:val||0,mois:mois,jamais:der<0})});
+dorm.sort(function(a,b){return b.v-a.v})}
+r.dormant=dorm.slice(0,6);r.dormantNb=dorm.length;r.dormantV=dormV;r.stockConnu=!!(pd.STKU&&Object.keys(pd.STKU).length);
+/* remises */
+var ck=rdvCleLab(ctx.conditions,lab);r.condLab=ck;
+if(ck){try{r.rem=condSuivi(pd,ck,ctx.conditions[ck])}catch(e){r.rem=null}}
+/* TDG et challenges avec ce labo */
+var aujI=aujIso();
+r.tdgs=(ctx.tdgs||[]).filter(function(t){return t&&t.lab&&memeLabo(t.lab,lab)}).sort(function(a,b){return String(b.debut||"").localeCompare(String(a.debut||""))}).slice(0,5).map(function(t){
+var res=null;try{if(ctx.tdgVentes){var an=tdgCardRes(t,ctx.tdgVentes);if(an&&!an.err&&an.note!==undefined&&an.note!==null)res=an}}catch(e){}
+var em=null;try{em=emplDe(ctx.empls,t.empl)}catch(e){}
+return{t:t,note:res?res.note:null,lift:res&&res.liftQ!==undefined?res.liftQ:null,empl:em?emplNom(em):""}});
+r.derniereTdg=r.tdgs.length?r.tdgs[0].t.debut:null;
+r.challenges=(ctx.challenges||[]).filter(function(c){return c&&c.lab&&memeLabo(c.lab,lab)}).sort(function(a,b){return String(b.debut||"").localeCompare(String(a.debut||""))}).slice(0,5).map(function(c){
+var etat=c.debut&&c.debut>aujI?"\u00e0 venir":(c.fin&&c.fin<aujI?"termin\u00e9":"en cours");return{c:c,etat:etat,pct:c.objectif>0?Math.round((c.progres||0)/c.objectif*100):null}});
+/* fiche delegue, decision, notes */
+var crmK=rdvCleLab(ctx.crm,lab);r.fiche=crmK?ctx.crm[crmK]:null;
+var decK=rdvCleLab(ctx.decisions,lab);r.dec=decK?ctx.decisions[decK]:null;
+var nk=rdvCleLab(ctx.notes,lab);r.notes=nk?(ctx.notes[nk]||[]).slice().sort(function(a,b){return String(b.d).localeCompare(String(a.d))}):[];r.notesCle=nk||lab;
+r.vocales=(ctx.voiceNotes||[]).filter(function(v){return v&&v.lab&&memeLabo(v.lab,lab)}).slice(0,3);
+/* points a aborder */
+var P=r.points;
+if(r.evCa!==null&&r.evCa<=-10)P.push(["\ud83d\udd3b","CA en baisse de "+Math.round(-r.evCa)+" % sur un an : demander un plan d'action (animation, formation, remise ponctuelle)."]);
+if(r.evCa!==null&&r.evCa>=10)P.push(["\ud83d\ude80","CA en hausse de "+Math.round(r.evCa)+" % sur un an : bon moment pour n\u00e9gocier un meilleur palier ou une remise."]);
+if(r.tx!==null&&r.txPharma&&r.tx<r.txPharma-3&&ca>2000)P.push(["\u26a0\ufe0f","Taux de marque "+r.tx.toFixed(1).replace(".",",")+" % contre "+r.txPharma.toFixed(1).replace(".",",")+" % en moyenne \u00e0 la pharmacie : ren\u00e9gocier les conditions."]);
+if(r.rem&&r.rem.statut==="pousser")P.push(["\ud83c\udfaf",phraseRemise(r.rem)]);
+if(!ck&&ca>3000)P.push(["\ud83d\udcdd","Aucune condition saisie pour ce labo : notez remise, paliers et franco (page Remises & paliers)."]);
+if(dormV>=80)P.push(["\ud83d\udca4",fmtEur0(dormV)+" de stock sans vente depuis 6 mois ou plus ("+dorm.length+" r\u00e9f.) : demander une reprise ou un \u00e9change."]);
+r.arretes.forEach(function(x){P.push(["\u2753",x.n+" ne se vend plus ("+fmtEur0(x.av)+" avant)"+(x.stk===0?" et n'est plus en stock : rupture chez le labo ?":" : pourquoi ?")])});
+if(r.baissent.length&&r.baissent[0].d<=-150&&!(r.arretes.length&&r.arretes[0].n===r.baissent[0].n))P.push(["\ud83d\udcc9","Plus forte baisse : "+r.baissent[0].n+" ("+fmtEur0(r.baissent[0].d)+")."]);
+r.challenges.forEach(function(x){if(x.etat==="en cours")P.push(["\ud83c\udfc6","Challenge en cours : "+(x.c.progres||0)+" / "+x.c.objectif+" ("+(x.pct||0)+" %). Faire le point avec le d\u00e9l\u00e9gu\u00e9."])});
+var six=new Date();six.setMonth(six.getMonth()-6);var sixI=isoLocal(six);
+if(ca>3000&&(!r.derniereTdg||r.derniereTdg<sixI))P.push(["\ud83d\udecb","Pas de TDG "+(r.derniereTdg?"depuis le "+dateCourteFr(r.derniereTdg):"enregistr\u00e9e")+" : proposer une mise en avant (voir les emplacements libres dans TDG)."]);
+if(!P.length)P.push(["\u2705","Rien d'urgent : faire le point sur les nouveaut\u00e9s et les animations \u00e0 venir."]);
+return r}
+
+function RdvCourbe(props){var pts=props.pts||[];if(pts.length<2)return null;
+var W=320,H=110,pl=6,pr=6,pt=10,pb=18;var max=0;pts.forEach(function(p){max=Math.max(max,p.v||0,p.v1||0)});if(!(max>0))return null;
+function x(i){return pl+i*(W-pl-pr)/(pts.length-1)}function y(v){return pt+(H-pt-pb)*(1-v/max)}
+var lN=pts.map(function(p,i){return(i?"L":"M")+x(i).toFixed(1)+" "+y(p.v||0).toFixed(1)}).join(" ");
+var l1="";var deb=true;pts.forEach(function(p,i){if(p.v1===null||p.v1===undefined){deb=true;return}l1+=(deb?"M":"L")+x(i).toFixed(1)+" "+y(p.v1).toFixed(1)+" ";deb=false});
+var aire=lN+" L"+x(pts.length-1).toFixed(1)+" "+(H-pb)+" L"+x(0).toFixed(1)+" "+(H-pb)+" Z";
+return React.createElement("div",null,
+React.createElement("svg",{viewBox:"0 0 "+W+" "+H,style:{width:"100%",height:"auto",display:"block"},role:"img","aria-label":"Chiffre d'affaires mois par mois"},
+React.createElement("path",{d:aire,fill:"var(--accent)",opacity:0.08}),
+l1?React.createElement("path",{d:l1,fill:"none",stroke:"var(--text3)",strokeWidth:1.5,strokeDasharray:"4 3"}):null,
+React.createElement("path",{d:lN,fill:"none",stroke:"var(--accent)",strokeWidth:2.2,strokeLinejoin:"round",strokeLinecap:"round"}),
+pts.map(function(p,i){return i===0||i===pts.length-1||i%3===0?React.createElement("text",{key:i,x:x(i),y:H-4,fontSize:9,fill:"var(--text3)",textAnchor:i===0?"start":(i===pts.length-1?"end":"middle")},moisCourt(p.m).replace(/ 20/," ")):null})),
+React.createElement("div",{style:{display:"flex",gap:14,fontSize:11,color:"var(--text3)",marginTop:2}},
+React.createElement("span",null,React.createElement("span",{style:{display:"inline-block",width:14,height:2,background:"var(--accent)",verticalAlign:"middle",marginRight:4}}),"CA mois par mois"),
+l1?React.createElement("span",null,React.createElement("span",{style:{display:"inline-block",width:14,borderTop:"2px dashed var(--text3)",verticalAlign:"middle",marginRight:4}}),"un an avant"):null))}
+
+function imprimerFicheRdv(r,rdv){
+var g=[];var L=function(a,b){return[a,b===undefined||b===null?"":String(b)]};
+g.push({titre:"Chiffres sur 12 mois ("+(r.periode||"")+")",lignes:[L("Chiffre d'affaires HT",fmtEur0(r.ca)+(r.evCa!==null?" ("+(r.evCa>=0?"+":"")+Math.round(r.evCa)+" % sur un an)":"")),L("Marge",fmtEur0(r.mg)+(r.evMg!==null?" ("+(r.evMg>=0?"+":"")+Math.round(r.evMg)+" %)":"")),L("Taux de marque",r.tx!==null?r.tx.toFixed(1).replace(".",",")+" % (pharmacie "+(r.txPharma||0).toFixed(1).replace(".",",")+" %)":"-")]});
+g.push({titre:"Points \u00e0 aborder",lignes:r.points.map(function(p){return L(p[1],"")})});
+if(r.montent.length)g.push({titre:"Produits qui montent ("+r.refTexte+")",lignes:r.montent.map(function(x){return L(x.n,"+"+fmtEur0(x.d))})});
+if(r.baissent.length)g.push({titre:"Produits qui baissent",lignes:r.baissent.map(function(x){return L(x.n,fmtEur0(x.d))})});
+if(r.dormant.length)g.push({titre:"Stock qui dort ("+fmtEur0(r.dormantV)+")",lignes:r.dormant.map(function(x){return L(x.n,x.q+" en stock \u00b7 "+fmtEur0(x.v)+" \u00b7 "+(x.jamais?"jamais vendu":x.mois+" mois sans vente"))})});
+if(r.rem)g.push({titre:"Remises & paliers",lignes:[L(phraseRemise(r.rem),"")]});
+if(r.tdgs.length)g.push({titre:"TDG avec ce labo",lignes:r.tdgs.map(function(x){return L((x.empl?x.empl+" \u00b7 ":"")+dateCourteFr(x.t.debut)+(x.t.fin?" \u2192 "+dateCourteFr(x.t.fin):""),x.note!==null?"note "+x.note+"/10":"")})});
+if(r.challenges.length)g.push({titre:"Challenges",lignes:r.challenges.map(function(x){return L(dateCourteFr(x.c.debut)+(x.c.fin?" \u2192 "+dateCourteFr(x.c.fin):"")+" \u00b7 "+x.etat,(x.c.progres||0)+" / "+x.c.objectif)})});
+if(r.notes.length)g.push({titre:"Notes du dernier RDV ("+dateCourteFr(r.notes[0].d)+")",lignes:[L(r.notes[0].t,"")]});
+g.push({titre:"Notes de ce RDV",lignes:[L(" ",""),L(" ",""),L(" ","")]});
+imprimerListe({titre:"RDV "+String(r.lab).replace(/ REF$/,""),sous:rdv?rdvJourFr(rdv.date,aujIso())+" "+dateCourteFr(rdv.date)+(rdv.heure?" \u00e0 "+rdv.heure:""):"",colonnes:[{t:""},{t:"",w:"190px"}],groupes:g})}
+
+function FicheRdv(props){
+var r=props.r;var rdv=props.rdv;
+var nS=useState("");var note=nS[0];var setNote=nS[1];
+var carte={background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:14,marginBottom:12};
+var titre=function(t,droite){return React.createElement("div",{style:{display:"flex",alignItems:"baseline",gap:8,marginBottom:8}},React.createElement("div",{style:{fontWeight:800,fontSize:15,flex:1}},t),droite?React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},droite):null)};
+var evo=function(v){if(v===null||v===undefined)return null;return React.createElement("span",{style:{fontSize:12,fontWeight:700,color:v>=0?"var(--accent)":"var(--red)"}},(v>=0?"+":"")+Math.round(v)+" %")};
+var tuile=function(lib,val,ev){return React.createElement("div",{style:{flex:"1 1 120px",background:"var(--bg)",borderRadius:12,padding:"10px 12px"}},
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",textTransform:"uppercase",letterSpacing:".3px",fontWeight:700}},lib),
+React.createElement("div",{style:{fontSize:20,fontWeight:800}},val),ev||null)};
+var ligneP=function(x,signe){return React.createElement("div",{key:x.n,style:{display:"flex",gap:8,fontSize:13,padding:"5px 0",borderBottom:"1px solid var(--border)"}},
+React.createElement("span",{style:{flex:1,minWidth:0}},x.n),
+React.createElement("span",{style:{fontWeight:700,whiteSpace:"nowrap",color:signe>0?"var(--accent)":"var(--red)"}},(signe>0?"+":"")+fmtEur0(x.d)),
+x.ev!==null?React.createElement("span",{style:{fontSize:11,color:"var(--text3)",whiteSpace:"nowrap",width:44,textAlign:"right"}},(x.ev>=0?"+":"")+Math.round(x.ev)+" %"):null)};
+function ajouterNote(){var t=note.trim();if(!t)return;props.onNote(r.notesCle,{d:rdv&&rdv.date<=aujIso()?rdv.date:aujIso(),t:t});setNote("")}
+var nomLab=String(r.lab).replace(/ REF$/,"");
+return React.createElement("div",null,
+React.createElement("div",{style:{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:12}},
+React.createElement("button",{onClick:props.onBack,style:{color:"var(--accent)",fontSize:14,fontWeight:600}},"\u2190 Mes RDV"),
+React.createElement("span",{style:{flex:1}}),
+props.openLab?React.createElement("button",{onClick:function(){props.openLab(r.lab)},style:{padding:"6px 12px",borderRadius:8,fontSize:12,fontWeight:600,border:"1px solid var(--border)",color:"var(--text2)"}},"Fiche labo"):null,
+React.createElement(BoutonImprimer,{onClick:function(){imprimerFicheRdv(r,rdv)}})),
+React.createElement("div",{style:{background:"linear-gradient(135deg,var(--accent),#0284c7)",borderRadius:16,padding:"16px 18px",color:"#fff",marginBottom:12}},
+React.createElement("div",{style:{fontSize:12,opacity:.85,fontWeight:600}},rdv?rdvJourFr(rdv.date,aujIso())+(rdv.heure?" \u00b7 "+rdv.heure:"")+(rdv.lieu?" \u00b7 "+rdv.lieu:""):"Pr\u00e9paration de RDV"),
+React.createElement("div",{style:{fontSize:22,fontWeight:800,lineHeight:1.2,marginTop:2}},nomLab),
+r.fiche&&(r.fiche.delegue||r.fiche.tel)?React.createElement("div",{style:{fontSize:13,marginTop:6,opacity:.95}},"\ud83e\udd1d "+(r.fiche.delegue||"D\u00e9l\u00e9gu\u00e9")+(r.fiche.tel?" \u00b7 "+r.fiche.tel:"")):null,
+rdv&&rdv.titre&&rdvCle(rdv.titre)!==rdvCle(nomLab)?React.createElement("div",{style:{fontSize:12,marginTop:4,opacity:.8}},"Agenda : \u00ab "+rdv.titre+" \u00bb"):null,
+rdv&&rdv.detail?React.createElement("div",{style:{fontSize:13,marginTop:6,padding:"6px 10px",background:"rgba(255,255,255,.18)",borderRadius:8}},"\ud83d\udccc "+rdv.detail):null),
+!r.ok?React.createElement("div",{style:carte},"Pas de ventes trouv\u00e9es pour ce labo dans les donn\u00e9es import\u00e9es."):null,
+React.createElement("div",{style:Object.assign({},carte,{borderColor:"var(--accent)",background:"var(--accent-bg)"})},
+titre("\ud83d\udcac Points \u00e0 aborder"),
+r.points.map(function(p,i){return React.createElement("div",{key:i,style:{display:"flex",gap:8,fontSize:13,lineHeight:1.45,padding:"4px 0"}},React.createElement("span",null,p[0]),React.createElement("span",null,p[1]))})),
+r.ok?React.createElement("div",{style:carte},
+titre("\ud83d\udcca 12 derniers mois",r.periode),
+React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}},
+tuile("CA HT",kEur(r.ca),evo(r.evCa)),tuile("Marge",kEur(r.mg),evo(r.evMg)),
+tuile("Taux de marque",r.tx!==null?r.tx.toFixed(1).replace(".",",")+" %":"-",r.txPharma?React.createElement("span",{style:{fontSize:11,color:"var(--text3)"}},"pharmacie "+r.txPharma.toFixed(1).replace(".",",")+" %"):null)),
+React.createElement(RdvCourbe,{pts:r.courbe}),
+r.evCa!==null&&r.nbC<12?React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:4}},"\u00c9volution calcul\u00e9e sur les "+r.nbC+" mois qui existent aussi l'an dernier."):null):null,
+r.ok&&(r.montent.length||r.baissent.length)?React.createElement("div",{style:carte},
+titre("\u2195\ufe0f Produits qui montent et qui baissent",r.refTexte),
+r.montent.length?React.createElement("div",{style:{marginBottom:8}},React.createElement("div",{style:{fontSize:12,fontWeight:700,color:"var(--accent)",marginBottom:2}},"\u25b2 Montent"),r.montent.map(function(x){return ligneP(x,1)})):null,
+r.baissent.length?React.createElement("div",null,React.createElement("div",{style:{fontSize:12,fontWeight:700,color:"var(--red)",marginBottom:2}},"\u25bc Baissent"),r.baissent.map(function(x){return ligneP(x,-1)})):null):null,
+r.ok&&r.stockConnu?React.createElement("div",{style:carte},
+titre("\ud83d\udca4 Stock qui dort",r.dormantNb?r.dormantNb+" r\u00e9f. \u00b7 "+fmtEur0(r.dormantV):""),
+r.dormant.length?r.dormant.map(function(x,i){return React.createElement("div",{key:i,style:{display:"flex",gap:8,fontSize:13,padding:"5px 0",borderBottom:"1px solid var(--border)"}},
+React.createElement("span",{style:{flex:1,minWidth:0}},x.n),
+React.createElement("span",{style:{fontSize:12,color:"var(--text3)",whiteSpace:"nowrap"}},x.q+" u. \u00b7 "+(x.jamais?"jamais vendu":x.mois+" mois")),
+React.createElement("span",{style:{fontWeight:700,whiteSpace:"nowrap"}},fmtEur0(x.v)))}):
+React.createElement("div",{style:{fontSize:13,color:"var(--text3)"}},"Aucun produit de ce labo sans vente depuis 6 mois. \ud83d\udc4d")):null,
+React.createElement("div",{style:carte},
+titre("\ud83d\udcb6 Remises & paliers"),
+r.rem?React.createElement("div",null,React.createElement("div",{style:{fontSize:13,lineHeight:1.45}},phraseRemise(r.rem)),React.createElement(BarreRemise,{s:r.rem})):
+React.createElement("div",{style:{fontSize:13,color:"var(--text3)"}},"Aucune condition saisie pour ce labo. Apr\u00e8s le RDV, notez-les dans \u00ab Remises & paliers \u00bb pour suivre vos RFA."),
+r.fiche&&r.fiche.conditions?React.createElement("div",{style:{fontSize:12,color:"var(--text2)",marginTop:8,whiteSpace:"pre-wrap"}},"\ud83d\udcce "+r.fiche.conditions):null),
+React.createElement("div",{style:carte},
+titre("\ud83d\udecb TDG et \ud83c\udfc6 challenges avec ce labo"),
+!r.tdgs.length&&!r.challenges.length?React.createElement("div",{style:{fontSize:13,color:"var(--text3)"}},"Aucune TDG ni aucun challenge enregistr\u00e9s avec ce labo."):null,
+r.tdgs.map(function(x){return React.createElement("div",{key:"t"+x.t.id,style:{display:"flex",gap:8,fontSize:13,padding:"5px 0",borderBottom:"1px solid var(--border)"}},
+React.createElement("span",null,"\ud83d\udecb"),React.createElement("span",{style:{flex:1,minWidth:0}},(x.empl?x.empl+" \u00b7 ":"TDG \u00b7 ")+dateCourteFr(x.t.debut)+(x.t.fin?" \u2192 "+dateCourteFr(x.t.fin):"")),
+x.note!==null?React.createElement("span",{style:{fontWeight:700,color:x.note>=6?"var(--accent)":(x.note<4?"var(--red)":"var(--orange)")}},x.note+"/10"):null)}),
+r.challenges.map(function(x){return React.createElement("div",{key:"c"+x.c.id,style:{display:"flex",gap:8,fontSize:13,padding:"5px 0",borderBottom:"1px solid var(--border)"}},
+React.createElement("span",null,"\ud83c\udfc6"),React.createElement("span",{style:{flex:1,minWidth:0}},dateCourteFr(x.c.debut)+(x.c.fin?" \u2192 "+dateCourteFr(x.c.fin):"")+" \u00b7 "+x.etat),
+React.createElement("span",{style:{fontWeight:700}},(x.c.progres||0)+" / "+x.c.objectif+(x.pct!==null?" ("+x.pct+" %)":"")))})),
+React.createElement("div",{style:carte},
+titre("\ud83d\udcdd Notes de RDV"),
+r.dec?React.createElement("div",{style:{fontSize:12,padding:"8px 10px",background:"var(--orange-bg)",borderRadius:8,marginBottom:8}},"\u2699\ufe0f D\u00e9cision strat\u00e9gique : "+(r.dec.d||"")+(r.dec.rempl?" \u2192 "+r.dec.rempl:"")+(r.dec.note?" \u00b7 "+r.dec.note:"")):null,
+r.notes.length?React.createElement("div",{style:{marginBottom:8}},r.notes.slice(0,3).map(function(x,i){return React.createElement("div",{key:i,style:{fontSize:13,padding:"6px 0",borderBottom:"1px solid var(--border)"}},
+React.createElement("div",{style:{fontSize:11,fontWeight:700,color:i===0?"var(--accent)":"var(--text3)"}},(i===0?"Dernier RDV \u00b7 ":"")+dateCourteFr(x.d)),
+React.createElement("div",{style:{whiteSpace:"pre-wrap",lineHeight:1.45}},x.t))})):
+React.createElement("div",{style:{fontSize:13,color:"var(--text3)",marginBottom:8}},"Pas encore de note pour ce labo. Ce que vous notez ici ressortira au prochain RDV."),
+r.vocales.map(function(v){return React.createElement("details",{key:v.id,style:{fontSize:12,marginBottom:6}},React.createElement("summary",{style:{cursor:"pointer",fontWeight:600}},"\ud83c\udf99 Note vocale du "+dateCourteFr(v.date)),React.createElement("div",{style:{whiteSpace:"pre-wrap",marginTop:4}},v.synthese))}),
+props.onNote?React.createElement("div",null,
+React.createElement("textarea",{value:note,onChange:function(e){setNote(e.target.value)},rows:3,placeholder:"Ce qui a \u00e9t\u00e9 dit, n\u00e9goci\u00e9, promis\u2026",style:{width:"100%",padding:"8px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13,resize:"vertical"}}),
+React.createElement("button",{onClick:ajouterNote,disabled:!note.trim(),style:{marginTop:6,padding:"8px 14px",borderRadius:8,fontSize:13,fontWeight:700,background:note.trim()?"var(--accent)":"var(--bg3)",color:note.trim()?"#fff":"var(--text3)"}},"Enregistrer la note")):null))}
+
+function RdvPage(props){
+var pd=props.pd;var ld=props.ld||{};var prep=props.prep||{};
+var labs=useMemo(function(){var o={};Object.keys(ld).forEach(function(l){if(!estGrossisteNom(l)&&!/INCONNU|^DIVERS/i.test(l))o[l]=1});Object.keys(props.conditions||{}).forEach(function(l){o[l]=1});return Object.keys(o).sort()},[ld,props.conditions]);
+var selS=useState(null);var sel=selS[0];var setSel=selS[1];
+var chS=useState("");var choixLab=chS[0];var setChoixLab=chS[1];
+var vmS=useState(false);var voirMasques=vmS[0];var setVoirMasques=vmS[1];
+var liste=rdvListe({agenda:props.agenda,events:props.events,gcal:props.gcalEvents,labs:labs,prep:prep});
+function lier(rdv,lab){var p=Object.assign({},prep);var li=Object.assign({},p.liens||{});li[rdvCle(rdv.titre)]=lab;p.liens=li;props.setPrep(p)}
+function ajouterNote(cle,x){var p=Object.assign({},prep);var no=Object.assign({},p.notes||{});no[cle]=(no[cle]||[]).concat([x]);p.notes=no;props.setPrep(p)}
+var ctx={conditions:props.conditions,tdgs:props.tdgs,challenges:props.challenges,crm:props.crm,decisions:props.decisions,notes:prep.notes||{},voiceNotes:props.voiceNotes,tdgVentes:props.tdgVentes,empls:props.empls};
+if(sel&&sel.lab&&sel.lab!=="-"){var r=rdvDonnees(pd,sel.lab,ctx);
+return React.createElement(FicheRdv,{r:r,rdv:sel.rdv,onBack:function(){setSel(null)},onNote:ajouterNote,openLab:props.openLab})}
+var futurs=liste.futurs.filter(function(x){return x.lab!=="-"});var masques=liste.futurs.filter(function(x){return x.lab==="-"});
+var demD=new Date();demD.setDate(demD.getDate()+1);var demI=isoLocal(demD);var bientot=futurs.filter(function(x){return x.date<=demI});
+var ag=props.agenda;
+function carteRdv(x,fort){var a=x.lab;
+return React.createElement("div",{key:x.k,style:{background:"var(--bg2)",border:"1px solid "+(fort?"var(--accent)":"var(--border)"),borderLeft:"4px solid "+(a?"var(--accent)":"var(--orange)"),borderRadius:12,padding:"10px 12px"}},
+React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10}},
+React.createElement("div",{style:{width:64,flexShrink:0}},React.createElement("div",{style:{fontSize:12,fontWeight:800,color:fort?"var(--accent)":"var(--text2)"}},rdvJourFr(x.date,liste.auj)),React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},x.heure||"")),
+React.createElement("div",{style:{flex:1,minWidth:0}},
+React.createElement("div",{style:{fontWeight:700,fontSize:15,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},a?String(a).replace(/ REF$/,""):x.titre),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}},[a&&rdvCle(x.titre)!==rdvCle(a)?"\u00ab "+x.titre+" \u00bb":"",x.detail||"",x.src==="main"?"saisi \u00e0 la main":""].filter(Boolean).join(" \u00b7 "))),
+a?React.createElement("button",{onClick:function(){setSel({lab:a,rdv:x});try{scrollHaut()}catch(e){}},style:{padding:"8px 12px",borderRadius:10,fontSize:13,fontWeight:700,background:"var(--accent)",color:"#fff",whiteSpace:"nowrap"}},"Pr\u00e9parer \u2192"):null),
+!a?React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginTop:8}},
+React.createElement("input",{list:"rdv-labs",placeholder:"Quel labo ?",onChange:function(e){var v=e.target.value;if(labs.indexOf(v)>=0)lier(x,v)},style:{flex:"1 1 160px",minWidth:0,padding:"7px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13}}),
+React.createElement("button",{onClick:function(){lier(x,"-")},style:{padding:"7px 10px",borderRadius:8,fontSize:12,color:"var(--text3)",border:"1px solid var(--border)"}},"Pas un RDV labo")):null)}
+return React.createElement("div",null,
+React.createElement(EnTeteOutil,{titre:"\ud83d\udcdd Pr\u00e9parer mes RDV labo",sous:"Pour chaque rendez-vous : les chiffres du labo, ce qui monte et ce qui baisse, le stock qui dort, vos remises, l'historique des TDG et challenges, et les notes du dernier RDV."}),
+React.createElement("datalist",{id:"rdv-labs"},labs.map(function(l){return React.createElement("option",{key:l,value:l})})),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:10}},ag&&ag.maj?"\ud83d\udcc6 Agenda Google lu le "+dateCourteFr(String(ag.maj).slice(0,10))+" \u00e0 "+String(new Date(ag.maj).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"}))+" \u00b7 mis \u00e0 jour chaque soir, avec une alerte sur le t\u00e9l\u00e9phone la veille des RDV":"\ud83d\udcc6 L'agenda Google est lu chaque soir : vos prochains RDV labo appara\u00eetront ici."),
+bientot.length?React.createElement("div",{style:{marginBottom:16}},
+React.createElement("div",{style:{fontWeight:800,fontSize:15,marginBottom:8}},"\u23f0 Aujourd'hui et demain"),
+React.createElement("div",{style:{display:"grid",gap:8}},bientot.map(function(x){return carteRdv(x,true)}))):null,
+React.createElement("div",{style:{fontWeight:800,fontSize:15,marginBottom:8}},"\ud83d\udcc5 Prochains RDV"+(futurs.length>bientot.length?" ("+(futurs.length-bientot.length)+")":"")),
+futurs.length>bientot.length?React.createElement("div",{style:{display:"grid",gap:8,marginBottom:12}},futurs.filter(function(x){return bientot.indexOf(x)<0}).slice(0,25).map(function(x){return carteRdv(x,false)})):
+React.createElement("div",{style:{fontSize:13,color:"var(--text3)",marginBottom:12}},"Aucun autre RDV pr\u00e9vu dans les 3 prochaines semaines."),
+masques.length?React.createElement("button",{onClick:function(){setVoirMasques(!voirMasques)},style:{fontSize:12,color:"var(--text3)",textDecoration:"underline",padding:0,marginBottom:8}},masques.length+" \u00e9v\u00e9nement"+(masques.length>1?"s":"")+" marqu\u00e9"+(masques.length>1?"s":"")+" \u00ab pas un RDV labo \u00bb"):null,
+voirMasques?React.createElement("div",{style:{display:"grid",gap:4,marginBottom:12}},masques.map(function(x){return React.createElement("div",{key:x.k,style:{display:"flex",gap:8,alignItems:"center",fontSize:12,color:"var(--text3)"}},React.createElement("span",{style:{flex:1}},dateCourteFr(x.date)+" \u00b7 "+x.titre),React.createElement("button",{onClick:function(){var p=Object.assign({},prep);var li=Object.assign({},p.liens||{});delete li[rdvCle(x.titre)];p.liens=li;props.setPrep(p)},style:{fontSize:12,color:"var(--accent)"}},"R\u00e9tablir"))})):null,
+React.createElement("div",{style:{background:"var(--bg2)",border:"1px dashed var(--border)",borderRadius:12,padding:12,marginTop:8,marginBottom:12}},
+React.createElement("div",{style:{fontWeight:700,fontSize:14,marginBottom:6}},"\ud83d\udd0e Pr\u00e9parer un autre labo"),
+React.createElement("div",{style:{display:"flex",gap:6}},
+React.createElement("input",{list:"rdv-labs",value:choixLab,onChange:function(e){setChoixLab(e.target.value)},placeholder:"Nom du labo",style:{flex:1,minWidth:0,padding:"8px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13}}),
+React.createElement("button",{onClick:function(){var l=labs.indexOf(choixLab)>=0?choixLab:trouveLabListe(labs,choixLab);if(l){setSel({lab:l,rdv:null});setChoixLab("")}},disabled:!choixLab.trim(),style:{padding:"8px 14px",borderRadius:8,fontSize:13,fontWeight:700,background:choixLab.trim()?"var(--accent)":"var(--bg3)",color:choixLab.trim()?"#fff":"var(--text3)"}},"Pr\u00e9parer"))),
+liste.passes.filter(function(x){return x.lab&&x.lab!=="-"}).length?React.createElement("details",{style:{marginBottom:12}},
+React.createElement("summary",{style:{cursor:"pointer",fontWeight:700,fontSize:14,padding:"6px 0"}},"\u2705 RDV pass\u00e9s"),
+React.createElement("div",{style:{display:"grid",gap:4,marginTop:6}},liste.passes.filter(function(x){return x.lab&&x.lab!=="-"}).slice(0,15).map(function(x){return React.createElement("button",{key:x.k,onClick:function(){setSel({lab:x.lab,rdv:x})},style:{display:"flex",gap:10,fontSize:13,padding:"6px 0",borderBottom:"1px solid var(--border)",textAlign:"left"}},React.createElement("span",{style:{width:70,color:"var(--text3)"}},dateCourteFr(x.date)),React.createElement("span",{style:{flex:1,fontWeight:600}},String(x.lab).replace(/ REF$/,"")))}))):null,
+React.createElement("details",null,
+React.createElement("summary",{style:{cursor:"pointer",fontWeight:700,fontSize:14,padding:"6px 0"}},"\u2699\ufe0f Ajouter un RDV \u00e0 la main \u00b7 synchro Google manuelle"),
+React.createElement("div",{style:{marginTop:8}},React.createElement(MemoPage,Object.assign({},props.memoProps,{compact:true})))))}
+
 function MemoPage(props){
 var ld=props.ld||{};var pd=props.pd;var decisions=props.decisions||{};
 var events=props.events||[];var setEvents=props.setEvents;
@@ -12880,8 +13210,8 @@ challenges=ch.filter(function(c){return c.lab&&c.lab.toUpperCase().indexOf(labUp
 return{labData:labData,labKey:labKey,rdvs:labRdvs,dec:dec,nbProds:nbProds,challenges:challenges}}
 
 return React.createElement("div",null,
-React.createElement("h2",{style:{fontSize:22,fontWeight:700,marginBottom:4}},"\ud83d\udcdd Memo RDV Labo"),
-React.createElement("p",{style:{fontSize:13,color:"var(--text2)",marginBottom:16}},"Pr\u00e9parez vos rendez-vous commerciaux avec toutes les donn\u00e9es cl\u00e9s"),
+props.compact?null:React.createElement("h2",{style:{fontSize:22,fontWeight:700,marginBottom:4}},"\ud83d\udcdd Memo RDV Labo"),
+props.compact?null:React.createElement("p",{style:{fontSize:13,color:"var(--text2)",marginBottom:16}},"Pr\u00e9parez vos rendez-vous commerciaux avec toutes les donn\u00e9es cl\u00e9s"),
 
 React.createElement("div",{style:{background:"var(--bg2)",borderRadius:12,padding:14,border:"1px solid var(--border)",marginBottom:12}},
 React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}},
@@ -12909,7 +13239,7 @@ React.createElement("option",{value:"merch"},"\ud83d\udecb Merchandising")),
 React.createElement("input",{value:evContact,onChange:function(e){setEvContact(e.target.value)},placeholder:"Contact (optionnel)",style:{padding:"8px 10px",borderRadius:8,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:13}}),
 React.createElement("button",{onClick:addEvent,disabled:!evDate||!evLab,style:{padding:"8px 14px",borderRadius:8,background:evDate&&evLab?"var(--accent)":"var(--bg3)",color:evDate&&evLab?"#fff":"var(--text3)",fontWeight:600,fontSize:13}},"Ajouter"))):null,
 
-selLab?
+props.compact?null:selLab?
 /* MEMO DETAIL VIEW */
 (function(){
 var memo=buildMemo(selLab);var d=memo.labData;
@@ -13322,6 +13652,8 @@ useEffect(function(){try{var g=localStorage.getItem("ps_gcal_cache");if(g)setGca
 var tasksAppS=useState([]);var tasksApp=tasksAppS[0];var setTasksApp=tasksAppS[1];
 var actPreS=useState(null);var actPre=actPreS[0];var setActPre=actPreS[1];
 var tdgsAppS=useState([]);var tdgsApp=tdgsAppS[0];var setTdgsApp=tdgsAppS[1];
+var agRdvS=useState(function(){return lsVal("ps_agenda_rdv",null)});var agendaRdv=agRdvS[0];var setAgendaRdv=agRdvS[1];
+var rdvPrepS=useState(function(){return lsVal("ps_rdv_prep",{})||{}});var rdvPrep=rdvPrepS[0];var setRdvPrep=rdvPrepS[1];var rdvPrepPret=useRef(false);
 var tdgPhotosS=useState({});var tdgPhotos=tdgPhotosS[0];var setTdgPhotos=tdgPhotosS[1];
 var photosDirty=useRef(false);
 var tdgVentesS=useState(null);var tdgVentes=tdgVentesS[0];var setTdgVentes=tdgVentesS[1];
@@ -13646,6 +13978,12 @@ useEffect(function(){if(!biPret.current||!biCfg)return;try{localStorage.setItem(
 useEffect(function(){var p=supaClient?supaLoad("tdg_emplacements").catch(function(){return null}):Promise.resolve(null);
 p.then(function(r){var v=null;if(Array.isArray(r)){v=r;SYNC_BASE["tdg_emplacements"]=r}else{try{var x=localStorage.getItem("ps_tdg_empl");if(x){x=JSON.parse(x);if(Array.isArray(x))v=x}}catch(e){}}
 if(v)setTdgEmpls(v);emPret.current=true})},[]);
+/* v9.21 : RDV labo lus dans l'agenda Google chaque soir + notes et liens de preparation */
+useEffect(function(){var p=supaClient?supaLoad("agenda_rdv").catch(function(){return null}):Promise.resolve(null);
+p.then(function(r){if(r&&Array.isArray(r.events)){setAgendaRdv(r);try{localStorage.setItem("ps_agenda_rdv",JSON.stringify(r))}catch(e){}}})},[]);
+useEffect(function(){var p=supaClient?supaLoad("rdv_prep").catch(function(){return null}):Promise.resolve(null);
+p.then(function(r){if(r&&typeof r==="object"&&!Array.isArray(r)){SYNC_BASE["rdv_prep"]=r;setRdvPrep(r)}rdvPrepPret.current=true})},[]);
+useEffect(function(){if(!rdvPrepPret.current)return;try{localStorage.setItem("ps_rdv_prep",JSON.stringify(rdvPrep))}catch(e){};syncSave("rdv_prep",rdvPrep,setRdvPrep)},[rdvPrep]);
 useEffect(function(){if(!emPret.current)return;try{localStorage.setItem("ps_tdg_empl",JSON.stringify(tdgEmpls))}catch(e){};syncSave("tdg_emplacements",tdgEmpls,setTdgEmpls)},[tdgEmpls]);
 /* Propositions de commande retirees (v9.03) : partagees entre appareils */
 useEffect(function(){var p=supaClient?supaLoad("cmd_retires").catch(function(){return null}):Promise.resolve(null);
@@ -13724,7 +14062,7 @@ useEffect(function(){if(!supaLoaded)return;try{localStorage.setItem("ps_decision
 
 /* Mise a jour depuis les autres appareils */
 var syncLive=useRef({});
-syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],tdg_emplacements:[tdgEmpls,setTdgEmpls],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],cmd_retires:[cmdRetires,setCmdRetires],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos],univers_regles:[univRegles,setUnivRegles],campagne_sante:[campCS,setCampCS],campagne_reglages:[campCf,setCampCf],potentiel_culottes:[pcmCfg,setPcmCfg]};
+syncLive.current={challenges:[challenges,setChallenges],tasks:[tasksApp,setTasksApp],tdgs:[tdgsApp,setTdgsApp],tdg_emplacements:[tdgEmpls,setTdgEmpls],rdv_prep:[rdvPrep,setRdvPrep],agenda_rdv:[agendaRdv,setAgendaRdv],team:[team,setTeam],decisions:[decisions,setDecisions],events:[events,setEvents],cmd_hidden:[cmdHidden,setCmdHidden],favs:[favs,setFavs],tips_state:[tipsState,setTipsState],widgets_config:[widgets,setWidgets],cmd_passed:[cmdPassed,setCmdPassed],cmd_retires:[cmdRetires,setCmdRetires],voice_notes:[voiceNotes,setVoiceNotes],ca_objectif:[caObj,setCaObj],crm_delegues:[crm,setCrm],palmares:[palmares,setPalmares],conditions_labos:[conditions,setConditions],promos_ajoutees:[promosAj,setPromosAj],ruptures_ansm:[ruptures,setRuptures],univers_metres:[metres,setMetres],univers_labos:[univOvr,setUnivOvr],univers_codes:[univCodes,setUnivCodes],reglages_google:[reglG,setReglG],alertes_ignorees:[alIgn,setAlIgn],projets_gammes:[projGammes,setProjGammes],duels_categories:[duelCats,setDuelCats],regroupements_labos:[regLabos,setRegLabos],univers_regles:[univRegles,setUnivRegles],campagne_sante:[campCS,setCampCS],campagne_reglages:[campCf,setCampCf],potentiel_culottes:[pcmCfg,setPcmCfg]};
 var supaLoadedRef=useRef(false);supaLoadedRef.current=supaLoaded;
 useEffect(function(){
 if(!supaClient)return;
@@ -14011,7 +14349,7 @@ content=React.createElement(RemisesPage,{pd:pdCal,ld:ldLive,conditions:condition
 }else if(page==="univers"){
 content=React.createElement(UniversPage,{nomsExt:nomsExt,setNomsExt:setNomsExt,regles:univRegles,setRegles:setUnivRegles,tdgs:tdgsApp,promos:((pdCal&&pdCal.PROMO)||[]).concat(promosAj||[]),ld:ldLive,pd:pdCal,openLab:openLab,setPage:setPage,metres:metres,setMetres:setMetres,overrides:univOvr,setOverrides:setUnivOvr,codes:univCodes,setCodes:setUnivCodes});
 }else if(page==="memo"){
-content=React.createElement(MemoPage,{key:"memo-"+(pdCal&&pdCal.CAL?1:0),ld:ldLive,pd:pdCal,decisions:decisions,events:events,setEvents:setEvents,gcalEvents:gcalEvents,setGcalEvents:setGcalEvents});
+content=React.createElement(RdvPage,{pd:pdCal,ld:ldLive,agenda:agendaRdv,events:events,gcalEvents:gcalEvents,prep:rdvPrep,setPrep:setRdvPrep,conditions:conditions,tdgs:tdgsApp,challenges:challenges,crm:crm,decisions:decisions,voiceNotes:voiceNotes,tdgVentes:tdgVentes,empls:tdgEmpls,openLab:openLab,memoProps:{key:"memo-"+(pdCal&&pdCal.CAL?1:0),ld:ldLive,pd:pdCal,decisions:decisions,events:events,setEvents:setEvents,gcalEvents:gcalEvents,setGcalEvents:setGcalEvents}});
 }else if(page==="vnotes"){
 content=React.createElement(VoiceNotesPage,{ld:ldLive,notes:voiceNotes,setNotes:setVoiceNotes});
 }else if(page==="actu"){
