@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.28">
+<meta name="ps-version" content="e1.29">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -708,10 +708,10 @@ function culSuivi(ext,mots,codes,h){
 var mt=motsGamme(mots);var cs={};(codes||[]).forEach(function(c){cs[String(c).replace(/\s/g,"")]=1});if(!ext||(!mt.length&&!Object.keys(cs).length))return null;
 function ok(nom,c,t){return(c&&(cs[c]||culCodeLpp(c)))||(culNomOk(nom,mt)&&culGarde(nom,t,h))}
 var n=ext.M.length;var parMois=[];for(var k=0;k<n;k++)parMois.push(0);var refs=[];
-ext.R.forEach(function(r){if(!ok(r.n,r.c,r.t))return;var t=0;r.q.forEach(function(x,k){parMois[k]+=x;t+=x});if(t>0)refs.push({n:r.n,t:t})});
+var codesC=[];ext.R.forEach(function(r){if(!ok(r.n,r.c,r.t))return;if(r.c)codesC.push(String(r.c).replace(/\s/g,""));var t=0;r.q.forEach(function(x,k){parMois[k]+=x;t+=x});if(t>0)refs.push({n:r.n,t:t})});
 refs.sort(function(a,b){return b.t-a.t});
 var cum=0;var mois=parMois.map(function(q,k){cum+=q;return{mk:ext.M[k],q:Math.round(q),cum:Math.round(cum),complet:k<n-1}});
-return{mois:mois,tot:Math.round(cum),refs:refs,fin:ext.fin}}
+return{mois:mois,tot:Math.round(cum),refs:refs,fin:ext.fin,codes:codesC}}
 var MOIS_LONG=["janvier","f\u00e9vrier","mars","avril","mai","juin","juillet","ao\u00fbt","septembre","octobre","novembre","d\u00e9cembre"];
 function culObjectif(cfg){var c=pcmCalc(cfg||PCM_INIT);var an=Math.max(1,Math.round(c.cul));return{an:an,mois:c.cul/12,h:c.h}}
 /* ou en est-on dans le mois en cours (au prorata des jours) */
@@ -749,6 +749,38 @@ cases.push(React.createElement("div",{key:mk,style:{textAlign:"center",minWidth:
 React.createElement("div",{style:{fontSize:ic==="\u00b7"?18:20,lineHeight:"26px",opacity:ic==="\u00b7"?0.5:1}},ic),
 React.createElement("div",{style:{fontSize:10,opacity:0.85}},MOIS_COURT[m])))}
 return React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(12,1fr)",gap:2,marginTop:10}},cases)}
+
+/* e1.29 : palmares de l'equipe (comme PharmaScope v9.26) - culottes vendues par chacun,
+   d'apres le suivi jour par jour (vendeur de chaque ligne de vente) */
+function culPalmares(vd,codes,debut,fin){
+if(!vd||!vd.V||!codes||!codes.length)return null;var parV={},tot=0,suivis=0,depuis=null;
+codes.forEach(function(c){var t=vd.T&&vd.T[c];if(t===1||t===true)t=vd.cov?vd.cov[0]:null;if(t){suivis++;if(!depuis||t>depuis)depuis=t}
+var v=vd.V[c];if(!v)return;Object.keys(v).forEach(function(d){if(d<debut||d>fin)return;Object.keys(v[d]).forEach(function(n){if(estHorsEquipe(n))return;var q=v[d][n]||0;if(!q)return;parV[n]=(parV[n]||0)+q;tot+=q})})});
+if(!suivis)return null;
+return{tot:tot,depuis:depuis,liste:Object.keys(parV).map(function(n){return{n:n,q:Math.round(parV[n]*10)/10}}).filter(function(x){return x.q>0}).sort(function(a,b){return b.q-a.q||a.n.localeCompare(b.n)})}}
+function CulPalmares(props){
+var pS=useState("oct");var per=pS[0];var setPer=pS[1];
+var vd=props.ventes;var fin=(vd&&vd.cov&&vd.cov[1])||aujIso();
+var d30=isoLocal(new Date(new Date(fin+"T12:00:00").getTime()-29*86400000));
+var debut=per==="mois"?fin.slice(0,8)+"01":(per==="30"?d30:"2026-10-01");
+var r=culPalmares(vd,props.codes,debut,fin);
+var carte={background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:14,marginBottom:12};
+var med=["\ud83e\udd47","\ud83e\udd48","\ud83e\udd49"];
+var pil=function(v,l){var on=per===v;return React.createElement("button",{key:v,onClick:function(){setPer(v)},style:{padding:"6px 11px",borderRadius:16,fontSize:12,fontWeight:700,border:"1px solid "+(on?"#be185d":"var(--border)"),background:on?"#be185d":"transparent",color:on?"#fff":"var(--text2)"}},l)};
+var tete=React.createElement("div",null,
+React.createElement("div",{style:{fontWeight:700,marginBottom:8}},"\ud83c\udfc6 Le palmar\u00e8s de l'\u00e9quipe"),
+React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}},pil("oct","Depuis le 1er oct."),pil("mois","Ce mois-ci"),pil("30","30 derniers jours")));
+if(!r)return React.createElement("div",{style:carte},tete,React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Le palmar\u00e8s appara\u00eetra apr\u00e8s la prochaine mise \u00e0 jour des ventes."));
+var max=r.liste.length?r.liste[0].q:0;var fq=function(x){return String(x).replace(".",",")};
+return React.createElement("div",{style:carte},tete,
+!r.liste.length?React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Aucune culotte vendue sur cette p\u00e9riode : \u00e0 qui la premi\u00e8re ? \ud83c\udf31"):
+r.liste.map(function(x,i){var pod=i<3;var w=max>0?Math.max(6,Math.round(x.q/max*100)):0;
+return React.createElement("div",{key:x.n,style:{display:"flex",alignItems:"center",gap:10,padding:pod?"9px 10px":"5px 10px",borderRadius:12,marginBottom:6,background:pod?"linear-gradient(135deg,#fdf2f8,var(--bg2))":"transparent",border:pod?"1px solid #fbcfe8":"none"}},
+React.createElement("span",{style:{fontSize:pod?24:14,width:30,textAlign:"center",fontWeight:800,color:"var(--text3)"}},pod?med[i]:(i+1)+"."),
+React.createElement("div",{style:{flex:1,minWidth:0}},React.createElement("div",{style:{fontWeight:pod?800:600,fontSize:pod?15:14}},x.n),
+React.createElement("div",{style:{height:6,borderRadius:3,background:"#fce7f3",marginTop:4,overflow:"hidden"}},React.createElement("div",{style:{height:"100%",width:w+"%",background:"#ec4899",borderRadius:3}}))),
+React.createElement("div",{style:{textAlign:"right"}},React.createElement("div",{style:{fontWeight:800,fontSize:pod?20:15,color:"#be185d"}},fq(x.q)),React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},"culotte"+(x.q>1?"s":""))))}),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:4}},"Du "+debut.split("-").reverse().join("/")+" au "+fin.split("-").reverse().join("/")+" \u00b7 "+fq(Math.round(r.tot))+" au total"+(r.depuis&&r.depuis>debut?" \u00b7 compt\u00e9 depuis le "+r.depuis.split("-").reverse().join("/"):"")))}
 
 function CulottesEquipe(props){
 var obj=culObjectif(props.cfg);var su=culSuivi(props.ext,obj.h.mots,culCodes(props.cfg),obj.h);var me=culMoisEnCours(su,obj);
@@ -790,7 +822,7 @@ li("Aux jeunes femmes et aux \u00e9tudiantes."),
 li("Aux mamans qui ach\u00e8tent des protections pour leur ado."),
 li("Lors d'un achat de serviettes, tampons ou d'antidouleur pour des r\u00e8gles douloureuses.")),
 React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:8}},"Sources : service-public.fr (01/10/2026), arr\u00eat\u00e9 du 6 ao\u00fbt 2026."));
-return React.createElement("div",null,hero,courbe,top,conseils)}
+return React.createElement("div",null,hero,React.createElement(CulPalmares,{ventes:props.ventes,codes:su?su.codes:[]}),courbe,top,conseils)}
 
 /* bandeau compact pour l'accueil */
 function BandeauCulottes(props){
@@ -1928,7 +1960,7 @@ etat.ok===false&&!etat.maj?h("div",{style:{background:"var(--red-bg)",color:"var
 charge&&!etat.maj?h(Vide,null,"Chargement\u2026"):
 vue==="accueil"?h("div",null,PV?h("div",{className:"grille",style:{gap:"0 16px"}},h(PV.BandeauVaccins,{cs:csV,cfg:cfV,onClick:function(){aller("vaccins")}}),h(PV.BandeauCulottes,{cfg:cfC,ext:culX,onClick:function(){aller("culottes")}})):null,h("div",{className:"grille"},blocs.taches,blocs.reassort,blocs.tg,blocs.challenges)):
 vue==="vaccins"&&PV?h("div",{style:{maxWidth:820}},h(PV.VaccinsEquipe,{cs:csV,cfg:cfV})):
-vue==="culottes"&&PV?h("div",{style:{maxWidth:820}},rea||!reaCharge?h(PV.CulottesEquipe,{cfg:cfC,ext:culX}):h(Vide,null,"Chargement des ventes\u2026")):
+vue==="culottes"&&PV?h("div",{style:{maxWidth:820}},rea||!reaCharge?h(PV.CulottesEquipe,{cfg:cfC,ext:culX,ventes:ventes}):h(Vide,null,"Chargement des ventes\u2026")):
 h("div",{style:{maxWidth:820}},
 vue==="taches"?h(PageTaches,{tasks:d.tasks,noms:noms,moi:moi,onFait:tacheFaite,onQui:quiFait,onEtape:etapeFaite,onEnregistrer:function(t){enregistrerEl("tasks",t)},onSupprimer:function(t){supprimerEl("tasks",t)}}):
 vue==="tg"?h(PageTG,{empls:vac.tdg_emplacements,tdgs:d.tdgs,photos:photos,ventes:ventes,resp:resp,noms:noms,moi:moi,cat:cat,montrer:montrer,onCheck:cocherTG,onStatut:statutTG,onPhoto:photoTG,onEnregistrer:function(t){enregistrerEl("tdgs",t)},onSupprimer:function(t){supprimerEl("tdgs",t)}}):
