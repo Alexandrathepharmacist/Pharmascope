@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.42">
+<meta name="ps-version" content="v9.43">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -852,7 +852,7 @@ if(!JOURS[mo])JOURS[mo]={};JOURS[mo][jour]=1;
 var hh=parseInt(((r0.split(" ")[1])||"").split(":")[0],10);
 if(facture&&!isNaN(hh)&&hh>=0&&hh<24){var jkH=dp[2]+"-"+dp[1]+"-"+dp[0];
 if(!HEATJ[jkH])HEATJ[jkH]={t:{},c:{},m:{}};var hj=HEATJ[jkH];
-if(!hj.t[hh])hj.t[hh]={};hj.t[hh][facture]=1;hj.c[hh]=(hj.c[hh]||0)+ca;hj.m[hh]=(hj.m[hh]||0)+marge}
+if(!hj.t[hh])hj.t[hh]={};hj.t[hh][facture]=1;hj.c[hh]=(hj.c[hh]||0)+ca;hj.m[hh]=(hj.m[hh]||0)+marge;if(ca>SEUIL_EXC){if(!hj.x)hj.x=[0,0,0];hj.x[0]++;hj.x[1]+=ca;hj.x[2]+=marge}}
 if(ca>SEUIL_EXC){if(!CAEXC[mo])CAEXC[mo]=[0,0];CAEXC[mo][0]+=ca;CAEXC[mo][1]+=1}
 if(whNew[code]){delete whNew[code];var whSup=pMap[code];pMap[code]=null;var labNom=inferLab(code);if(!labNom||estGrossisteNom(labNom))pMap[code]=whSup}
 var sup=pMap[code]||inferLab(code)||quarMap[code]||"Divers";
@@ -973,7 +973,7 @@ if(fenetre.length)log("Reassort: "+Object.keys(fREC).length+" references sur "+f
 var fHEAT={};
 Object.keys(HEATJ).forEach(function(jk){var hj=HEATJ[jk];var t=[],c=[],mh=[];
 for(var h2=0;h2<24;h2++){t.push(hj.t[h2]?Object.keys(hj.t[h2]).length:0);c.push(Math.round(hj.c[h2]||0));mh.push(Math.round(hj.m[h2]||0))}
-fHEAT[jk]={t:t,c:c,m:mh,v:2}});
+fHEAT[jk]={t:t,c:c,m:mh,v:3};if(hj.x)fHEAT[jk].x=[hj.x[0],Math.round(hj.x[1]),Math.round(hj.x[2])]});
 /* Ventes associees : paires de produits achetes ensemble (tickets de 2 a 15 produits) */
 var fASSOC=null;
 (function(){
@@ -1724,7 +1724,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.42";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.43";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -1743,6 +1743,7 @@ var NAVG=[
 {id:"alertes",label:"Alertes",icon:"\ud83d\udd14"},
 {id:"moisprec",label:"Mois pr\u00e9c\u00e9dent",icon:"\ud83d\udcc5"},
 {id:"annee",label:"Mon ann\u00e9e",icon:"\ud83d\udcc8"},
+{id:"services",label:"Services",icon:"\ud83e\ude7a"},
 {id:"tresorerie",label:"Tr\u00e9sorerie",icon:"\ud83d\udcb6"},
 {id:"bilan",label:"Bilan & r\u00e9sultat",icon:"\ud83d\udcd2"},
 {id:"univers",label:"Univers",icon:"\ud83c\udfea"}]},
@@ -1752,6 +1753,7 @@ var NAVG=[
 {id:"meteo",label:"M\u00e9t\u00e9o de la demande",icon:"\ud83c\udf26"},
 {id:"recos",label:"Recos",icon:"\ud83d\udca1"},
 {id:"dormant",label:"Stock dormant",icon:"\ud83d\udca4"},
+{id:"planstock",label:"R\u00e9duire le stock",icon:"\ud83d\udcb0"},
 {id:"ruptures",label:"Ruptures ANSM",icon:"\ud83d\udea8"},
 {id:"prix",label:"Contr\u00f4le des prix",icon:"\ud83c\udff7"}]},
 {id:"labos",label:"Labos & gammes",icon:"\ud83e\udd1d",items:[
@@ -2841,7 +2843,8 @@ if(id==="marge_jour"){var mj=margeDernierJour(pd);if(!mj||!mj.dj)return null;
 var jN=new Date(mj.dj+"T12:00:00");var jLib=["DIM.","LUN.","MAR.","MER.","JEU.","VEN.","SAM."][jN.getDay()]+" "+mj.dj.slice(8,10)+"/"+mj.dj.slice(5,7);
 if(mj.mg===null)return{label:"MARGE DU "+jLib,value:"\u2014",sub:"au prochain import des ventes",subCol:"var(--text3)"};
 var jNom=["dimanches","lundis","mardis","mercredis","jeudis","vendredis","samedis"][jN.getDay()];
-return{label:"MARGE DU "+jLib,value:fmtEur0(mj.mg),sub:(mj.ev!==null?pct(mj.ev)+" vs moy. "+mj.nRef+" "+jNom+(mj.partiel?" (m\u00eame heure)":""):"")+(mj.tx!==null?(mj.ev!==null?" \u2022 ":"")+"taux "+pct(mj.tx):""),subCol:mj.ev!==null?evolColor(mj.ev):"var(--text3)"}}
+var hX=pd.HEAT[mj.dj]&&pd.HEAT[mj.dj].x;
+return{label:"MARGE DU "+jLib,value:fmtEur0(mj.mg),sub:(mj.ev!==null?pct(mj.ev)+" vs moy. "+mj.nRef+" "+jNom+(mj.partiel?" (m\u00eame heure)":""):"")+(mj.tx!==null?(mj.ev!==null?" \u2022 ":"")+"taux "+pct(mj.tx):"")+(hX?" \u2022 dont "+hX[0]+" m\u00e9d. cher"+(hX[0]>1?"s":"")+" ("+fmtEur0(hX[1])+" de CA)":""),subCol:mj.ev!==null?evolColor(mj.ev):"var(--text3)"}}
 if(id==="marge_n1"&&fC&&typeof fC.marge!=="undefined"){
 var mpM=moisCourant.split("-");var fM1=pd.F?pd.F[(parseInt(mpM[0],10)-1)+"-"+mpM[1]]:null;
 if(fM1&&((fM1.jours||0)<10||typeof fM1.marge==="undefined"))fM1=null;
@@ -5315,8 +5318,8 @@ return React.createElement("g",{key:"p"+i},React.createElement("circle",{cx:x(i)
 React.createElement("text",{x:x(i),y:haut?y(p.v)-8:y(p.v)+15,fontSize:9.5,fontWeight:700,fill:"var(--text2)",textAnchor:i===0?"start":(i===pts.length-1?"end":"middle")},semK(p.v)))}),
 pts.map(function(p,i){return React.createElement("text",{key:"l"+i,x:x(i),y:H-5,fontSize:10.5,fontWeight:p.auj?800:500,fill:p.auj?"var(--accent)":"var(--text3)",textAnchor:i===0?"start":(i===pts.length-1?"end":"middle")},p.l)})),
 React.createElement("div",{style:{display:"flex",gap:14,fontSize:11,color:"var(--text3)",marginTop:4,flexWrap:"wrap"}},
-React.createElement("span",null,React.createElement("span",{style:{display:"inline-block",width:16,height:3,borderRadius:2,background:"var(--accent)",verticalAlign:"middle",marginRight:5}}),"cette semaine"),
-l1?React.createElement("span",null,React.createElement("span",{style:{display:"inline-block",width:16,borderTop:"2px dashed var(--text3)",verticalAlign:"middle",marginRight:5}}),"m\u00eame semaine l'an dernier"):null))}
+React.createElement("span",null,React.createElement("span",{style:{display:"inline-block",width:16,height:3,borderRadius:2,background:"var(--accent)",verticalAlign:"middle",marginRight:5}}),props.leg1||"cette semaine"),
+l1?React.createElement("span",null,React.createElement("span",{style:{display:"inline-block",width:16,borderTop:"2px dashed var(--text3)",verticalAlign:"middle",marginRight:5}}),props.leg2||"m\u00eame semaine l'an dernier"):null))}
 function SemCarte(props){
 return React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:"14px 16px",display:"flex",flexDirection:"column",gap:6}},
 React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8}},React.createElement("span",{style:{fontSize:20}},props.ic),React.createElement("div",{style:{fontWeight:800,fontSize:15,flex:1}},props.titre),
@@ -5340,6 +5343,7 @@ var modeMg=s.marge!==null&&s.marge!==undefined;var valJ=modeMg?semMgJour:semCaJo
 /* courbe : lundi -> samedi (+ dimanche s'il y a eu des ventes) */
 var nbJ=6;for(var k=6;k<7;k++){var jj=isoAjoute(s.du,k);if(semCaJour(pd,jj)||semCaJour(pd,isoAjoute(jj,-364)))nbJ=7}
 var pts=[];for(var i=0;i<nbJ;i++){var j=isoAjoute(s.du,i);var v=j<=s.au?valJ(pd,j):null;var v1=valJ(pd,isoAjoute(j,-364));pts.push({l:JOURS_LETTRES[i]+" "+j.slice(8,10),j:j,v:v,v1:v1,auj:j===aujIso(),nom:JOURS_NOMS[i]})}
+var exc=[0,0,0];pts.forEach(function(p){var h=pd.HEAT[p.j];if(p.v!==null&&p.v!==undefined&&h&&h.x){exc[0]+=h.x[0];exc[1]+=h.x[1];exc[2]+=h.x[2];p.x=h.x[0]}});
 var meilleur=null;pts.forEach(function(p){if(p.v!==null&&p.v!==undefined&&(!meilleur||p.v>meilleur.v))meilleur=p});
 var evPan=s.panier&&s.panier_n1?semEvol(s.panier,s.panier_n1):null;var evTk=s.tickets_n1?semEvol(s.tickets,s.tickets_n1):null;
 var nav=React.createElement("div",{style:{display:"flex",alignItems:"center",gap:8,marginBottom:14}},
@@ -5358,6 +5362,7 @@ React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,flex
 React.createElement("span",{style:{fontSize:34,fontWeight:800,letterSpacing:"-0.5px"}},fmtEur0(modeMg?s.marge:s.ca)),React.createElement(SemPill,{e:modeMg?s.evol_marge:s.evol,grand:true})),
 React.createElement("div",{style:{fontSize:12,color:"#475569",marginBottom:12,lineHeight:1.45}},modeMg?(s.marge_n1!==null&&s.marge_n1!==undefined?"L'an dernier, m\u00eames jours : "+fmtEur0(s.marge_n1)+" \u00b7 \u00e9cart "+(s.marge-s.marge_n1>=0?"+":"\u2212")+fmtEur0(Math.abs(s.marge-s.marge_n1)):"Comparaison avec l'an dernier d\u00e8s que l'historique des marges jour par jour aura \u00e9t\u00e9 relu (prochain import des ventes Winpharma)."):
 (s.ca_n1!==null?"L'an dernier, m\u00eames jours : "+fmtEur0(s.ca_n1)+" \u00b7 \u00e9cart "+(s.ca-s.ca_n1>=0?"+":"\u2212")+fmtEur0(Math.abs(s.ca-s.ca_n1)):"Pas de ventes connues l'an dernier sur ces jours.")+" \u00b7 La marge jour par jour s'affichera ici apr\u00e8s le prochain import des ventes Winpharma."),
+exc[0]?React.createElement("div",{style:{fontSize:12,color:"#1e3a8a",background:"rgba(219,234,254,.8)",borderRadius:8,padding:"5px 10px",marginBottom:10}},"\ud83d\udc8a Dont "+exc[0]+" m\u00e9dicament"+(exc[0]>1?"s":"")+" cher"+(exc[0]>1?"s":"")+" (plus de 1 000 \u20ac la ligne) : "+fmtEur0(exc[1])+" de CA pour "+fmtEur0(exc[2])+" de marge."):null,
 React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},
 tuile("\ud83d\udc65 Clients",(s.tickets||0).toLocaleString("fr-FR"),evTk,s.tickets_n1?"l'an dernier : "+s.tickets_n1.toLocaleString("fr-FR"):null),
 modeMg?tuile("\ud83d\udcb6 Marge par client",s.tickets?semEur2(s.marge/s.tickets):"\u2013",s.tickets&&s.tickets_n1&&s.marge_n1?semEvol(s.marge/s.tickets,s.marge_n1/s.tickets_n1):null,s.tickets_n1&&s.marge_n1?"l'an dernier : "+semEur2(s.marge_n1/s.tickets_n1):null):
@@ -5369,7 +5374,7 @@ React.createElement("div",{style:{fontWeight:800,fontSize:15,marginBottom:6}},mo
 React.createElement(SemCourbe,{pts:pts,lib:modeMg?"Marge":"Chiffre d'affaires"}),
 React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat("+nbJ+",1fr)",gap:4,marginTop:10}},pts.map(function(p,i){var e=semEvol(p.v,p.v1);
 return React.createElement("div",{key:i,style:{textAlign:"center",padding:"6px 2px",borderRadius:8,background:p.v===null||p.v===undefined?"transparent":"var(--bg3)"}},
-React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--text3)"}},JOURS_LETTRES[i]),
+React.createElement("div",{style:{fontSize:11,fontWeight:700,color:"var(--text3)"}},JOURS_LETTRES[i]+(p.x?" \ud83d\udc8a":"")),
 React.createElement("div",{style:{fontSize:12,fontWeight:800}},p.v===null||p.v===undefined?"\u2013":semK(p.v)),
 e!==null?React.createElement("div",{style:{fontSize:10.5,fontWeight:700,color:e>=0?"var(--accent)":"var(--red)"}},(e>=0?"+":"")+Math.round(e)+"%"):React.createElement("div",{style:{fontSize:10.5,color:"var(--text3)"}},p.v1&&(p.v===null||p.v===undefined)?semK(p.v1)+" a-1":" "))})));
 var cartes=[];
@@ -5401,6 +5406,131 @@ return React.createElement("div",null,entete,nav,hero,courbe,
 cartes.length?React.createElement("div",{style:{fontWeight:800,fontSize:16,margin:"4px 0 10px"}},recente?"\ud83e\udded Ce qui vous attend":"\ud83c\udfc6 Challenges de cette semaine-l\u00e0"):null,
 cartes.length?React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:12}},cartes):null,
 React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:14,lineHeight:1.5}},(modeMg?"Marge = marge calcul\u00e9e par Winpharma sur chaque ligne de vente (prix de vente HT \u2212 prix d'achat). Elle est beaucoup moins fauss\u00e9e qu'un chiffre d'affaires par un m\u00e9dicament tr\u00e8s cher, car la marge r\u00e9glement\u00e9e des m\u00e9dicaments remboursables est d\u00e9gressive (son taux baisse quand le prix monte). ":"Chiffre d'affaires HT d'apr\u00e8s l'export des ventes Winpharma. ")+"Comparaison avec les m\u00eames jours de la semaine, 52 semaines plus t\u00f4t (ex. lundi "+dateCourteFr(s.du)+" contre lundi "+dateCourteFr(isoAjoute(s.du,-364))+")."))}
+
+/* ===== PLAN DE REDUCTION DU STOCK (v9.43) =====
+   Pour chaque produit en stock : rythme de vente par semaine = le plus fort entre les 3 derniers mois
+   pleins et les 3 mois a venir l'an dernier (pour ne pas penaliser un produit de saison) ; couverture =
+   stock / rythme ; \u00ab en trop \u00bb = valeur du stock au-dela de la couverture cible (8 semaines par defaut) ;
+   \u00ab dormant \u00bb = aucune vente depuis 6 mois. Valeurs HT du fichier stock Winpharma. */
+function planStockCalc(pd,cible,filtre){
+if(!pd||!pd.STKU||!pd.M)return null;var idx=indexProduits(pd);var lf=dernierMoisComplet(pd);if(lf<0)return null;
+var labs={};var tot={val:0,trop:0,dorm:0,cout:0,nb:0};
+Object.keys(pd.STKU).forEach(function(c){var q=pd.STKU[c];if(!(q>0))return;var sv=pd.STKV&&pd.STKV[c];var v=Array.isArray(sv)?sv[0]:sv;if(!(v>0))return;
+var med=/^340/.test(c);if(filtre==="para"&&med)return;if(filtre==="medic"&&!med)return;
+var e=idx[c];var p=e&&e.p;var lab=e?e.lab:(Array.isArray(sv)?sv[2]||"Divers":"Divers");var nom=p?p.n:(Array.isArray(sv)?sv[1]:"EAN "+c);
+if(estFournOrphelin(lab)&&Array.isArray(sv)&&sv[2])lab=sv[2];
+var q3=0,qf=0,q6=0;if(p&&p.qm){for(var i=lf-2;i<=lf;i++)if(i>=0)q3+=p.qm[i]||0;for(var k=1;k<=3;k++){var j=lf+k-12;if(j>=0)qf+=p.qm[j]||0}for(var i6=lf-5;i6<=pd.M.length-1;i6++)if(i6>=0)q6+=p.qm[i6]||0}
+var rythme=Math.max(q3,qf)/13;var cu=v/q;
+var dormant=q6<=0;var trop=dormant?v:Math.max(0,q-rythme*cible)*cu;var couv=rythme>0?q/rythme:null;
+var der=null;if(p&&p.qm)for(var d=p.qm.length-1;d>=0;d--){if(p.qm[d]>0){der=pd.M[d];break}}
+if(!labs[lab])labs[lab]={lab:lab,val:0,trop:0,dorm:0,cout:0,prods:[]};var L=labs[lab];
+L.val+=v;L.trop+=trop;if(dormant)L.dorm+=v;L.cout+=rythme*cu;
+if(trop>=1)L.prods.push({c:c,n:nom,q:q,v:v,trop:trop,rythme:rythme,couv:couv,dormant:dormant,der:der,med:med});
+tot.val+=v;tot.trop+=trop;if(dormant)tot.dorm+=v;tot.cout+=rythme*cu;tot.nb++});
+var liste=Object.keys(labs).map(function(k){var L=labs[k];L.couv=L.cout>0?L.val/L.cout:null;L.prods.sort(function(a,b){return b.trop-a.trop});
+L.actions=[];if(L.dorm>=150)L.actions.push(["\ud83d\udd01","Demander un retour ou un \u00e9change au d\u00e9l\u00e9gu\u00e9","pour "+fmtEur0(L.dorm)+" de produits qui ne se vendent plus"]);
+if(L.couv&&L.couv>cible*2&&L.trop-L.dorm>=300)L.actions.push(["\u23f8\ufe0f","Suspendre les commandes \u2248 "+Math.min(26,Math.round(L.couv-cible))+" semaines","le stock couvre "+Math.round(L.couv)+" semaines de ventes"]);
+var bons=L.prods.filter(function(x){return !x.dormant&&!x.med&&x.rythme>0}).slice(0,3);if(bons.length&&L.trop-L.dorm>=200)L.actions.push(["\ud83d\udecd\ufe0f","Mettre en avant (t\u00eate de gondole, conseil)",bons.map(function(x){return x.n}).join(", ")]);
+return L}).filter(function(L){return L.trop>=50}).sort(function(a,b){return b.trop-a.trop});
+tot.couv=tot.cout>0?tot.val/tot.cout:null;return{labs:liste,tot:tot}}
+function PlanStockPage(props){
+var pd=props.pd;
+var cS=useState(function(){return lsVal("ps_planstock_cible",8)});var cible=cS[0];
+var fS=useState(function(){return lsVal("ps_planstock_filtre","para")});var filtre=fS[0];
+function setC(v){cS[1](v);try{localStorage.setItem("ps_planstock_cible",JSON.stringify(v))}catch(e){}}
+function setF(v){fS[1](v);try{localStorage.setItem("ps_planstock_filtre",JSON.stringify(v))}catch(e){}}
+var oS=useState(null);var ouvert=oS[0];var setOuvert=oS[1];
+var r=useMemo(function(){try{return planStockCalc(pd,cible,filtre)}catch(e){console.warn("planstock",e);return null}},[pd,cible,filtre]);
+var entete=React.createElement(EnTeteOutil,{titre:"\ud83d\udcb0 Plan de r\u00e9duction du stock",sous:"Le stock en trop, labo par labo : ce qui d\u00e9passe quelques semaines de ventes, et ce qui ne se vend plus. Chaque euro lib\u00e9r\u00e9 revient en tr\u00e9sorerie."});
+if(!r||!r.tot.nb)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\ud83d\udce6",titre:"Pas encore de fichier stock",texte:"Le plan se calcule d\u00e8s qu'un \u00e9tat du stock Winpharma a \u00e9t\u00e9 import\u00e9."}));
+var t=r.tot;
+var hero=React.createElement("div",{style:{background:"linear-gradient(135deg,#ecfdf5 0%,#f0f9ff 60%,#fefce8 100%)",border:"1px solid #d1fae5",borderRadius:18,padding:"18px 18px 14px",marginBottom:14,color:"#0f172a"}},
+React.createElement("div",{style:{fontSize:13,fontWeight:700,color:"#047857"}},"Tr\u00e9sorerie que l'on peut lib\u00e9rer"),
+React.createElement("div",{style:{fontSize:34,fontWeight:800,letterSpacing:"-0.5px"}},fmtEur0(t.trop)),
+React.createElement("div",{style:{fontSize:12,color:"#475569",marginBottom:12}},"sur "+fmtEur0(t.val)+" de stock "+(filtre==="para"?"de parapharmacie":(filtre==="medic"?"de m\u00e9dicaments":"au total"))+" (valeur HT du dernier fichier stock)"),
+React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap"}},
+[["\ud83d\udca4 Ne se vend plus",fmtEur0(t.dorm),"aucune vente depuis 6 mois"],["\ud83d\udce6 Au-del\u00e0 de "+cible+" semaines",fmtEur0(t.trop-t.dorm),"stock en avance sur les ventes"],["\u23f1\ufe0f Couverture moyenne",t.couv?Math.round(t.couv)+" sem.":"\u2013","stock \u00f7 ventes au prix d'achat"]].map(function(x,i){
+return React.createElement("div",{key:i,style:{flex:"1 1 140px",background:"rgba(255,255,255,.65)",borderRadius:12,padding:"10px 12px"}},React.createElement("div",{style:{fontSize:12,color:"#64748b",fontWeight:600}},x[0]),React.createElement("div",{style:{fontSize:20,fontWeight:800}},x[1]),React.createElement("div",{style:{fontSize:11,color:"#64748b"}},x[2]))})));
+var reglages=React.createElement("div",{style:{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginBottom:12}},
+React.createElement(Pastilles,{val:filtre,set:setF,options:[["para","Parapharmacie"],["medic","M\u00e9dicaments"],["tout","Tout"]]}),
+React.createElement("span",{style:{fontSize:13,color:"var(--text2)"}},"Stock vis\u00e9 :"),
+React.createElement(Pastilles,{val:cible,set:setC,options:[[4,"4 sem."],[6,"6 sem."],[8,"8 sem."],[12,"12 sem."]]}));
+var lignes=r.labs.slice(0,30).map(function(L){var op=ouvert===L.lab;
+return React.createElement("div",{key:L.lab,style:{background:"var(--bg2)",border:"1px solid "+(op?"var(--accent)":"var(--border)"),borderRadius:12,padding:"12px 14px"}},
+React.createElement("div",{onClick:function(){setOuvert(op?null:L.lab)},style:{display:"flex",gap:10,alignItems:"center",cursor:"pointer"}},
+React.createElement("div",{style:{flex:1,minWidth:0}},React.createElement("div",{style:{fontWeight:800,fontSize:15}},String(L.lab).replace(/ REF$/,"")),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},"stock "+fmtEur0(L.val)+(L.couv?" \u00b7 couvre "+Math.round(L.couv)+" sem.":" \u00b7 plus de ventes")+(L.dorm>=1?" \u00b7 dont "+fmtEur0(L.dorm)+" qui dort":""))),
+React.createElement("div",{style:{textAlign:"right",flexShrink:0}},React.createElement("div",{style:{fontWeight:800,fontSize:17,color:"var(--accent)"}},fmtEur0(L.trop)),React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},"\u00e0 lib\u00e9rer")),
+React.createElement("span",{style:{color:"var(--text3)"}},op?"\u25b4":"\u25be")),
+L.actions.length?React.createElement("div",{style:{display:"grid",gap:4,marginTop:8}},L.actions.map(function(a,i){return React.createElement("div",{key:i,style:{fontSize:13,lineHeight:1.4}},a[0]+" ",React.createElement("b",null,a[1]),React.createElement("span",{style:{color:"var(--text3)"}}," \u2014 "+a[2]))})):null,
+op?React.createElement("div",{style:{marginTop:10,overflowX:"auto"}},React.createElement("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:12.5,minWidth:520}},
+React.createElement("thead",null,React.createElement("tr",null,["Produit","Stock","Ventes / sem.","Couverture","\u00c0 lib\u00e9rer"].map(function(h){return React.createElement("th",{key:h,style:{textAlign:h==="Produit"?"left":"right",padding:"5px 6px",color:"var(--text3)",fontWeight:600,borderBottom:"1px solid var(--border)"}},h)}))),
+React.createElement("tbody",null,L.prods.slice(0,15).map(function(x){var td={padding:"5px 6px",textAlign:"right",borderBottom:"1px solid var(--border)"};
+return React.createElement("tr",{key:x.c},React.createElement("td",{style:Object.assign({},td,{textAlign:"left"})},x.n,x.dormant?React.createElement("span",{style:{marginLeft:6,fontSize:11,color:"var(--orange)",fontWeight:700}},"\ud83d\udca4 "+(x.der?"derni\u00e8re vente "+moisCourt(x.der):"jamais vendu")):null),
+React.createElement("td",{style:td},x.q),React.createElement("td",{style:td},x.rythme>0?String(Math.round(x.rythme*10)/10).replace(".",","):"0"),
+React.createElement("td",{style:td},x.couv?Math.round(x.couv)+" sem.":"\u2013"),React.createElement("td",{style:Object.assign({},td,{fontWeight:700})},fmtEur0(x.trop)))}))),
+L.prods.length>15?React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:4}},"Les 15 plus gros montants sont affich\u00e9s sur "+L.prods.length+"."):null):null)});
+return React.createElement("div",null,entete,hero,reglages,
+React.createElement("div",{style:{fontWeight:800,fontSize:16,margin:"4px 0 10px"}},"\ud83e\udded Les labos o\u00f9 agir en premier"),
+r.labs.length?React.createElement("div",{style:{display:"grid",gap:8}},lignes):React.createElement("div",{style:{fontSize:13,color:"var(--text2)"}},"Rien \u00e0 lib\u00e9rer avec ces r\u00e9glages. \ud83c\udf3f"),
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:14,lineHeight:1.5}},"Ventes par semaine : le plus fort entre les 3 derniers mois pleins et les 3 mois \u00e0 venir de l'an dernier, pour ne pas compter un produit de saison comme du stock en trop. \u00ab \u00c0 lib\u00e9rer \u00bb : valeur du stock au-del\u00e0 de "+cible+" semaines de ventes, ou tout le stock du produit s'il ne s'est pas vendu depuis 6 mois."))}
+
+/* ===== SERVICES PHARMACEUTIQUES (v9.43) =====
+   Lignes de vente sans code-barres a TVA 2,1 % (honoraires de dispensation) ou 0 % (actes et prestations :
+   vaccinations, tests, entretiens...). Marge = 100 % du montant HT depuis v9.41. Les noms des codes se
+   donnent ici (meme cle que les produits sans nom, noms_produits). */
+function servicesListe(pd){var out=[];if(!pd||!pd.P)return out;var vus={};
+Object.keys(pd.P).forEach(function(l){(pd.P[l]||[]).forEach(function(p){if(!p||p.c===undefined||vus[p.c])return;var c=String(p.c);if(/^\d{7,14}$/.test(c))return;
+if(!(p.tva===2.1||p.tva===0))return;if(!((p.ca||0)>=5))return;vus[c]=1;out.push({c:c,n:p.n,grp:p.tva===0?"act":"hon",qm:p.qm||[],caM:p.caM||[],mM:p.mM||[],ca:p.ca||0,q:p.q||0})})});
+return out}
+function ServicesPage(props){
+var pd=props.pd;var noms=props.noms||{};
+var eS=useState(null);var edit=eS[0];var setEdit=eS[1];var vS=useState("");var val=vS[0];var setVal=vS[1];
+var liste=useMemo(function(){return servicesListe(pd)},[pd]);
+var entete=React.createElement(EnTeteOutil,{titre:"\ud83e\ude7a Services pharmaceutiques",sous:"Honoraires et actes (vaccinations, tests, entretiens\u2026) : ils rapportent 100 % de leur montant. Leur \u00e9volution, mois par mois, compar\u00e9e \u00e0 l'an dernier."});
+if(!liste.length||!pd.M)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\ud83e\ude7a",titre:"Pas encore d'honoraires dans les ventes",texte:"Ils apparaissent apr\u00e8s l'import d'un export des ventes Winpharma."}));
+var lf=dernierMoisComplet(pd);var n=pd.M.length;
+function som(arr,grp,i0,i1){var s=0;liste.forEach(function(x){if(grp&&x.grp!==grp)return;for(var i=Math.max(0,i0);i<=i1;i++)s+=(x[arr][i]||0)});return s}
+var ok=[];for(var i=lf-11;i<=lf;i++){if(i-12>=0&&moisN1Ok(pd,i,i-12))ok.push(i)}
+function evol(arr,grp){var a=0,b=0;ok.forEach(function(i){a+=som(arr,grp,i,i);b+=som(arr,grp,i-12,i-12)});return b>0&&ok.length>=3?(a/b-1)*100:null}
+var mg12=som("mM",null,lf-11,lf);var mgTot=0;for(var k=Math.max(0,lf-11);k<=lf;k++){var f=pd.F&&pd.F[pd.M[k]];if(f&&f.marge)mgTot+=f.marge}
+var part=mgTot>0?mg12/mgTot*100:null;
+var pts=[];for(var j=Math.max(0,lf-11);j<=n-1;j++){var enc=j>lf;pts.push({l:MOIS_COURT[parseInt(pd.M[j].slice(5,7),10)-1],v:Math.round(som("mM",null,j,j)),v1:j-12>=0?Math.round(som("mM",null,j-12,j-12)):null,auj:enc})}
+function carteGrp(grp,ic,titre,sous){var m=som("mM",grp,lf-11,lf),q=som("qm",grp,lf-11,lf);var e=evol("mM",grp);var qM=som("qm",grp,lf,lf),qM1=lf-12>=0?som("qm",grp,lf-12,lf-12):0;
+return React.createElement(SemCarte,{key:grp,ic:ic,titre:titre,badge:e!==null?(e>=0?"+":"")+Math.round(e)+" %":null,badgeFond:e!==null&&e>=0?"var(--accent-bg)":"var(--red-bg)",badgeCouleur:e!==null&&e>=0?"var(--accent)":"var(--red)"},
+React.createElement("div",null,React.createElement("b",null,fmtEur0(m))," sur 12 mois \u00b7 "+Math.round(q).toLocaleString("fr-FR")+" actes"),
+React.createElement("div",null,moisCourt(pd.M[lf])+" : "+Math.round(qM).toLocaleString("fr-FR")+" actes"+(qM1?" (l'an dernier : "+Math.round(qM1).toLocaleString("fr-FR")+")":"")),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)"}},sous))}
+var eT=evol("mM",null);
+var hero=React.createElement("div",{style:{background:"linear-gradient(135deg,#eff6ff 0%,#f0fdf4 60%,#fdf4ff 100%)",border:"1px solid #bfdbfe",borderRadius:18,padding:"18px 18px 14px",marginBottom:14,color:"#0f172a"}},
+React.createElement("div",{style:{fontSize:13,fontWeight:700,color:"#1d4ed8"}},"Marge des services sur 12 mois"),
+React.createElement("div",{style:{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}},React.createElement("span",{style:{fontSize:34,fontWeight:800}},fmtEur0(mg12)),React.createElement(SemPill,{e:eT,grand:true})),
+React.createElement("div",{style:{fontSize:12,color:"#475569"}},(part!==null?String(Math.round(part*10)/10).replace(".",",")+" % de la marge de la pharmacie \u00b7 ":"")+"de "+moisCourt(pd.M[Math.max(0,lf-11)])+" \u00e0 "+moisCourt(pd.M[lf])+(eT!==null?" \u00b7 \u00e9volution sur "+ok.length+" mois comparables":"")));
+var courbe=React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:"14px 14px 10px",marginBottom:14}},
+React.createElement("div",{style:{fontWeight:800,fontSize:15,marginBottom:6}},"\ud83d\udcc8 Marge des services, mois par mois"),React.createElement(SemCourbe,{pts:pts,lib:"Marge des services",leg1:"12 derniers mois",leg2:"ann\u00e9e d'avant"}));
+var lignes=liste.slice().sort(function(a,b){return som2(b)-som2(a)});function som2(x){var s=0;for(var i=Math.max(0,lf-11);i<=lf;i++)s+=x.mM[i]||0;return s}
+var td={padding:"6px 6px",textAlign:"right",borderBottom:"1px solid var(--border)"};
+var table=React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:14,padding:12,overflowX:"auto"}},
+React.createElement("div",{style:{fontWeight:800,fontSize:15,marginBottom:4}},"\ud83e\uddfe Le d\u00e9tail par code Winpharma"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},"Winpharma n'exporte que le code. Touchez \u00ab Nommer \u00bb pour indiquer de quoi il s'agit (vaccination grippe, TROD angine\u2026) : le nom sera gard\u00e9."),
+React.createElement("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:12.5,minWidth:560}},
+React.createElement("thead",null,React.createElement("tr",null,["Service","Prix moyen",moisCourt(pd.M[lf]),"12 mois","Marge 12 mois","vs an dernier"].map(function(h,i){return React.createElement("th",{key:h,style:{textAlign:i?"right":"left",padding:"5px 6px",color:"var(--text3)",fontWeight:600,borderBottom:"1px solid var(--border)"}},h)}))),
+React.createElement("tbody",null,lignes.map(function(x){var q12=0,c12=0;for(var i=Math.max(0,lf-11);i<=lf;i++){q12+=x.qm[i]||0;c12+=x.caM[i]||0}
+var a=0,b=0;ok.forEach(function(i){a+=x.qm[i]||0;b+=x.qm[i-12]||0});var e=b>=5?(a/b-1)*100:null;var nm=noms[x.c]&&noms[x.c].n;
+return React.createElement("tr",{key:x.c},
+React.createElement("td",{style:Object.assign({},td,{textAlign:"left"})},edit===x.c?React.createElement("span",{style:{display:"flex",gap:4}},React.createElement("input",{autoFocus:true,value:val,onChange:function(ev){setVal(ev.target.value)},placeholder:"ex. Vaccination grippe",style:{flex:1,minWidth:120,padding:"4px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:12.5}}),
+React.createElement("button",{onClick:function(){var v=val.trim();if(v.length>=2&&props.setNoms)props.setNoms(function(o){var y=Object.assign({},o||{});y[x.c]={n:v.slice(0,60),src:"manuel",d:aujIso()};return y});setEdit(null)},style:{fontWeight:700,color:"var(--accent)",padding:"0 4px"}},"OK")):
+React.createElement("span",null,React.createElement("b",null,nm||("Code "+x.c)),React.createElement("span",{style:{fontSize:11,color:"var(--text3)"}},(x.grp==="hon"?" \u00b7 honoraire":" \u00b7 acte")+(nm?" \u00b7 code "+x.c:"")),
+props.setNoms?React.createElement("button",{onClick:function(){setEdit(x.c);setVal(nm||"")},style:{marginLeft:6,fontSize:11,color:"var(--accent)",fontWeight:700,padding:0}},nm?"\u270f\ufe0f":"Nommer"):null)),
+React.createElement("td",{style:td},x.q>0?semEur2(x.ca/x.q):"\u2013"),React.createElement("td",{style:td},Math.round(x.qm[lf]||0)),React.createElement("td",{style:td},Math.round(q12).toLocaleString("fr-FR")),
+React.createElement("td",{style:Object.assign({},td,{fontWeight:700})},fmtEur0(som2(x))),
+React.createElement("td",{style:Object.assign({},td,{color:e===null?"var(--text3)":(e>=0?"var(--accent)":"var(--red)"),fontWeight:600})},e===null?"\u2013":(e>=0?"+":"")+Math.round(e)+" %"))}))));
+return React.createElement("div",null,entete,hero,courbe,
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(260px,1fr))",gap:12,marginBottom:14}},
+carteGrp("hon","\ud83d\udc8a","Honoraires de dispensation","par bo\u00eete, ordonnance, \u00e2ge, m\u00e9dicaments sp\u00e9cifiques (TVA 2,1 %)"),
+carteGrp("act","\ud83d\udc89","Actes et prestations","vaccinations, tests, entretiens, bilans\u2026 (sans TVA)")),
+table,
+React.createElement("div",{style:{fontSize:11,color:"var(--text3)",marginTop:12,lineHeight:1.5}},"Lignes de vente sans code-barres, \u00e0 2,1 % de TVA (honoraires) ou sans TVA (actes). \u00c9volutions calcul\u00e9es sur les mois comparables \u00e0 l'an dernier (m\u00eame r\u00e8gle que \u00ab Mon ann\u00e9e \u00bb)."))}
 
 function LigneAlerte(props){
 var a=props.a;var ty=AL_TYPES[a.type];var pd=props.pd;
@@ -5792,6 +5922,7 @@ React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(3,m
 mini("\ud83d\udcb6 Marge",hasM?fmtEur0(mgJ):"\u2013",evMg,hasM?(caJ>0?"taux de marque "+String(Math.round(mgJ/caJ*1000)/10).replace(".",",")+" %":null):"au prochain import des ventes",true),
 mini("\ud83e\uddfe CA HT",fmtEur0(caJ),evCa,null),
 mini("\ud83d\udc65 Clients",String(tkJ),evTk,tkJ?(hasM?semEur2(mgJ/tkJ)+" de marge / client":"panier "+semEur2(caJ/tkJ)):null)),
+pd.HEAT[dj].x?React.createElement("div",{style:{fontSize:12.5,marginTop:8,padding:"6px 10px",borderRadius:8,background:"var(--blue-bg)",color:"var(--text)"}},"\ud83d\udc8a Dont "+pd.HEAT[dj].x[0]+" m\u00e9dicament"+(pd.HEAT[dj].x[0]>1?"s":"")+" cher"+(pd.HEAT[dj].x[0]>1?"s":"")+" (plus de 1 000 \u20ac la ligne) : "+fmtEur0(pd.HEAT[dj].x[1])+" de CA pour "+fmtEur0(pd.HEAT[dj].x[2])+" de marge."):null,
 refs.length?React.createElement("div",{style:{fontSize:11.5,color:"var(--text3)",marginTop:6}},"Compar\u00e9 \u00e0 la moyenne des "+refs.length+" "+nomJ.split(" ")[0]+"s pr\u00e9c\u00e9dents"+(partiel?", \u00e0 heure \u00e9gale (journ\u00e9e export\u00e9e avant la fermeture, ventes jusqu'\u00e0 "+(hJ+1)+"h)":"")+"."):null),
 function(){props.setPage("affluence")},"Voir l'affluence",ev!==null&&ev<-10?"var(--red)":"var(--accent)"))}}
 /* 1 bis. TDG arrivees a 14 jours (v9.42) */
@@ -14379,7 +14510,7 @@ var state=cl||local||{};
 var cur0=pdLive.current||{};
 var sameS=state.sales&&state.sales.id===pick.sales.id&&state.sales.mod===pick.sales.modifiedTime&&(!pick.salesDate||cur0.UPD===driveDateFr(pick.salesDate));
 /* v9.37 : le dernier fichier est relu une fois si la marge jour par jour (HEAT.m) n'a pas encore ete gardee */
-if(sameS&&cur0.HEAT){var hkM=Object.keys(cur0.HEAT).sort();var hlM=hkM[hkM.length-1];if(hlM&&(!Array.isArray(cur0.HEAT[hlM].m)||cur0.HEAT[hlM].v!==2))sameS=false}
+if(sameS&&cur0.HEAT){var hkM=Object.keys(cur0.HEAT).sort();var hlM=hkM[hkM.length-1];if(hlM&&(!Array.isArray(cur0.HEAT[hlM].m)||cur0.HEAT[hlM].v!==3))sameS=false}
 var sameK=!pick.stock||(state.stock&&state.stock.id===pick.stock.id&&state.stock.mod===pick.stock.modifiedTime&&!!(pdLive.current&&pdLive.current.STKL));
 if(sameS&&sameK){
 var trk0=suiviTracked(tdgsLive.current,challengesLive.current);var vd0=ventesLive.current;
@@ -14919,6 +15050,10 @@ content=React.createElement(SantePage,{pd:pdCal,pdBrut:pd,regles:regLabos,ventes
 content=React.createElement(ReassortPage,{pd:pdCal,regles:reaReg,exclus:(reaReg&&reaReg.exclus)||reaExclus(pdCal),dernier:reaDer,onRegles:function(ch){setReaReg(function(o){return Object.assign({},o||{},ch)})},onDernier:function(codes,on){setReaDer(function(d){var n=reaElaguer(d||{});var auj=reaIsoJour();codes.forEach(function(c){if(on)n[c]=auj;else delete n[c]});return n})}});
 }else if(page==="aujourdhui"){
 content=React.createElement(AujourdhuiPage,{ventes:tdgVentes,ruptures:ruptures,pd:pdCal,ld:ldLive,openLab:openLab,setPage:setPage,tasks:tachesVis,tdgs:tdgsApp,challenges:challenges,cmdPassed:cmdPassed,cmdHidden:cmdHidden});
+}else if(page==="planstock"){
+content=React.createElement(PlanStockPage,{pd:pdCal});
+}else if(page==="services"){
+content=React.createElement(ServicesPage,{pd:pdCal,noms:nomsExt,setNoms:setNomsExt});
 }else if(page==="dormant"){
 content=React.createElement(StockDormantPage,{pd:pdCal,ld:ldLive,openLab:openLab,setPage:setPage});
 }else if(page==="ruptures"){
