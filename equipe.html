@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.29">
+<meta name="ps-version" content="e1.30">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -983,15 +983,34 @@ function Vide(p){return h("div",{style:{padding:"18px 10px",textAlign:"center",c
 function BoutonLien(p){return h("button",{onClick:p.onClick,style:{width:"100%",marginTop:8,padding:"10px",borderRadius:10,background:"var(--bg3)",color:"var(--text2)",fontWeight:700,fontSize:14}},p.children)}
 function Puce(p){return h("button",{onClick:p.onClick,style:{padding:"6px 12px",borderRadius:20,fontSize:13,fontWeight:700,background:p.on?"var(--accent)":"var(--bg3)",color:p.on?"#fff":"var(--text2)",flexShrink:0}},p.children)}
 
-/* ===== Ecran de connexion ===== */
+/* ===== Ecran de connexion (e1.30) =====
+   Identifiant "pharma" = compte du poste de la pharmacie ; sinon adresse mail personnelle.
+   Comptes du cloud PharmaScope (memes que le Planning). L'ancien mot de passe du poste reste accepte
+   pendant la transition, jusqu'au verrouillage des donnees. */
+var COMPTES_SPECIAUX={pharma:"pharmaciedeveyrier74+poste@gmail.com"};
+function msgConnexion(e){var t=String((e&&e.message)||e||"");
+if(/invalid login|invalid credentials/i.test(t))return"Identifiant ou mot de passe incorrect";
+if(/not confirmed/i.test(t))return"Compte pas encore activ\u00e9 : ouvre le mail d'invitation";
+if(/acces/i.test(t))return"Ce compte n'a pas acc\u00e8s \u00e0 la version \u00e9quipe";
+if(/fetch|network/i.test(t))return"Pas de connexion Internet";
+return"Connexion impossible ("+t.slice(0,60)+")"}
 function Connexion(p){
 var u=useRef(null),m=useRef(null);
 var e=useState("");var err=e[0],setErr=e[1];
 var vs=useState(false);var voir=vs[0],setVoir=vs[1];
+var bs=useState(false);var cours=bs[0],setCours=bs[1];
 function ok(){
-var id=(u.current.value||"").trim().toLowerCase();
-if(id===COMPTE.id&&hashSimple(m.current.value||"")===COMPTE.hash){lsSet("pse_auth",1);p.onOk()}
-else setErr("Identifiant ou mot de passe incorrect")}
+var id=(u.current.value||"").trim().toLowerCase();var mdp=m.current.value||"";
+if(!id||!mdp){setErr("Indique l'identifiant et le mot de passe");return}
+function ancien(){if(id===COMPTE.id&&hashSimple(mdp)===COMPTE.hash){lsSet("pse_auth",1);p.onOk();return true}return false}
+var email=COMPTES_SPECIAUX[id]||id;
+if(email.indexOf("@")<0||!db){if(!ancien())setErr("Identifiant ou mot de passe incorrect");return}
+setCours(true);setErr("");
+db.auth.signInWithPassword({email:email,password:mdp}).then(function(r){if(r.error)throw r.error;
+return db.rpc("ps_role").then(function(rr){var role=rr&&rr.data;
+if(["admin","equipe","poste"].indexOf(role)<0){db.auth.signOut();throw new Error("acces")}
+return db.from("staff").select("name").eq("user_id",r.data.user.id).maybeSingle().then(function(s){
+lsSet("pse_auth",{via:"compte",role:role,nom:(s&&s.data&&s.data.name)||""});setCours(false);p.onOk()})})}).catch(function(x){setCours(false);if(!ancien())setErr(msgConnexion(x))})}
 function touche(ev){if(ev.key==="Enter")ok()}
 var champ={width:"100%",padding:"13px 14px",borderRadius:10,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:16,outline:"none"};
 return h("div",{style:{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",padding:16,background:"linear-gradient(135deg,#059669 0%,#0284c7 100%)"}},
@@ -1000,12 +1019,13 @@ h("div",{style:{textAlign:"center",marginBottom:22}},logo(60),
 h("h1",{style:{fontSize:22,fontWeight:800,marginTop:10}},"PharmaScope \u00c9quipe"),
 h("p",{style:{color:"var(--text2)",fontSize:14,marginTop:2}},"Pharmacie de Veyrier-du-Lac")),
 err?h("div",{style:{background:"var(--red-bg)",color:"var(--red)",padding:"9px 12px",borderRadius:8,fontSize:14,marginBottom:12}},err):null,
-h("input",{ref:u,placeholder:"Identifiant",autoCapitalize:"none",autoCorrect:"off",onKeyDown:touche,style:Object.assign({},champ,{marginBottom:10})}),
+h("input",{ref:u,placeholder:"pharma ou ton adresse mail",autoCapitalize:"none",autoCorrect:"off",autoComplete:"username",onKeyDown:touche,style:Object.assign({},champ,{marginBottom:10})}),
 h("div",{style:{position:"relative",marginBottom:16}},
-h("input",{ref:m,type:voir?"text":"password",placeholder:"Mot de passe",onKeyDown:touche,style:Object.assign({},champ,{paddingRight:46})}),
+h("input",{ref:m,type:voir?"text":"password",placeholder:"Mot de passe",autoComplete:"current-password",onKeyDown:touche,style:Object.assign({},champ,{paddingRight:46})}),
 h("button",{type:"button",onClick:function(){setVoir(!voir)},"aria-label":"Afficher le mot de passe",style:{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",fontSize:18,padding:6,opacity:voir?1:.5}},"\ud83d\udc41")),
-h("button",{onClick:ok,style:{width:"100%",padding:14,borderRadius:10,background:"#059669",color:"#fff",fontWeight:700,fontSize:16}},"Se connecter"),
-h("p",{style:{fontSize:12,color:"var(--text3)",textAlign:"center",marginTop:14}},"La session reste ouverte sur cet appareil.")))}
+h("button",{onClick:ok,disabled:cours,style:{width:"100%",padding:14,borderRadius:10,background:"#059669",color:"#fff",fontWeight:700,fontSize:16,opacity:cours?.6:1}},cours?"Un instant\u2026":"Se connecter"),
+h("p",{style:{fontSize:12,color:"var(--text3)",textAlign:"center",marginTop:14,lineHeight:1.5}},"La session reste ouverte sur cet appareil.",h("br",null),h("a",{href:"activation.html",style:{color:"var(--text3)"}},"Mot de passe personnel oubli\u00e9 ?"))))}
+
 
 /* ===== TACHES RECURRENTES ET AUTOMATIQUES (partage PharmaScope / version equipe) =====
    Une tache "modele" (modele:true) ne s'affiche pas comme une tache : elle cree
@@ -1784,7 +1804,7 @@ var vtS=useState(null);var ventes=vtS[0],setVentes=vtS[1];
 var vacS=useState({});var vac=vacS[0],setVac=vacS[1];
 var etS=useState({ok:null,maj:null});var etat=etS[0],setEtat=etS[1];
 var chS=useState(true);var charge=chS[0],setCharge=chS[1];
-var moiS=useState(function(){return lsGet("pse_moi","")});var moi=moiS[0],setMoi=moiS[1];
+var moiS=useState(function(){var a=lsGet("pse_auth",0);return lsGet("pse_moi","")||(a&&a.nom?a.nom:"")});var moi=moiS[0],setMoi=moiS[1];
 var resp=false;try{localStorage.removeItem("pse_resp")}catch(e){}
 var choixS=useState(false);var choix=choixS[0],setChoix=choixS[1];
 var vueS=useState("accueil");var vue=vueS[0],setVue=vueS[1];
@@ -1969,13 +1989,15 @@ blocs[vue]),
 rea&&rea.LABS?h("datalist",{id:"pse-labs"},rea.LABS.map(function(l){return h("option",{key:l,value:l})})):null,
 h("footer",{style:{marginTop:28,textAlign:"center",fontSize:12,color:"var(--text3)"}},
 "PharmaScope \u00c9quipe \u00b7 ",
-h("button",{onClick:function(){try{localStorage.removeItem("pse_auth")}catch(e){}p.onSortir()},style:{fontSize:12,color:"var(--text3)",textDecoration:"underline"}},"Se d\u00e9connecter")),
+h("button",{onClick:function(){try{localStorage.removeItem("pse_auth")}catch(e){}try{if(db)db.auth.signOut()}catch(e){}p.onSortir()},style:{fontSize:12,color:"var(--text3)",textDecoration:"underline"}},"Se d\u00e9connecter")),
 toast?h("div",{role:"status",style:{position:"fixed",left:16,right:16,bottom:"calc(env(safe-area-inset-bottom,0px) + 16px)",maxWidth:520,margin:"0 auto",background:"#0f172a",color:"#fff",borderRadius:14,padding:"12px 14px",display:"flex",gap:10,alignItems:"center",boxShadow:"0 8px 30px rgba(0,0,0,.3)",zIndex:9000,animation:"up .2s"}},
 h("span",{style:{flex:1,fontSize:14,minWidth:0}},toast.msg),
 toast.annuler?h("button",{onClick:function(){var a=toast.annuler;setToast(null);a()},style:{color:"#6ee7b7",fontWeight:800,fontSize:14}},"Annuler"):null):null)}
 
 function Racine(){
-var s=useState(function(){return lsGet("pse_auth",0)===1});var ok=s[0],setOk=s[1];
+var s=useState(function(){var a=lsGet("pse_auth",0);return a===1||!!(a&&a.via==="compte")});var ok=s[0],setOk=s[1];
+/* compte du cloud : session encore valable ? */
+useEffect(function(){var a=lsGet("pse_auth",0);if(!ok||!db||!(a&&a.via==="compte"))return;db.auth.getSession().then(function(r){if(!(r&&r.data&&r.data.session)){try{localStorage.removeItem("pse_auth")}catch(e){}setOk(false)}}).catch(function(){})},[ok]);
 return ok?h(Appli,{onSortir:function(){setOk(false)}}):h(Connexion,{onOk:function(){setOk(true)}})}
 
 ReactDOM.createRoot(document.getElementById("root")).render(h(Racine));
