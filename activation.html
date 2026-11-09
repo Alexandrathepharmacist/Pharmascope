@@ -97,7 +97,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent2);outlin
     <div class="big">✓</div>
     <h2 class="center">Connexion réussie</h2>
     <p class="sub center" id="inSub"></p>
-    <a class="btn" href="planning.html" style="display:block;text-align:center;text-decoration:none">Ouvrir PharmaScope Planning</a>
+    <a class="btn" id="goApp2" href="planning.html" style="display:block;text-align:center;text-decoration:none">Ouvrir PharmaScope Planning</a>
     <button class="btn ghost" id="outBtn">Se déconnecter</button>
   </section>
 
@@ -189,7 +189,7 @@ $("setBtn").addEventListener("click",function(){
     var email=res.data&&res.data.user?res.data.user.email:$("setEmail").value;
     $("lgEmail").value=email;$("fgEmail").value=email;
     $("pw1").value="";$("pw2").value="";
-    return sb.auth.signOut().then(function(){show("done");});
+    return versApp(["goApp"]).then(function(){return sb.auth.signOut();}).then(function(){show("done");});
   }).catch(function(e){b.textContent="Activer mon compte";b.disabled=false;msg($("setErr"),fr(e),"err");});
 });
 $("goTest").addEventListener("click",function(){show("login");$("lgPw").focus();});
@@ -225,16 +225,22 @@ $("fgBtn").addEventListener("click",function(){
   }).catch(function(e){b.disabled=false;msg($("fgMsg"),fr(e),"err");});
 });
 
+/* Titulaires : le bouton ouvre PharmaScope (version complète) plutôt que le Planning */
+function versApp(ids){
+  return sb.rpc("is_planning_admin").then(function(r){
+    if(r&&r.data===true)ids.forEach(function(id){var a=$(id);if(a){a.href="index.html";a.textContent="Ouvrir PharmaScope";}});
+  }).catch(function(){});
+}
 /* Aiguillage au chargement */
 function route(session){
   if(linkError){show("expired");return;}
   if(session&&(linkType==="invite"||linkType==="recovery"||linkType==="signup"||linkType==="magiclink")){
     $("setEmail").value=session.user.email||"";
-    if(linkType==="recovery"){$("setTitle").textContent="Nouveau mot de passe";$("setSub").textContent="Choisissez un nouveau mot de passe pour votre espace PharmaScope Planning.";}
+    if(linkType==="recovery"){$("setTitle").textContent="Nouveau mot de passe";$("setSub").textContent="Choisissez un nouveau mot de passe pour votre espace PharmaScope.";}
     else{$("setTitle").textContent="Bienvenue !";$("setSub").textContent="Choisissez votre mot de passe pour activer votre espace PharmaScope Planning.";}
     show("set");$("pw1").focus();return;
   }
-  if(session){$("inSub").textContent="Vous êtes connecté(e) en tant que "+session.user.email+".";show("in");return;}
+  if(session){$("inSub").textContent="Vous êtes connecté(e) en tant que "+session.user.email+".";versApp(["goApp2"]);show("in");return;}
   if(linkType){show("expired");return;}
   show("login");
 }
