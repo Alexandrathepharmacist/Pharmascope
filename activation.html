@@ -218,9 +218,10 @@ $("backLogin").addEventListener("click",function(){show("login");});
 $("fgBtn").addEventListener("click",function(){
   var em=$("fgEmail").value.trim();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){msg($("fgMsg"),"Indiquez une adresse mail valide.","err");return;}
   var b=$("fgBtn");b.disabled=true;
-  sb.auth.resetPasswordForEmail(em,{redirectTo:HERE}).then(function(res){
+  sb.functions.invoke("courrier",{body:{action:"oubli",email:em}}).then(function(res){
     b.disabled=false;
     if(res.error){msg($("fgMsg"),fr(res.error),"err");return;}
+    if(res.data&&res.data.err==="envoi"){msg($("fgMsg"),"L'envoi des mails n'est pas encore activé sur PharmaScope. Demandez à Alexandra ou Éloi de vous transmettre un lien depuis « Accès & comptes ».","err");return;}
     msg($("fgMsg"),"C'est envoyé. Si un compte existe pour "+em+", un mail arrive dans quelques instants (pensez à regarder les indésirables).","ok");
   }).catch(function(e){b.disabled=false;msg($("fgMsg"),fr(e),"err");});
 });
@@ -245,6 +246,16 @@ function route(session){
   show("login");
 }
 var routed=false;
+/* Lien fabriqué par PharmaScope (invitation ou mot de passe oublié) : le jeton est validé ici, à l'ouverture de la page */
+if(Q.token_hash&&!linkError){
+  routed=true;
+  var typ=(Q.type==="invite"||Q.type==="recovery")?Q.type:"recovery";linkType=typ;
+  try{history.replaceState(null,"",HERE);}catch(e){}
+  sb.auth.verifyOtp({token_hash:Q.token_hash,type:typ}).then(function(res){
+    if(res.error||!res.data||!res.data.session){show("expired");return;}
+    route(res.data.session);
+  }).catch(function(){show("expired");});
+}
 sb.auth.onAuthStateChange(function(ev,session){
   if(ev==="PASSWORD_RECOVERY")linkType="recovery";
   if(!routed&&(ev==="SIGNED_IN"||ev==="PASSWORD_RECOVERY"||ev==="INITIAL_SESSION")){routed=true;setTimeout(function(){route(session);},0);}

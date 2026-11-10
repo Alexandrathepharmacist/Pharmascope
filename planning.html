@@ -179,6 +179,16 @@ html,body{margin:0}
 .saving{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:12px;z-index:40;background:var(--ink);color:var(--bg);font-size:.75rem;border-radius:999px;padding:4px 10px;opacity:.85}
 .proto{display:inline-block;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:2px 7px;margin-left:6px;vertical-align:3px}
 @media (prefers-reduced-motion:no-preference){.sheet{animation:up .22s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}to{transform:none;opacity:1}}}
+.soldes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 6px}
+.sol{border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:0}
+.lbl2.warn{color:#B45309;margin:4px 0}
+@media (max-width:380px){.soldes{grid-template-columns:1fr}}
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .top>div:last-child,.tabs,.viewbar,.wknav .iconbtn,#todayBtn,#printBtn,.legend2,.note,#layer,.toast,.saving,.banner{display:none!important}
+  body{background:#fff}.wrap{max-width:none;padding:0}.gridbox{overflow:visible;box-shadow:none}
+  @page{size:A4 landscape;margin:10mm}
+}
 </style>
 <style>
 :root{--t-cp:#2F6FC0;--t-cp-bg:#E3EEFB;--t-rec:#A55F00;--t-rec-bg:#FCEFD9;--t-mal:#7A4FB8;--t-mal-bg:#EFE7FA;--t-hs:#1F7A45;--t-hs-bg:#DFF3E7;--t-aut:#5F6B70;--t-aut-bg:#E9EDEE}
@@ -289,6 +299,7 @@ table.wkt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
       <div><div class="lab" id="wkLabel"></div><div class="tl" id="wkSub"></div></div>
       <button class="iconbtn" id="nextWk" aria-label="Semaine suivante">›</button>
       <button class="btn ghost" id="todayBtn">Cette semaine</button>
+      <button class="btn ghost" id="printBtn">Imprimer</button>
     </div>
     <div class="viewbar"><div class="seg" id="pseg"><button data-v="day">Jour</button><button data-v="week">Semaine</button></div></div>
     <div id="pdayv"><div class="daychips" id="pdays"></div><div id="ptl"></div></div>
@@ -338,8 +349,12 @@ table.wkt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
   <section id="p-team" hidden>
     <div class="h2row"><h2>Demandes à traiter</h2></div>
     <div class="alerts" id="reqPending"></div>
+    <div id="teamAdmin">
     <div class="h2row"><h2>Équipe et accès</h2><button class="btn primary" id="addMember">+ Ajouter un membre</button></div>
     <div class="people" id="people"></div>
+    <div class="h2row"><h2>Décompte des congés payés</h2></div>
+    <div class="card" style="padding:12px 14px" id="cpModeBox"></div>
+    </div>
     <div class="h2row"><h2>Notifications envoyées</h2></div>
     <div class="alerts" id="notifSent"></div>
     <div class="h2row"><h2>Demandes traitées</h2></div>
@@ -359,7 +374,7 @@ table.wkt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
   <section id="p-myr" hidden>
     <div class="h2row"><h2>Mes demandes</h2><button class="btn primary" id="newReq">+ Nouvelle demande</button></div>
     <div class="alerts" id="myReqs"></div>
-    <p class="note">Votre demande arrive aussitôt chez Alexandra et Éloi, qui l'acceptent ou la refusent dans l'appli.</p>
+    <p class="note">Votre demande arrive aussitôt chez les responsables du planning, qui l'acceptent ou la refusent dans l'appli. Vous êtes prévenu(e) de la réponse ici et par mail.</p>
   </section>
 </div>
 
@@ -372,7 +387,7 @@ var W=["A","B","C","D","E","F"];
 var D=["Lun","Mar","Mer","Jeu","Ven","Sam"];
 var DL=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
 var STATUS={titulaire:"Titulaire",salarie:"Salarié(e)",facture:"Facturé(e) à l'heure",extra:"Extra"};
-var ACCESS={admin:"Administrateur",user:"Utilisateur",none:"Pas d'accès"};
+var ACCESS={admin:"Administrateur",manager:"Gestionnaire du planning",user:"Utilisateur",none:"Pas d'accès"};
 var TYPES={
  cp:{l:"Congés payés",s:"CP",paid:true},
  recup:{l:"Récup / échange",s:"Récup"},
@@ -440,7 +455,7 @@ function cp(x){return JSON.parse(JSON.stringify(x));}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
 
 /* État */
-var S={trame:{},changes:{},people:[],requests:[],notifs:[],accounts:{},tab:"plan",w:"A",wk:null,day:0,meas:"ratio",me:null,month:null};
+var S={adjust:[],cpMode:"ouvrables",trame:{},changes:{},people:[],requests:[],notifs:[],accounts:{},tab:"plan",w:"A",wk:null,day:0,meas:"ratio",me:null,month:null};
 var today=new Date();var tIso=dIso(new Date(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())));
 var t0=dParse(tIso);LAST=dAdd(monOf(t0),7*60);if(t0<FIRST)t0=FIRST;
 S.wk=dIso(monOf(t0));S.day=Math.min(5,wdOf(t0));S.month=tIso.slice(0,7);S.pview="day";S.tview="day";S.pday=S.day;S.tday=0;
@@ -452,6 +467,7 @@ function undo(){if(!hist.length)return;var o=JSON.parse(hist.pop());S.trame=o.tr
 function P(id){for(var i=0;i<S.people.length;i++)if(S.people[i].id===id)return S.people[i];}
 function ME(){return P(S.me);}
 function isAdmin(){var m=ME();return !!m&&m.access==="admin";}
+function isEditor(){var m=ME();return !!m&&(m.access==="admin"||m.access==="manager");}
 function legal(p){return p.status==="salarie"||p.status==="extra";}
 
 /* Journée réelle d'une personne */
@@ -496,6 +512,59 @@ function personMonth(p,ym){
   return r;
 }
 
+/* Soldes cumulés : heures (récup / échanges) et congés payés */
+function latestReport(pid,field){var best=null;S.adjust.forEach(function(a){if(a.p===pid&&a.kind==="report"&&a[field]!=null&&(!best||a.day>best.day))best=a;});return best;}
+function hoursBalance(pid){
+  var rep=latestReport(pid,"min"),base=rep?rep.day:dIso(dAdd(FIRST,-1)),start=rep?rep.min:0,adj=0,plan=0;
+  S.adjust.forEach(function(a){if(a.p===pid&&a.kind==="ajust"&&a.min!=null&&a.day>base)adj+=a.min;});
+  var end=monOf(dParse(tIso));
+  for(var d=dAdd(monOf(dParse(base)),7);d<=end;d=dAdd(d,7)){var w=weekStats(pid,d);plan+=w.bal+w.bank;}
+  return {rep:rep,base:base,start:start,adj:adj,plan:plan,total:start+adj+plan};
+}
+/* Jours de congés payés décomptés entre deux dates (après « after », jusqu'à « until » inclus).
+   Mode « ouvrables » : du premier jour d'absence jusqu'à la veille de la reprise, du lundi au samedi, hors fériés.
+   Mode « poses » : seulement les jours marqués en congé payé au planning. */
+function cpDays(pid,after,until){
+  var n=0,inCp=false,d=dAdd(dParse(after),1),e=dParse(until),x=dAdd(d,-14);if(x<FIRST)x=FIRST;
+  for(;x<=e;x=dAdd(x,1)){
+    var ds=dIso(x);if(wdOf(x)>5||FERIES[ds])continue;
+    var inf=dayInfo(pid,ds),cnt=false;
+    if(inf.t==="cp"&&!inf.act.length){inCp=true;cnt=true;}
+    else if(inf.act.length||(inf.t&&inf.t!=="cp")){inCp=false;}
+    else if(inCp&&S.cpMode!=="poses"){cnt=true;}
+    if(cnt&&x>=d)n++;
+  }
+  return n;
+}
+function cpBalance(pid){
+  var rep=latestReport(pid,"cp"),base=rep?rep.day:dIso(dAdd(FIRST,-1)),start=rep?rep.cp:0,adj=0;
+  S.adjust.forEach(function(a){if(a.p===pid&&a.kind==="ajust"&&a.cp!=null&&a.day>base)adj+=a.cp;});
+  var a0=dParse(base),b0=dParse(tIso);
+  var months=Math.max(0,(b0.getUTCFullYear()-a0.getUTCFullYear())*12+(b0.getUTCMonth()-a0.getUTCMonth())+(b0.getUTCDate()-a0.getUTCDate())/30);
+  var acq=Math.round(months*2.5*2)/2;
+  var taken=tIso>base?cpDays(pid,base,tIso):0,planned=cpDays(pid,tIso>base?tIso:base,dIso(LAST));
+  return {rep:rep,base:base,start:start,adj:adj,acq:acq,taken:taken,planned:planned,total:start+adj+acq-taken,free:start+adj+acq-taken-planned};
+}
+function jj(n){var v=Math.round(n*2)/2;return (v<0?"−":"")+String(Math.abs(v)).replace(".",",")+" j";}
+function dFr(ds){var p=ds.split("-");return p[2]+"/"+p[1]+"/"+p[0].slice(2);}
+function soldeBlock(p){
+  var h=hoursBalance(p.id),c=cpBalance(p.id);
+  var out="<div class='soldes'>"+
+    "<div class='sol'><div class='lbl2'>Solde d'heures (récup / échanges)</div><div class='big num "+(h.total>=0?"pos":"neg")+"'>"+sg(h.total)+"</div><div class='lbl2'>à la fin de cette semaine</div></div>"+
+    "<div class='sol'><div class='lbl2'>Congés payés restants</div><div class='big num "+(c.total>=0?"":"neg")+"'>"+jj(c.total)+"</div><div class='lbl2'>"+(c.planned?"dont "+jj(c.planned)+" déjà posés à venir · "+jj(c.free)+" libres":"aucun congé posé à venir")+"</div></div></div>";
+  if(!h.rep||!c.rep)out+="<div class='lbl2 warn'>⚠ Report de départ non renseigné pour "+(!h.rep&&!c.rep?"les heures et les congés":(!h.rep?"les heures":"les congés"))+" : le calcul part de zéro au "+dFr(dIso(FIRST))+". À confirmer avec Alexandra ou Éloi.</div>";
+  out+="<details class='wk-detail'><summary>Comment c'est calculé</summary><div class='rows'>"+
+    "<span><b>Heures</b> · "+(h.rep?"report au "+dFr(h.base):"départ au "+dFr(dIso(FIRST)))+"</span><span>"+sg(h.start)+"</span>"+
+    "<span>Changements de planning et heures au-delà de 39 h depuis</span><span>"+sg(h.plan)+"</span>"+
+    (h.adj?"<span>Ajustements (heures payées, régularisations)</span><span>"+sg(h.adj)+"</span>":"")+
+    "<span><b>Congés</b> · "+(c.rep?"report au "+dFr(c.base):"départ au "+dFr(dIso(FIRST)))+"</span><span>"+jj(c.start)+"</span>"+
+    "<span>Acquis depuis (2,5 jours ouvrables par mois)</span><span>+"+jj(c.acq)+"</span>"+
+    "<span>Pris depuis"+(S.cpMode==="poses"?" (jours posés au planning)":" (jours ouvrables, du lundi au samedi)")+"</span><span>−"+jj(c.taken)+"</span>"+
+    (c.adj?"<span>Ajustements</span><span>"+jj(c.adj)+"</span>":"")+
+    "</div><div class='lbl2'>Congés : 2,5 jours ouvrables acquis par mois de travail, soit 30 par an (<a href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033020789' target='_blank' rel='noopener'>article L3141-3 du Code du travail</a>). Le bulletin de paie fait foi en cas d'écart.</div></details>";
+  return out;
+}
+
 /* Contrôles */
 function dayIssues(p,bl){
   var out=[];if(!legal(p)||!bl.length)return out;
@@ -537,6 +606,7 @@ function descr(inf){
   if(!inf.act.length)return inf.t?TYPES[inf.t].l.toLowerCase():"repos";
   return inf.act.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(" · ");
 }
+var decisionNote=null;
 function notifyDiff(old){
   var by=ME().name,now=new Date(),names=[];
   S.people.forEach(function(p){
@@ -556,12 +626,14 @@ function notifyDiff(old){
         var f=function(bl){return bl.length?bl.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(" · "):"repos";};
         lines.push({ds:"T"+w+d,txt:"Semaine type "+w+", "+DL[d].toLowerCase()+" : "+f(n[d])+" (au lieu de "+f(o[d])+")"});}}
     });
+    if(decisionNote&&decisionNote.p===p.id)lines.push({ds:"0",txt:decisionNote.txt});
     if(!lines.length)return;
     lines.sort(function(x,y){return x.ds<y.ds?-1:1;});
     S.notifs.unshift({id:uuid(),p:p.id,by:by,at:now.toISOString(),lines:lines.map(function(l){return l.txt;}),read:false,mail:p.email||null});
     names.push(p.name+(p.email?"":" (pas d'adresse)"));
   });
   if(S.notifs.length>200)S.notifs.length=200;
+  decisionNote=null;
   lastNotified=names;
 }
 function flushNotifToast(){
@@ -573,7 +645,7 @@ function notifCard(n,admin){
   var p=P(n.p),d=new Date(n.at);
   var when=d.getDate()+" "+MOIS[d.getMonth()]+" à "+d.getHours()+"h"+(d.getMinutes()<10?"0":"")+d.getMinutes();
   var b=el("button",{class:"req",style:"--pc:"+p.color+";width:100%;text-align:left;"+(!admin&&!n.read?"border-color:var(--accent)":"")});
-  b.innerHTML=av(p)+"<div class='body'><div><b>"+(admin?esc(p.name)+" · ":"")+"Planning modifié</b> "+(!admin&&!n.read?"<span class='st st-pending'>Nouveau</span>":"")+"</div><div class='meta'>"+esc(n.lines[0])+(n.lines.length>1?" et "+(n.lines.length-1)+" autre"+(n.lines.length>2?"s":""):"")+"</div><div class='meta'>"+(admin?(n.mail?(n.mailStatus==="sent"?"Mail envoyé à ":"Mail à venir pour ")+esc(n.mail):"Pas d'adresse mail : à prévenir de vive voix")+" · ":"")+"par "+esc(n.by)+", le "+when+"</div></div>";
+  b.innerHTML=av(p)+"<div class='body'><div><b>"+(admin?esc(p.name)+" · ":"")+"Planning modifié</b> "+(!admin&&!n.read?"<span class='st st-pending'>Nouveau</span>":"")+"</div><div class='meta'>"+esc(n.lines[0])+(n.lines.length>1?" et "+(n.lines.length-1)+" autre"+(n.lines.length>2?"s":""):"")+"</div><div class='meta'>"+(admin?(n.mail?(n.mailStatus==="sent"?"Mail envoyé à ":(n.mailStatus==="failed"?"Mail non parti pour ":"Mail en attente pour "))+esc(n.mail):(isAdmin()?"Pas d'adresse mail : à prévenir de vive voix":"Prévenu(e) dans l'appli"))+" · ":"")+"par "+esc(n.by)+", le "+when+"</div></div>";
   b.addEventListener("click",function(){openMail(n);});
   return b;
 }
@@ -584,7 +656,7 @@ function openMail(n){
   box.innerHTML="<div class='meta'>À : "+esc(n.mail||"(pas d'adresse)")+"<br>Objet : Votre planning a changé</div><hr style='border:0;border-top:1px solid var(--line);margin:10px 0'>"+
     "<p style='margin:0 0 8px'>Bonjour "+esc(p.name)+",</p><p style='margin:0 0 8px'>"+esc(n.by)+" a modifié vos horaires :</p><ul style='margin:0 0 8px;padding-left:18px'>"+n.lines.map(function(l){return "<li>"+esc(l)+"</li>";}).join("")+"</ul><p style='margin:0'>Retrouvez votre planning à jour dans PharmaScope Planning.</p>";
   c.appendChild(box);
-  c.appendChild(el("p",{class:"note"},(n.mailStatus==="sent"?"Ce mail a été envoyé.":"L'envoi automatique de ces mails sera activé à la prochaine étape. En attendant, la notification est visible ici, dans l'appli.")));
+  c.appendChild(el("p",{class:"note"},(n.mailStatus==="sent"?"Ce mail a été envoyé.":"Le mail part automatiquement dès que l'envoi des mails est activé dans PharmaScope (Google relié). Dans tous les cas, la notification est visible ici, dans l'appli.")));
   var row=el("div",{class:"row"});row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));c.appendChild(row);
   sheet(c);
 }
@@ -608,7 +680,9 @@ function tabsFor(){
     return [["plan","Planning"],["trame","Trame"],["aff","Affluence"],["hrs","Heures"],["team","Équipe"+(n?"<span class='badge'>"+n+"</span>":"")]];}
   var mine=S.requests.filter(function(r){return r.p===S.me&&r.status==="pending";}).length;
   var unread=S.notifs.filter(function(n){return n.p===S.me&&!n.read;}).length;
-  return [["plan","Planning"],["myh","Mon solde"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];
+  if(isEditor()){var n2=S.requests.filter(function(r){return r.status==="pending"&&r.p!==S.me;}).length;
+    return [["plan","Planning"],["trame","Trame"],["aff","Affluence"],["team","Demandes"+(n2?"<span class='badge'>"+n2+"</span>":"")],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];}
+  return [["plan","Planning"],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];
 }
 function renderTabs(){
   var t=tabsFor(),box=document.getElementById("tabs");box.innerHTML="";
@@ -619,7 +693,7 @@ function renderTabs(){
 }
 function renderViewAs(){
   var m=ME();document.getElementById("whoami").textContent=m?m.name+" · "+ACCESS[m.access]:"";
-  document.getElementById("undoBtn").hidden=!isAdmin();
+  document.getElementById("undoBtn").hidden=!isEditor();
 }
 
 /* Planning daté */
@@ -630,7 +704,7 @@ function renderPlan(){
   document.getElementById("wkSub").textContent="Trame "+L+" · semaine "+Math.ceil(((mon-new Date(Date.UTC(mon.getUTCFullYear(),0,1)))/864e5+new Date(Date.UTC(mon.getUTCFullYear(),0,1)).getUTCDay()+1)/7);
   document.getElementById("prevWk").disabled=dAdd(mon,-7)<FIRST;document.getElementById("nextWk").disabled=dAdd(mon,7)>LAST;
   if(S.pview==="day"){renderPlanDay();return;}
-  var admin=isAdmin(),h="<thead><tr><th>Équipe</th>";
+  var admin=isEditor(),h="<thead><tr><th>Équipe</th>";
   for(var i=0;i<6;i++){var dd=dAdd(mon,i),ds=dIso(dd),gp=phGapsDate(ds);
     h+="<th class='"+(FERIES[ds]?"fer":"")+"'>"+D[i]+"<span class='dt'>"+dd.getUTCDate()+"</span>"+(FERIES[ds]?"<div class='phgap' style='color:var(--ink-3);background:var(--sunk)'>férié</div>":"")+(FERIES[ds]?"":covStrip((function(x){return function(pid){return dayInfo(pid,x).act;};})(ds),i))+"</th>";}
   h+="</tr></thead><tbody>";
@@ -651,7 +725,7 @@ function renderPlan(){
     h+="</tr>";
   });
   var g=document.getElementById("pgrid");g.innerHTML=h+"</tbody>";
-  g.querySelectorAll(".cell[data-p]").forEach(function(c){if(c.disabled)return;c.addEventListener("click",function(){var pid=c.getAttribute("data-p"),ds=c.getAttribute("data-ds");if(isAdmin())openDay(pid,ds);else openRequest(ds);});});
+  g.querySelectorAll(".cell[data-p]").forEach(function(c){if(c.disabled)return;c.addEventListener("click",function(){var pid=c.getAttribute("data-p"),ds=c.getAttribute("data-ds");if(isEditor())openDay(pid,ds);else openRequest(ds);});});
   var note=admin?"Touchez une case pour poser une absence, un échange ou des heures sup. Les changements depuis le 31 août viennent de l'historique MonPlanningPharma, avec leur catégorie et leur commentaire (touchez une case pour le lire).":"Vous voyez le planning de toute l'équipe. Touchez une de vos journées pour demander un congé, une récupération ou un échange.";
   document.getElementById("planNote").textContent=note;
 }
@@ -788,7 +862,7 @@ function renderTimeline(box,o){
 }
 function dayIssueKind(getBlocks,d){var is=covIssues(covSegments(getBlocks,d));return is.none.length?"none":(is.np.length?"np":"");}
 function renderPlanDay(){
-  var mon=dParse(S.wk),d=S.pday,ds=dIso(dAdd(mon,d)),admin=isAdmin();
+  var mon=dParse(S.wk),d=S.pday,ds=dIso(dAdd(mon,d)),admin=isEditor();
   dayChips(document.getElementById("pdays"),d,function(i){var dd=dAdd(mon,i);return "<span>"+D[i]+"</span><b>"+dd.getUTCDate()+"</b>";},function(i){var x=dIso(dAdd(mon,i));if(FERIES[x])return "";return dayIssueKind(function(pid){return dayInfo(pid,x).act;},i);},function(i){S.pday=i;renderAll();});
   renderTimeline(document.getElementById("ptl"),{
     d:d,closed:!!FERIES[ds],
@@ -896,6 +970,7 @@ function cardFor(p,open){
   var head="<div class='top'>"+whoCell(p,esc(p.role)+" · "+(p.status==="salarie"?"contrat "+hm(p.contract)+"/sem.":STATUS[p.status]))+"</div>";
   var body="";
   if(p.status==="salarie"){
+    body+=soldeBlock(p)+"<div class='lbl2' style='margin-top:6px;font-weight:600'>"+MOISL[+S.month.slice(5)-1]+"</div>";
     var pct=r.due?Math.min(130,r.counted/r.due*100):0;
     body+="<div><div class='big num "+(r.diff>=0?"pos":"neg")+"'>"+sg(r.diff)+"</div><div class='lbl2'>par rapport au contrat ("+r.rows.length+" semaines)</div></div>";
     body+="<div class='meter' title='Heures comptées par rapport au contrat'><i style='width:"+(pct/130*100)+"%'></i><b style='left:"+(100/130*100)+"%'></b></div>";
@@ -917,7 +992,41 @@ function cardFor(p,open){
     r.rows.forEach(function(s){t+="<tr><td>"+dShort(s.mon)+" ("+letterOf(s.mon)+")</td><td>"+hm(s.worked)+"</td><td>"+(s.paid?hm(s.paid):"–")+"</td>"+(p.contract?"<td class='"+(s.counted-p.contract>=0?"pos":"neg")+"'>"+sg(s.counted-p.contract)+"</td><td class='"+(s.bal+s.bank>=0?"pos":"neg")+"'>"+(s.bal+s.bank?sg(s.bal+s.bank):"–")+"</td>":"")+"</tr>";});
     body+=t+"</table></details>";
   }
-  c.innerHTML=head+body;return c;
+  c.innerHTML=head+body;
+  if(isAdmin()&&p.status==="salarie"){var ab=el("button",{class:"btn",style:"margin-top:8px",onclick:function(){openAdjust(p.id);}},"Report et ajustements des soldes");c.appendChild(ab);}
+  return c;
+}
+function parseSigned(v){var mm=/^\s*([+\-−]?)\s*(\d{1,3})(?:\s*[:h]\s*(\d{1,2}))?\s*$/.exec(v);if(!mm)return null;var n=(+mm[2])*60+(mm[3]?+mm[3]:0);return (mm[1]==="-"||mm[1]==="−")?-n:n;}
+function loadAdjust(){return sb.from("solde_ajustements").select("*").order("jour").then(check).then(function(r){S.adjust=(r.data||[]).map(function(x){return {id:x.id,p:x.staff_id,day:String(x.jour).slice(0,10),kind:x.kind,min:x.minutes,cp:x.cp_jours==null?null:+x.cp_jours,label:x.motif||""};});});}
+function openAdjust(pid){
+  var p=P(pid),k=["report"];
+  var c=el("div","","<h2>Soldes de "+esc(p.name)+"</h2><div class='sub'>Le report donne le solde connu à une date (bulletin de paie, écran « Fin de mois »). L'appli calcule ensuite la suite toute seule.</div>");
+  var list=el("div",{class:"alerts",style:"margin-top:10px"});
+  var mine=S.adjust.filter(function(a){return a.p===pid;}).slice().reverse();
+  if(!mine.length)list.innerHTML="<div class='empty'>Aucun report ni ajustement pour l'instant.</div>";
+  mine.forEach(function(a){
+    var row=el("div",{class:"req",style:"--pc:"+p.color});
+    row.innerHTML="<div class='body'><div><b>"+(a.kind==="report"?"Report au ":"Ajustement du ")+dFr(a.day)+"</b></div><div class='meta'>"+(a.min!=null?"Heures : "+sg(a.min):"")+(a.min!=null&&a.cp!=null?" · ":"")+(a.cp!=null?"Congés : "+jj(a.cp):"")+(a.label?" · « "+esc(a.label)+" »":"")+"</div></div>";
+    var del=el("button",{class:"btn",onclick:function(){del.disabled=true;sb.from("solde_ajustements").delete().eq("id",a.id).then(check).then(loadAdjust).then(function(){renderAll();openAdjust(pid);toast("Ligne supprimée");}).catch(function(e){toast("Suppression impossible : "+(e&&e.message||e));});}},"Supprimer");
+    row.querySelector(".body").appendChild(del);list.appendChild(row);
+  });
+  c.appendChild(list);
+  var s1=el("div",{class:"sec"},"<div class='lbl'>Nouvelle ligne</div>");s1.appendChild(radio(["report","ajust"],["Report : solde connu à une date","Ajustement : heures payées, jours offerts…"],k,upd));c.appendChild(s1);
+  var f1=el("div",{class:"sec field"},"<label class='lbl' for='a-d'>Date (de préférence un samedi ou une fin de mois)</label>"),di=el("input",{type:"date",id:"a-d"});di.value=tIso;f1.appendChild(di);c.appendChild(f1);
+  var f2=el("div",{class:"sec field"},"<label class='lbl' for='a-h'>Heures (ex. +12:30 ou -3:00) — laisser vide si inchangé</label>"),hi=el("input",{type:"text",id:"a-h",placeholder:"+0:00"});f2.appendChild(hi);c.appendChild(f2);
+  var f3=el("div",{class:"sec field"},"<label class='lbl' for='a-c'>Jours de congés payés (ex. 12,5) — laisser vide si inchangé</label>"),ci=el("input",{type:"text",id:"a-c",inputmode:"decimal",placeholder:"0"});f3.appendChild(ci);c.appendChild(f3);
+  var f4=el("div",{class:"sec field"},"<label class='lbl' for='a-m'>Motif</label>"),mi=el("input",{type:"text",id:"a-m",placeholder:"Ex. bulletin d'octobre, 10 h payées en novembre"});f4.appendChild(mi);c.appendChild(f4);
+  var rec=el("div",{class:"recap"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
+  var row2=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Enregistrer");
+  row2.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row2.appendChild(ok);c.appendChild(row2);
+  function vals(){var h=hi.value.trim()?parseSigned(hi.value):null,cv=ci.value.trim()?parseFloat(ci.value.replace(",",".").replace("−","-")):null;return {h:h,c:cv,bad:(hi.value.trim()&&h==null)||(ci.value.trim()&&(cv==null||isNaN(cv)))};}
+  function upd(){var v=vals();
+    rec.textContent=k[0]==="report"?"Report : « au soir de cette date, le solde était de… ». Les semaines suivantes sont ajoutées automatiquement.":"Ajustement : s'ajoute au solde (mettre un signe moins pour retirer, par exemple des heures payées).";
+    er.textContent=v.bad?"Format non reconnu : heures comme +12:30, jours comme 12,5.":"";ok.disabled=v.bad||!di.value||(v.h==null&&v.c==null);}
+  [hi,ci,di].forEach(function(i){i.addEventListener("input",upd);});
+  ok.addEventListener("click",function(){var v=vals();if(ok.disabled)return;ok.disabled=true;
+    sb.from("solde_ajustements").insert({staff_id:pid,jour:di.value,kind:k[0],minutes:v.h,cp_jours:v.c,motif:mi.value.trim()||null}).then(check).then(loadAdjust).then(function(){renderAll();openAdjust(pid);toast("Solde de "+p.name+" mis à jour");}).catch(function(e){ok.disabled=false;er.textContent="Enregistrement impossible : "+(e&&e.message||e);});});
+  upd();sheet(c);
 }
 function renderHrs(){
   monthChips("months");
@@ -954,13 +1063,14 @@ function rangeDays(from,to){var out=[],d=dParse(from),e=dParse(to);while(d<=e){o
 function applyAbsence(pid,from,to,t,c){var n=0;rangeDays(from,to).forEach(function(ds){var inf=dayInfo(pid,ds);if(!inf.exp.length||FERIES[ds])return;setChange(pid,ds,{b:[],t:t,c:c||undefined});n++;});return n;}
 function decide(r,ok){
   snap();r.status=ok?"ok":"no";var msg;
+  decisionNote={p:r.p,txt:"Votre demande ("+RTYPES[r.t].toLowerCase()+" "+(r.from===r.to?"le "+dShort(dParse(r.from)):"du "+dShort(dParse(r.from))+" au "+dShort(dParse(r.to)))+") a été "+(ok?"acceptée":"refusée")};
   if(ok&&(r.t==="cp"||r.t==="recup")){var n=applyAbsence(r.p,r.from,r.to,r.t,r.c);msg="Acceptée : "+n+" jour"+(n>1?"s":"")+" posé"+(n>1?"s":"")+" au planning";}
   else if(ok){msg="Acceptée : modifiez les deux journées dans le planning";}
   else msg="Demande refusée";
   save();renderAll();toast(msg,true);
 }
 function renderTeam(){
-  var pend=S.requests.filter(function(r){return r.status==="pending";}),bp=document.getElementById("reqPending");bp.innerHTML="";
+  var pend=S.requests.filter(function(r){return r.status==="pending"&&(isAdmin()||r.p!==S.me);}),bp=document.getElementById("reqPending");bp.innerHTML="";
   if(!pend.length)bp.innerHTML="<div class='empty'>Aucune demande en attente.</div>";
   pend.forEach(function(r){bp.appendChild(reqLine(r,[["Voir au planning",function(){S.wk=dIso(monOf(dParse(r.from)));S.tab="plan";renderAll();}],["Refuser",function(){decide(r,false);}],["Accepter",function(){decide(r,true);},true]]));});
   var ns=document.getElementById("notifSent");ns.innerHTML="";
@@ -969,8 +1079,12 @@ function renderTeam(){
   var done=S.requests.filter(function(r){return r.status!=="pending";}).slice().reverse(),bd=document.getElementById("reqDone");bd.innerHTML="";
   if(!done.length)bd.innerHTML="<div class='empty'>Aucune.</div>";
   done.forEach(function(r){bd.appendChild(reqLine(r,null));});
+  document.getElementById("teamAdmin").hidden=!isAdmin();
   var pb=document.getElementById("people");pb.innerHTML="";
-  S.people.forEach(function(p){
+  var cm=document.getElementById("cpModeBox");cm.innerHTML="";
+  if(isAdmin()){var mode=[S.cpMode];cm.appendChild(radio(["ouvrables","poses"],["Jours ouvrables (règle légale : du 1er jour d'absence à la veille de la reprise, samedi compris)","Jours posés (seulement les jours marqués en congé au planning)"],mode,function(){
+    if(mode[0]===S.cpMode)return;S.cpMode=mode[0];sb.from("planning_settings").update({cp_mode:S.cpMode}).eq("id",1).then(check).then(function(){toast("Décompte des congés mis à jour");}).catch(function(e){toast("Enregistrement impossible : "+(e&&e.message||e));});}));}
+  if(isAdmin())S.people.forEach(function(p){
     var b=el("button",{class:"pp",style:"--pc:"+p.color,onclick:function(){openPerson(p.id);}},av(p)+"<div style='min-width:0'><div class='n' style='font-weight:600'>"+esc(p.name)+"</div><div class='meta'>"+esc(p.role)+" · "+(p.status==="salarie"?"contrat "+hm(p.contract):STATUS[p.status])+"</div><div class='meta'>Accès : "+ACCESS[p.access]+"</div><div class='meta'>"+(p.email?esc(p.email):"Pas d'adresse mail")+"</div>"+acctBadge(p)+"</div>");
     pb.appendChild(b);
   });
@@ -1098,7 +1212,7 @@ function openDay(pid,ds){
 /* Demande d'un collaborateur */
 function openRequest(ds){
   var p=ME(),t=["cp"];
-  var c=el("div","", "<h2>Nouvelle demande</h2><div class='sub'>Elle sera envoyée à Alexandra et Éloi.</div>");
+  var c=el("div","", "<h2>Nouvelle demande</h2><div class='sub'>Elle sera envoyée aux responsables du planning, qui l'acceptent ou la refusent.</div>");
   var s1=el("div",{class:"sec"},"<div class='lbl'>Type</div>");s1.appendChild(radio(["cp","recup","echange"],["Congé payé","Récupération","Échange de jour"],t,upd));c.appendChild(s1);
   var f1=el("div",{class:"sec field"},"<label class='lbl' for='r-from'>Du</label>"),fi=el("input",{type:"date",id:"r-from",min:dIso(FIRST)});fi.value=ds||dIso(dAdd(t0,7));f1.appendChild(fi);c.appendChild(f1);
   var f2=el("div",{class:"sec field"},"<label class='lbl' for='r-to'>Au (inclus)</label>"),ti=el("input",{type:"date",id:"r-to"});ti.value=fi.value;f2.appendChild(ti);c.appendChild(f2);
@@ -1111,6 +1225,9 @@ function openRequest(ds){
     if(!fi.value||!ti.value||ti.value<fi.value){er.textContent="Choisissez une date de fin après la date de début.";ok.disabled=true;rec.textContent="";return;}
     er.textContent="";ok.disabled=false;var n=0,h=0;rangeDays(fi.value,ti.value).forEach(function(x){var i2=dayInfo(p.id,x);if(i2.exp.length&&!FERIES[x]){n++;h+=dur(i2.exp);}});
     rec.textContent=n?"Vous êtes prévu(e) "+n+" jour"+(n>1?"s":"")+" sur cette période ("+hm(h)+").":"Vous n'êtes pas prévu(e) au planning sur ces dates.";
+    if(p.status==="salarie"&&t[0]==="cp"){var nb=0;rangeDays(fi.value,ti.value).forEach(function(x){if(wdOf(dParse(x))<=5&&!FERIES[x])nb++;});var cb=cpBalance(p.id);
+      rec.textContent+=" Cette demande représente environ "+jj(nb)+" de congés. Votre solde : "+jj(cb.total)+(cb.planned?", dont "+jj(cb.planned)+" déjà posés":"")+"."+(nb>cb.free?" Attention : c'est plus que votre solde disponible.":"");}
+    if(p.status==="salarie"&&t[0]==="recup"){rec.textContent+=" Votre solde d'heures : "+sg(hoursBalance(p.id).total)+".";}
   }
   ok.addEventListener("click",function(){if(ok.disabled)return;snap();
     S.requests.push({id:uuid(),p:p.id,t:t[0],from:fi.value,to:ti.value,c:mi.value,at:tIso,status:"pending"});
@@ -1140,12 +1257,12 @@ function openPerson(pid){
   sC.appendChild(cb);c.appendChild(sC);
   var sE=el("div",{class:"sec field"},"<label class='lbl' for='pp-e'>Adresse mail (invitation, connexion et notifications)</label>");
   var ei=el("input",{type:"text",id:"pp-e",inputmode:"email",autocomplete:"off",placeholder:"prenom.nom@exemple.fr"});ei.value=p.email||"";ei.addEventListener("input",upd);sE.appendChild(ei);c.appendChild(sE);
-  var s3=el("div",{class:"sec"},"<div class='lbl'>Accès</div>");s3.appendChild(radio(["admin","user","none"],["Administrateur","Utilisateur","Pas d'accès"],ac,upd));c.appendChild(s3);
+  var s3=el("div",{class:"sec"},"<div class='lbl'>Accès</div>");s3.appendChild(radio(["admin","manager","user","none"],["Administrateur","Gestionnaire du planning","Utilisateur","Pas d'accès"],ac,upd));c.appendChild(s3);
   var rec=el("div",{class:"recap"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
   var row=el("div",{class:"row"});
   var ok=el("button",{class:"btn"},"Enregistrer"),inv=el("button",{class:"btn primary"},"");
   row.appendChild(el("button",{class:"btn ghost",onclick:closeSheet},"Fermer"));row.appendChild(ok);row.appendChild(inv);c.appendChild(row);
-  var AC={admin:"Créer et modifier la trame et le planning, voir les soldes et les fins de mois de tout le monde, accepter ou refuser les demandes, inviter l'équipe.",user:"Voir le planning de l'équipe et son propre solde d'heures, faire ses demandes de congé. Prévenu(e) à chaque changement de ses horaires.",none:"Aucun accès à l'application."};
+  var AC={admin:"Créer et modifier la trame et le planning, voir les soldes et les fins de mois de tout le monde, accepter ou refuser les demandes, inviter l'équipe.",manager:"Comme un utilisateur, et en plus : modifier le planning et la trame, accepter ou refuser les demandes de congés. Ne voit pas les contrats, les soldes des autres ni les comptes.",user:"Voir le planning de l'équipe (sans pouvoir le modifier), ses soldes d'heures et de congés, faire ses demandes de congé. Prévenu(e) à chaque changement de ses horaires.",none:"Aucun accès à l'application."};
   function parseH(v){var mm=/^(\d{1,2})(?:[:h,.](\d{1,2}))?$/.exec(v.trim());if(!mm)return null;var mi=mm[2]?(mm[2].length===1&&/[,.]/.test(v)?(+mm[2])*6:+mm[2]):0;return (+mm[1])*60+mi;}
   var ai=acctInfo(p);
   function problem(){
@@ -1183,9 +1300,23 @@ function invite(p){
       var ctx=r.error.context;
       return (ctx&&ctx.json?ctx.json().catch(function(){return {};}):Promise.resolve({})).then(function(b){toast("Pas d'envoi pour "+p.name+" : "+((b&&b.error)||r.error.message));});
     }
-    toast(r.data&&r.data.mode==="reset"?p.name+" a déjà un compte : lien pour choisir un nouveau mot de passe envoyé à "+r.data.email:"Invitation envoyée à "+(r.data&&r.data.email));
-    return refreshAccounts().then(renderAll);
+    var d=r.data||{};
+    if(d.envoye)toast(d.mode==="reset"?p.name+" a déjà un compte : lien pour choisir un nouveau mot de passe envoyé à "+d.email:"Invitation envoyée à "+d.email);
+    return refreshAccounts().then(renderAll).then(function(){if(!d.envoye&&d.lien)openLink(p,d);});
   }).catch(function(e){toast("Pas d'envoi pour "+p.name+" : "+(e&&e.message||e));});
+}
+
+function openLink(p,d){
+  var c=el("div","","<h2>Lien pour "+esc(p.name)+"</h2><div class='sub'>Le mail n'est pas parti. "+esc(d.raison||"")+"</div>");
+  c.appendChild(el("p",{class:"note"},"Transmettez ce lien à "+esc(p.name)+" (SMS, WhatsApp…) : il lui permet de choisir son mot de passe. Il ne sert qu'une fois et expire rapidement ; vous pouvez en refaire un à tout moment."));
+  var inp=el("input",{type:"text",readonly:"readonly",style:"width:100%"});inp.value=d.lien;c.appendChild(inp);
+  var row=el("div",{class:"row"});row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));
+  var cpb=el("button",{class:"btn primary"},navigator.share?"Partager le lien":"Copier le lien");
+  cpb.addEventListener("click",function(){
+    if(navigator.share){navigator.share({title:"PharmaScope",text:"Bonjour "+p.name+", voici le lien pour activer ton compte PharmaScope :",url:d.lien}).catch(function(){});return;}
+    var done=function(){cpb.textContent="✓ Lien copié";};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(d.lien).then(done).catch(function(){inp.select();});else inp.select();});
+  row.appendChild(cpb);c.appendChild(row);sheet(c);
 }
 
 /* Éditeur de trame (repris) */
@@ -1268,12 +1399,20 @@ function same(a,b){return JSON.stringify(a===undefined?null:a)===JSON.stringify(
 function check(r){if(r&&r.error)throw r.error;return r;}
 function showSaving(on){var e=document.querySelector(".saving");if(on&&!e){document.body.appendChild(el("div",{class:"saving"},"Enregistrement…"));}if(!on&&e)e.remove();}
 
+/* Mails des notifications : envoyés par le serveur, 30 s après la dernière modification (le temps d'annuler) */
+var mailTimer=null;
+function planMails(){if(!isEditor())return;if(mailTimer)clearTimeout(mailTimer);mailTimer=setTimeout(function(){mailTimer=null;
+  saving.then(function(){return sb.functions.invoke("courrier",{body:{action:"notifs"}});}).then(function(r){
+    if(r&&r.data&&r.data.envoyes)return sb.from("notifications").select("id,mail_status").order("created_at",{ascending:false}).limit(300).then(function(q){var st={};(q.data||[]).forEach(function(x){st[x.id]=x.mail_status;});S.notifs.forEach(function(n){if(st[n.id])n.mailStatus=st[n.id];});if(S.tab==="team"&&!layer.innerHTML)renderAll();});
+  }).catch(function(){});},30000);}
+
 /* Envoie à la base tout ce qui a changé depuis le dernier enregistrement */
 function persist(){
   if(!SAVED)return saving;
   var base=SAVED,target=snapshotState();SAVED=target;
   showSaving(true);
-  saving=saving.then(function(){return pushDiff(base,target);}).then(function(){showSaving(false);}).catch(function(e){
+  var hadNew=target.notifs.some(function(n){return !base.notifs.some(function(x){return x.id===n.id;});});
+  saving=saving.then(function(){return pushDiff(base,target);}).then(function(){showSaving(false);if(hadNew)planMails();}).catch(function(e){
     showSaving(false);
     toast("Enregistrement impossible : "+((e&&e.message)||e)+". Les données ont été rechargées.");
     return loadAll().then(renderAll);
@@ -1349,7 +1488,8 @@ function loadAll(){
       sb.rpc("planning_view",{d1:"2000-01-01",d2:"2100-12-31"}),
       sb.from("leave_requests").select("*").order("created_at"),
       sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(300),
-      sb.from("planning_settings").select("*").maybeSingle()
+      sb.from("planning_settings").select("*").maybeSingle(),
+      sb.from("solde_ajustements").select("*").order("jour")
     ]).then(function(res){
       res.forEach(check);
       var st=res[0].data||[],pv=res[1].data||[],tr=res[2].data||[],ch=res[3].data||[],rq=res[4].data||[],nt=res[5].data||[],set=res[6].data;
@@ -1360,6 +1500,8 @@ function loadAll(){
       S.changes={};ch.forEach(function(x){var ds=String(x.day).slice(0,10);if(!S.changes[ds])S.changes[ds]={};var o={b:x.blocks||[],t:x.kind};if(x.comment)o.c=x.comment;S.changes[ds][x.staff_id]=o;});
       S.requests=rq.map(function(x){return {id:x.id,p:x.staff_id,t:x.kind,from:String(x.date_from).slice(0,10),to:String(x.date_to).slice(0,10),c:x.comment||"",at:String(x.created_at).slice(0,10),status:x.status};});
       S.notifs=nt.map(function(x){var p=P(x.staff_id);return {id:x.id,p:x.staff_id,by:x.by_name,at:x.created_at,lines:x.lines||[],read:!!x.read_at,mail:p?p.email:null,mailStatus:x.mail_status};});
+      S.adjust=(res[7].data||[]).map(function(x){return {id:x.id,p:x.staff_id,day:String(x.jour).slice(0,10),kind:x.kind,min:x.minutes,cp:x.cp_jours==null?null:+x.cp_jours,label:x.motif||""};});
+      S.cpMode=(set&&set.cp_mode)||"ouvrables";
       if(set){REF=dParse(String(set.cycle_ref_monday).slice(0,10));REFW=Math.max(0,W.indexOf(set.cycle_ref_week));}
       SAVED=snapshotState();hist=[];document.getElementById("undoBtn").disabled=true;lastLoad=Date.now();
       return refreshAccounts().then(function(){return true;});
@@ -1414,13 +1556,15 @@ document.getElementById("backLogin").addEventListener("click",function(){showScr
 document.getElementById("fgBtn").addEventListener("click",function(){
   var em=document.getElementById("fgEmail").value.trim(),msg=document.getElementById("fgMsg");
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){msg.textContent="Indiquez une adresse mail valide.";return;}
-  sb.auth.resetPasswordForEmail(em,{redirectTo:ACTIVATION}).then(function(r){
-    msg.style.color=r.error?"":"var(--accent)";
-    msg.textContent=r.error?frAuth(r.error):"C'est envoyé. Si un compte existe pour "+em+", un mail arrive dans quelques instants (pensez aux indésirables).";
+  sb.functions.invoke("courrier",{body:{action:"oubli",email:em}}).then(function(r){
+    var off=!r.error&&r.data&&r.data.err==="envoi";
+    msg.style.color=(r.error||off)?"":"var(--accent)";
+    msg.textContent=r.error?frAuth(r.error):off?"L'envoi des mails n'est pas encore activé. Demandez à Alexandra ou Éloi de vous transmettre un lien.":"C'est envoyé. Si un compte existe pour "+em+", un mail arrive dans quelques instants (pensez aux indésirables).";
   });
 });
 function logout(){closeSheet();sb.auth.signOut().then(function(){S.me=null;SAVED=null;showScreen("login");});}
 document.getElementById("logoutBtn").addEventListener("click",logout);
+document.getElementById("printBtn").addEventListener("click",function(){S.pview="week";renderAll();setTimeout(function(){window.print();},80);});
 document.getElementById("nlOut").addEventListener("click",logout);
 document.getElementById("addMember").addEventListener("click",function(){openPerson(null);});
 ["pseg","tseg"].forEach(function(id){document.getElementById(id).querySelectorAll("button").forEach(function(b){b.addEventListener("click",function(){if(id==="pseg")S.pview=b.getAttribute("data-v");else S.tview=b.getAttribute("data-v");renderAll();});});});
@@ -1430,7 +1574,7 @@ document.addEventListener("visibilitychange",function(){
   if(Date.now()-lastLoad<60000||layer.innerHTML)return;
   saving.then(loadAll).then(function(ok){if(ok)renderAll();}).catch(function(){});
 });
-window.__app={S:S,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
+window.__app={S:S,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
 if(!sb){showScreen("login");document.getElementById("lgErr").textContent="Le service de connexion n'a pas pu se charger. Rechargez la page.";}
 else sb.auth.getSession().then(function(r){if(r.data&&r.data.session)startApp();else showScreen("login");}).catch(function(){showScreen("login");});
 })();

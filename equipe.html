@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.30">
+<meta name="ps-version" content="e1.31">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -1989,6 +1989,7 @@ blocs[vue]),
 rea&&rea.LABS?h("datalist",{id:"pse-labs"},rea.LABS.map(function(l){return h("option",{key:l,value:l})})):null,
 h("footer",{style:{marginTop:28,textAlign:"center",fontSize:12,color:"var(--text3)"}},
 "PharmaScope \u00c9quipe \u00b7 ",
+(lsGet("pse_auth",0)||{}).role==="equipe"?h("a",{href:"planning.html",style:{fontSize:12,color:"var(--accent)",fontWeight:700,textDecoration:"underline",marginRight:10}},"\ud83d\udcc5 Mon planning, mes cong\u00e9s et mes soldes"):null,
 h("button",{onClick:function(){try{localStorage.removeItem("pse_auth")}catch(e){}try{if(db)db.auth.signOut()}catch(e){}p.onSortir()},style:{fontSize:12,color:"var(--text3)",textDecoration:"underline"}},"Se d\u00e9connecter")),
 toast?h("div",{role:"status",style:{position:"fixed",left:16,right:16,bottom:"calc(env(safe-area-inset-bottom,0px) + 16px)",maxWidth:520,margin:"0 auto",background:"#0f172a",color:"#fff",borderRadius:14,padding:"12px 14px",display:"flex",gap:10,alignItems:"center",boxShadow:"0 8px 30px rgba(0,0,0,.3)",zIndex:9000,animation:"up .2s"}},
 h("span",{style:{flex:1,fontSize:14,minWidth:0}},toast.msg),
