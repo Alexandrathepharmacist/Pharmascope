@@ -1,0 +1,14 @@
+{
+  "name": "PharmaScope Planning - Pharmacie de Veyrier-du-Lac",
+  "short_name": "Planning",
+  "start_url": "./planning.html",
+  "scope": "./planning.html",
+  "display": "standalone",
+  "background_color": "#F5F7F8",
+  "theme_color": "#F5F7F8",
+  "icons": [
+    {"src": "icon-planning-192.png?v=1", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-planning-512.png?v=1", "sizes": "512x512", "type": "image/png"},
+    {"src": "apple-touch-icon-planning.png?v=1", "sizes": "180x180", "type": "image/png"}
+  ]
+}

@@ -7,7 +7,14 @@
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#F5F7F8">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Planning">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="apple-touch-icon-planning.png?v=1">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-planning-192.png?v=1">
+<link rel="manifest" href="manifest-planning.webmanifest?v=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap">
@@ -243,6 +250,35 @@ table.wkt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
 .field{display:flex;flex-direction:column;gap:6px}
 .field input[type=date],.field input[type=number],.field input[type=text]{max-width:260px}
 .empty{color:var(--ink-3);font-size:.9rem;padding:10px 0}
+/* ---- iPhone ---- */
+html{-webkit-text-size-adjust:100%}
+body{-webkit-tap-highlight-color:transparent}
+button,a,.tab,.chip,.cell{touch-action:manipulation}
+.wrap{padding-top:calc(14px + env(safe-area-inset-top,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tab .ti{display:none}
+.sheet .lbl2{font-size:.78rem;color:var(--ink-3)}
+.req .st{display:inline-block}
+.installhint{margin:12px 0 0;background:var(--accent-soft);border-radius:14px;padding:10px 12px;font-size:.86rem;line-height:1.4;color:var(--ink)}
+.installhint .linkbtn{margin-top:6px;display:block}
+.sharei{display:inline-block;vertical-align:-3px}
+@supports (height:1dvh){.sheet{max-height:88dvh}.authwrap{min-height:100dvh}}
+@media (pointer:coarse){.btn{min-height:44px}.iconbtn{width:44px;height:44px}.chip{min-height:40px}.linkbtn{min-height:36px}}
+@media (max-width:640px){
+  .top .eyebrow,.top .sub{display:none}
+  .top h1{font-size:1.2rem}
+  .tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;margin:0;width:auto;max-width:none;border-radius:0;gap:2px;justify-content:space-around;
+    background:rgba(255,255,255,.94);-webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);
+    border-top:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+  .tab{flex:1 0 auto;min-width:62px;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:4px 6px;border-radius:12px;font-size:.68rem}
+  .tab .ti{display:block;font-size:1.25rem;line-height:1.25}
+  .tab[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);box-shadow:none}
+  .wrap{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+  .toast{bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+  .field input[type=date],.field input[type=number],.field input[type=text]{max-width:none;width:100%}
+  .h2row .btn{flex:1 1 auto;justify-content:center}
+  #printBtn{display:none}
+  .top{align-items:center}
+}
 </style>
 </head>
 <body>
@@ -251,7 +287,8 @@ table.wkt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
 
 <div class="authwrap" id="auth" hidden>
   <div class="authcard">
-    <div class="authhead"><img src="apple-touch-icon.png" alt=""><h1>PharmaScope Planning</h1><div class="sub">Pharmacie de Veyrier-du-Lac</div></div>
+    <div class="authhead"><img src="apple-touch-icon-planning.png?v=1" alt=""><h1>PharmaScope Planning</h1><div class="sub">Pharmacie de Veyrier-du-Lac</div></div>
+    <div class="installhint" hidden><b>Installer l'appli sur l'iPhone</b> : dans Safari, touchez le bouton Partager <svg class="sharei" width="16" height="18" viewBox="0 0 16 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 11V1.5M4.5 4.5 8 1l3.5 3.5M3.5 8H2.3A1.3 1.3 0 0 0 1 9.3v6.4A1.3 1.3 0 0 0 2.3 17h11.4a1.3 1.3 0 0 0 1.3-1.3V9.3A1.3 1.3 0 0 0 13.7 8h-1.2"/></svg> en bas de l'écran, puis « Sur l'écran d'accueil ». Ouvrez ensuite l'icône Planning et connectez-vous une fois.<button class="linkbtn hintx" type="button">J'ai compris, ne plus afficher</button></div>
     <div id="auth-login">
       <label class="lbl" for="lgEmail">Adresse mail</label>
       <input id="lgEmail" type="email" autocomplete="username" inputmode="email">
@@ -290,6 +327,7 @@ table.wkt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
     </div>
   </div>
   <div class="banner" id="banner" hidden></div>
+  <div class="installhint" hidden><b>Installer l'appli sur l'iPhone</b> : dans Safari, touchez le bouton Partager <svg class="sharei" width="16" height="18" viewBox="0 0 16 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 11V1.5M4.5 4.5 8 1l3.5 3.5M3.5 8H2.3A1.3 1.3 0 0 0 1 9.3v6.4A1.3 1.3 0 0 0 2.3 17h11.4a1.3 1.3 0 0 0 1.3-1.3V9.3A1.3 1.3 0 0 0 13.7 8h-1.2"/></svg> en bas de l'écran, puis « Sur l'écran d'accueil ». Ouvrez ensuite l'icône Planning et connectez-vous une fois.<button class="linkbtn hintx" type="button">J'ai compris, ne plus afficher</button></div>
 
   <div class="tabs" role="tablist" id="tabs"></div>
 
@@ -372,9 +410,10 @@ table.wkt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:6px}
   </section>
 
   <section id="p-myr" hidden>
-    <div class="h2row"><h2>Mes demandes</h2><button class="btn primary" id="newReq">+ Nouvelle demande</button></div>
+    <div class="h2row"><h2>Mes demandes</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="newSwap">⇄ Proposer un échange</button><button class="btn primary" id="newReq">+ Congé ou récup</button></div></div>
+    <div class="alerts" id="mySwaps"></div>
     <div class="alerts" id="myReqs"></div>
-    <p class="note">Votre demande arrive aussitôt chez les responsables du planning, qui l'acceptent ou la refusent dans l'appli. Vous êtes prévenu(e) de la réponse ici et par mail.</p>
+    <p class="note">Votre demande arrive aussitôt chez Alexandra et Éloi, qui l'acceptent ou la refusent dans l'appli. Vous êtes prévenu(e) de la réponse ici et par mail. Un échange de jours se fait entre collègues du même diplôme, pour le même nombre d'heures : votre collègue accepte d'abord, puis un titulaire valide.</p>
   </section>
 </div>
 
@@ -455,7 +494,7 @@ function cp(x){return JSON.parse(JSON.stringify(x));}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
 
 /* État */
-var S={adjust:[],cpMode:"ouvrables",trame:{},changes:{},people:[],requests:[],notifs:[],accounts:{},tab:"plan",w:"A",wk:null,day:0,meas:"ratio",me:null,month:null};
+var S={swaps:[],adjust:[],cpMode:"ouvrables",trame:{},changes:{},people:[],requests:[],notifs:[],accounts:{},tab:"plan",w:"A",wk:null,day:0,meas:"ratio",me:null,month:null};
 var today=new Date();var tIso=dIso(new Date(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())));
 var t0=dParse(tIso);LAST=dAdd(monOf(t0),7*60);if(t0<FIRST)t0=FIRST;
 S.wk=dIso(monOf(t0));S.day=Math.min(5,wdOf(t0));S.month=tIso.slice(0,7);S.pview="day";S.tview="day";S.pday=S.day;S.tday=0;
@@ -626,7 +665,7 @@ function notifyDiff(old){
         var f=function(bl){return bl.length?bl.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(" · "):"repos";};
         lines.push({ds:"T"+w+d,txt:"Semaine type "+w+", "+DL[d].toLowerCase()+" : "+f(n[d])+" (au lieu de "+f(o[d])+")"});}}
     });
-    if(decisionNote&&decisionNote.p===p.id)lines.push({ds:"0",txt:decisionNote.txt});
+    [].concat(decisionNote||[]).forEach(function(dn){if(dn.p===p.id)lines.push({ds:"0",txt:dn.txt});});
     if(!lines.length)return;
     lines.sort(function(x,y){return x.ds<y.ds?-1:1;});
     S.notifs.unshift({id:uuid(),p:p.id,by:by,at:now.toISOString(),lines:lines.map(function(l){return l.txt;}),read:false,mail:p.email||null});
@@ -645,7 +684,7 @@ function notifCard(n,admin){
   var p=P(n.p),d=new Date(n.at);
   var when=d.getDate()+" "+MOIS[d.getMonth()]+" à "+d.getHours()+"h"+(d.getMinutes()<10?"0":"")+d.getMinutes();
   var b=el("button",{class:"req",style:"--pc:"+p.color+";width:100%;text-align:left;"+(!admin&&!n.read?"border-color:var(--accent)":"")});
-  b.innerHTML=av(p)+"<div class='body'><div><b>"+(admin?esc(p.name)+" · ":"")+"Planning modifié</b> "+(!admin&&!n.read?"<span class='st st-pending'>Nouveau</span>":"")+"</div><div class='meta'>"+esc(n.lines[0])+(n.lines.length>1?" et "+(n.lines.length-1)+" autre"+(n.lines.length>2?"s":""):"")+"</div><div class='meta'>"+(admin?(n.mail?(n.mailStatus==="sent"?"Mail envoyé à ":(n.mailStatus==="failed"?"Mail non parti pour ":"Mail en attente pour "))+esc(n.mail):(isAdmin()?"Pas d'adresse mail : à prévenir de vive voix":"Prévenu(e) dans l'appli"))+" · ":"")+"par "+esc(n.by)+", le "+when+"</div></div>";
+  b.innerHTML=av(p)+"<div class='body'><div><b>"+(admin?esc(p.name)+" · ":"")+(n.origine==="echange"?"Échange de jours":"Planning modifié")+"</b> "+(!admin&&!n.read?"<span class='st st-pending'>Nouveau</span>":"")+"</div><div class='meta'>"+esc(n.lines[0])+(n.lines.length>1?" et "+(n.lines.length-1)+" autre"+(n.lines.length>2?"s":""):"")+"</div><div class='meta'>"+(admin?(n.mail?(n.mailStatus==="sent"?"Mail envoyé à ":(n.mailStatus==="failed"?"Mail non parti pour ":"Mail en attente pour "))+esc(n.mail):(isAdmin()?"Pas d'adresse mail : à prévenir de vive voix":"Prévenu(e) dans l'appli"))+" · ":"")+"par "+esc(n.by)+", le "+when+"</div></div>";
   b.addEventListener("click",function(){openMail(n);});
   return b;
 }
@@ -675,19 +714,22 @@ function whoCell(p,sub){return "<div class='who'>"+av(p)+"<div style='min-width:
 function sepRow(p,cols){var ix=S.people.indexOf(p);return (p.hors&&!S.people[ix-1].hors)?"<tr class='sep'><td colspan='"+cols+"'>Renforts hors trame</td></tr>":"";}
 
 /* Onglets */
+var TABICON={plan:"📅",trame:"🔁",aff:"📈",hrs:"⏱️",team:"👥",myh:"⏳",notif:"🔔",myr:"✋"};
 function tabsFor(){
-  if(isAdmin()){var n=S.requests.filter(function(r){return r.status==="pending";}).length;
+  var sw=S.swaps.filter(function(x){return x.status==="attente_titulaire"&&(isAdmin()||(x.a!==S.me&&x.b!==S.me));}).length;
+  var swMe=S.swaps.filter(function(x){return x.b===S.me&&x.status==="attente_collegue";}).length;
+  if(isAdmin()){var n=sw+S.requests.filter(function(r){return r.status==="pending";}).length;
     return [["plan","Planning"],["trame","Trame"],["aff","Affluence"],["hrs","Heures"],["team","Équipe"+(n?"<span class='badge'>"+n+"</span>":"")]];}
-  var mine=S.requests.filter(function(r){return r.p===S.me&&r.status==="pending";}).length;
+  var mine=swMe+S.requests.filter(function(r){return r.p===S.me&&r.status==="pending";}).length;
   var unread=S.notifs.filter(function(n){return n.p===S.me&&!n.read;}).length;
-  if(isEditor()){var n2=S.requests.filter(function(r){return r.status==="pending"&&r.p!==S.me;}).length;
+  if(isEditor()){var n2=sw+S.requests.filter(function(r){return r.status==="pending"&&r.p!==S.me;}).length;
     return [["plan","Planning"],["trame","Trame"],["aff","Affluence"],["team","Demandes"+(n2?"<span class='badge'>"+n2+"</span>":"")],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];}
   return [["plan","Planning"],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];
 }
 function renderTabs(){
   var t=tabsFor(),box=document.getElementById("tabs");box.innerHTML="";
   if(!t.some(function(x){return x[0]===S.tab;}))S.tab="plan";
-  t.forEach(function(x){box.appendChild(el("button",{class:"tab",role:"tab","aria-selected":String(S.tab===x[0]),onclick:function(){S.tab=x[0];renderAll();}},x[1]));});
+  t.forEach(function(x){box.appendChild(el("button",{class:"tab",role:"tab","aria-selected":String(S.tab===x[0]),onclick:function(){S.tab=x[0];renderAll();window.scrollTo(0,0);}},"<span class='ti' aria-hidden='true'>"+(TABICON[x[0]]||"")+"</span><span>"+x[1]+"</span>"));});
   ["plan","trame","aff","hrs","team","myh","myr","notif"].forEach(function(k){document.getElementById("p-"+k).hidden=S.tab!==k;});
   document.getElementById("banner").hidden=true;
 }
@@ -1071,13 +1113,22 @@ function decide(r,ok){
 }
 function renderTeam(){
   var pend=S.requests.filter(function(r){return r.status==="pending"&&(isAdmin()||r.p!==S.me);}),bp=document.getElementById("reqPending");bp.innerHTML="";
-  if(!pend.length)bp.innerHTML="<div class='empty'>Aucune demande en attente.</div>";
+  var swP=S.swaps.filter(function(x){return x.status==="attente_titulaire"||x.status==="attente_collegue";});
+  if(!pend.length&&!swP.length)bp.innerHTML="<div class='empty'>Aucune demande en attente.</div>";
+  swP.forEach(function(x){
+    if(x.status==="attente_collegue"){bp.appendChild(swapLine(x,null));return;}
+    var w=swapCheck(x),acts=[["Voir au planning",function(){S.wk=dIso(monOf(dParse(x.dsA)));S.pday=Math.min(5,wdOf(dParse(x.dsA)));S.tab="plan";renderAll();}],["Refuser",function(){decideSwap(x,false);}]];
+    if(!w.block&&(isAdmin()||(x.a!==S.me&&x.b!==S.me)))acts.push(["Valider l'échange",function(){decideSwap(x,true);},true]);
+    bp.appendChild(swapLine(x,acts,w.block||w.warn));
+  });
   pend.forEach(function(r){bp.appendChild(reqLine(r,[["Voir au planning",function(){S.wk=dIso(monOf(dParse(r.from)));S.tab="plan";renderAll();}],["Refuser",function(){decide(r,false);}],["Accepter",function(){decide(r,true);},true]]));});
   var ns=document.getElementById("notifSent");ns.innerHTML="";
   if(!S.notifs.length)ns.innerHTML="<div class='empty'>Aucune pour l'instant. Chaque modification des horaires de quelqu'un crée une notification pour cette personne.</div>";
   S.notifs.slice(0,15).forEach(function(n){ns.appendChild(notifCard(n,true));});
   var done=S.requests.filter(function(r){return r.status!=="pending";}).slice().reverse(),bd=document.getElementById("reqDone");bd.innerHTML="";
-  if(!done.length)bd.innerHTML="<div class='empty'>Aucune.</div>";
+  var swD=S.swaps.filter(function(x){return x.status==="ok"||x.status==="refus"||x.status==="refus_collegue";}).slice().reverse();
+  if(!done.length&&!swD.length)bd.innerHTML="<div class='empty'>Aucune.</div>";
+  swD.forEach(function(x){bd.appendChild(swapLine(x,null));});
   done.forEach(function(r){bd.appendChild(reqLine(r,null));});
   document.getElementById("teamAdmin").hidden=!isAdmin();
   var pb=document.getElementById("people");pb.innerHTML="";
@@ -1089,6 +1140,123 @@ function renderTeam(){
     pb.appendChild(b);
   });
 }
+/* ===== Échanges de jours entre collègues : même diplôme, même nombre d'heures.
+   1) le demandeur propose  2) le collègue accepte  3) un titulaire valide : le planning des deux est alors mis à jour. ===== */
+function grade(p){return (p.ph?"ph:":"np:")+String(p.role||"").toLowerCase().slice(0,8);}
+function overlapBl(x,y){return x.some(function(a){return y.some(function(b){return a[0]<b[1]&&b[0]<a[1];});});}
+function mergeBl(x,y){return x.concat(y).map(function(b){return [b[0],b[1]];}).sort(function(a,b){return a[0]-b[0];});}
+function blTxt(bl){return bl.length?bl.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(" · "):"repos";}
+function dLong(ds){var d=dParse(ds);return (wdOf(d)<6?DL[wdOf(d)].toLowerCase():"dimanche")+" "+dShort(d);}
+function isOff(inf){return !!inf.ferie||(!!inf.changed&&!inf.act.length&&inf.exp.length>0);}
+function mapSwap(x){return {id:x.id,a:x.demandeur,b:x.collegue,dsA:String(x.jour_demandeur).slice(0,10),dsB:String(x.jour_collegue).slice(0,10),ga:x.blocs_demandeur||[],gb:x.blocs_collegue||[],c:x.comment||"",status:x.status,at:dIso(new Date(Date.UTC(new Date(x.cree_le).getFullYear(),new Date(x.cree_le).getMonth(),new Date(x.cree_le).getDate())))};}
+/* a cède sa journée dsA à b, et prend la journée dsB de b */
+function swapPlan(aId,dsA,bId,dsB){
+  var a=P(aId),b=P(bId),errs=[],out={errs:errs,res:[],ga:[],gb:[]};
+  if(!a||!b){errs.push("Collègue introuvable.");return out;}
+  if(grade(a)!==grade(b))errs.push("Il faut le même diplôme.");
+  if(!dsA||!dsB){errs.push("Choisissez les deux journées.");return out;}
+  if(dsA<=tIso||dsB<=tIso)errs.push("Les deux journées doivent être à venir.");
+  var ia=dayInfo(aId,dsA),ib=dayInfo(bId,dsB),ga=ia.act,gb=ib.act;out.ga=ga;out.gb=gb;
+  if(!ga.length)errs.push(a.name+" ne travaille pas le "+dLong(dsA)+".");
+  if(!gb.length)errs.push(b.name+" ne travaille pas le "+dLong(dsB)+".");
+  if(ga.length&&gb.length&&dur(ga)!==dur(gb))errs.push("Les deux journées n'ont pas le même nombre d'heures : "+hm(dur(ga))+" contre "+hm(dur(gb))+".");
+  if(errs.length)return out;
+  if(dsA===dsB){
+    if(same(ga,gb)){errs.push("Les horaires sont déjà identiques ce jour-là.");return out;}
+    out.res=[[aId,dsA,gb,b.name],[bId,dsA,ga,a.name]];return out;
+  }
+  var bOnA=dayInfo(bId,dsA),aOnB=dayInfo(aId,dsB);
+  if(isOff(bOnA))errs.push(b.name+" est absent(e) le "+dLong(dsA)+".");
+  else if(overlapBl(bOnA.act,ga))errs.push(b.name+" travaille déjà sur ces horaires le "+dLong(dsA)+".");
+  if(isOff(aOnB))errs.push(a.name+" est absent(e) le "+dLong(dsB)+".");
+  else if(overlapBl(aOnB.act,gb))errs.push(a.name+" travaille déjà sur ces horaires le "+dLong(dsB)+".");
+  var nb=mergeBl(bOnA.act,ga),na=mergeBl(aOnB.act,gb);
+  if(legal(b)&&dur(nb)>600)errs.push(b.name+" dépasserait 10 h de travail le "+dLong(dsA)+".");
+  if(legal(a)&&dur(na)>600)errs.push(a.name+" dépasserait 10 h de travail le "+dLong(dsB)+".");
+  out.res=[[aId,dsA,[],b.name],[bId,dsA,nb,a.name],[bId,dsB,[],a.name],[aId,dsB,na,b.name]];
+  return out;
+}
+function applySwap(pl){pl.res.forEach(function(r){var inf=dayInfo(r[0],r[1]);
+  if(same(r[2],inf.exp))setChange(r[0],r[1],null);else setChange(r[0],r[1],{b:r[2],t:r[2].length?"hs":"recup",c:"Échange avec "+r[3]});});}
+function gapMin(ds){var n=0;phGapsDate(ds).forEach(function(g){n+=g[1]-g[0];});return n;}
+/* Contrôle au moment de valider : block = échange devenu impossible, warn = à regarder avant de valider */
+function swapCheck(x){
+  var pl=swapPlan(x.a,x.dsA,x.b,x.dsB);
+  if(pl.errs.length)return {block:"Échange devenu impossible : "+pl.errs[0]};
+  if(!same(pl.ga,x.ga)||!same(pl.gb,x.gb))return {block:"Le planning de ces journées a changé depuis la proposition : refusez-la pour qu'ils en refassent une."};
+  var days=x.dsA===x.dsB?[x.dsA]:[x.dsA,x.dsB],before=days.map(gapMin),keep=S.changes,warn=[];
+  S.changes=cp(S.changes);applySwap(pl);
+  days.forEach(function(ds,i){if(gapMin(ds)>before[i])warn.push(dLong(ds)+" : aucun pharmacien de "+phGapsDate(ds).map(function(g){return hm(g[0])+" à "+hm(g[1]);}).join(", "));});
+  S.changes=keep;
+  return {pl:pl,warn:warn.length?"Après l'échange, "+warn.join(" ; ")+".":""};
+}
+function swapStatus(x){var b=P(x.b),n=b?b.name:"votre collègue";
+  return {attente_collegue:["st-pending","En attente de la réponse de "+n],attente_titulaire:["st-pending","À valider par un titulaire"],ok:["st-ok","Validé"],refus_collegue:["st-no","Refusé par "+n],refus:["st-no","Non validé"]}[x.status]||["st-pending",x.status];}
+function swapLine(x,actions,alertTxt){
+  var a=P(x.a)||{name:"?",color:"#767676"},b=P(x.b)||{name:"?",color:"#767676"},st=swapStatus(x);
+  var d=el("div",{class:"req",style:"--pc:"+a.color});
+  d.innerHTML=av(a)+"<div class='body'><div><b>"+esc(a.name)+" ⇄ "+esc(b.name)+"</b> · Échange de jours <span class='st "+st[0]+"'>"+esc(st[1])+"</span></div>"+
+    "<div class='meta'><b>"+dLong(x.dsA)+"</b> · "+blTxt(x.ga)+" ("+hm(dur(x.ga))+") : "+esc(b.name)+" à la place de "+esc(a.name)+"</div>"+
+    "<div class='meta'><b>"+dLong(x.dsB)+"</b> · "+blTxt(x.gb)+" ("+hm(dur(x.gb))+") : "+esc(a.name)+" à la place de "+esc(b.name)+"</div>"+
+    (x.c?"<div class='meta'>« "+esc(x.c)+" »</div>":"")+(alertTxt?"<div class='meta' style='color:var(--bad);font-weight:600'>⚠ "+esc(alertTxt)+"</div>":"")+
+    "<div class='meta'>Proposé le "+dShort(dParse(x.at))+"</div></div>";
+  if(actions){var box=el("div",{class:"acts"});actions.forEach(function(k){box.appendChild(el("button",{class:"btn"+(k[2]?" primary":""),onclick:k[1]},k[0]));});d.querySelector(".body").appendChild(box);}
+  return d;
+}
+function swapErr(e){toast("Impossible : "+((e&&e.message)||e));}
+/* Après une action sur un échange : on recharge tout (les notifications sont créées par le serveur) et on fait partir les mails */
+function afterSwap(msg){return saving.then(loadAll).then(function(){renderAll();if(msg)toast(msg);sb.functions.invoke("courrier",{body:{action:"notifs"}}).catch(function(){});});}
+function answerSwap(x,ok){
+  if(ok){var pl=swapPlan(x.a,x.dsA,x.b,x.dsB);if(pl.errs.length||!same(pl.ga,x.ga)||!same(pl.gb,x.gb)){toast("Cet échange n'est plus possible : "+(pl.errs[0]||"le planning a changé depuis la proposition.")+" Refusez-le pour en refaire un.");return;}}
+  sb.rpc("echange_repondre",{p_id:x.id,p_ok:ok}).then(check).then(function(){return afterSwap(ok?"Échange accepté : il reste à être validé par Alexandra ou Éloi":"Échange refusé");}).catch(swapErr);
+}
+function decideSwap(x,ok){
+  var a=P(x.a),b=P(x.b),w=ok?swapCheck(x):null;
+  if(ok&&w.block){toast(w.block);return;}
+  sb.from("echanges").update({status:ok?"ok":"refus",decide_par:myUid,decide_le:new Date().toISOString()}).eq("id",x.id).then(check).then(function(){
+    x.status=ok?"ok":"refus";
+    if(!ok)return afterSwap("Échange refusé : "+a.name+" et "+b.name+" sont prévenus");
+    snap();applySwap(w.pl);
+    decisionNote=[{p:x.a,txt:"Votre échange avec "+b.name+" a été validé"},{p:x.b,txt:"Votre échange avec "+a.name+" a été validé"}];
+    save();renderAll();toast("Échange validé : le planning de "+a.name+" et "+b.name+" est à jour");
+  }).catch(swapErr);
+}
+function openSwap(){
+  var me=ME(),mates=S.people.filter(function(p){return p.id!==me.id&&p.access!=="none"&&grade(p)===grade(me);});
+  var c=el("div","","<h2>Proposer un échange</h2><div class='sub'>Entre collègues du même diplôme, pour le même nombre d'heures. Votre collègue accepte d'abord, puis Alexandra ou Éloi valide.</div>");
+  if(!mates.length){c.appendChild(el("p",{class:"note"},"Aucun(e) collègue du même diplôme n'a accès au planning pour l'instant."));var r0=el("div",{class:"row"});r0.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));c.appendChild(r0);sheet(c);return;}
+  var who=[mates[0].id],first="",firstAny="";
+  /* jour proposé d'office : ma première journée pour laquelle un échange est possible avec la première personne de la liste */
+  for(var i=1;i<=60&&!first;i++){var x=dIso(dAdd(dParse(tIso),i));if(!dayInfo(me.id,x).act.length)continue;if(!firstAny)firstAny=x;
+    for(var j=1;j<=56;j++){if(!swapPlan(me.id,x,mates[0].id,dIso(dAdd(dParse(tIso),j))).errs.length){first=x;break;}}}
+  if(!first)first=firstAny;
+  var s1=el("div",{class:"sec"},"<div class='lbl'>Avec qui ?</div>");s1.appendChild(radio(mates.map(function(p){return p.id;}),mates.map(function(p){return esc(p.name);}),who,function(){ti.value="";upd();}));c.appendChild(s1);
+  var f1=el("div",{class:"sec field"},"<label class='lbl' for='s-a'>Le jour que je cède</label>"),fi=el("input",{type:"date",id:"s-a",min:dIso(dAdd(dParse(tIso),1))});fi.value=first;f1.appendChild(fi);var myTxt=el("div",{class:"lbl2"});f1.appendChild(myTxt);c.appendChild(f1);
+  var f2=el("div",{class:"sec field"},"<label class='lbl' for='s-b'>Le jour que je prends à sa place</label>"),ti=el("input",{type:"date",id:"s-b",min:dIso(dAdd(dParse(tIso),1))});f2.appendChild(ti);c.appendChild(f2);
+  var sg2=el("div",{class:"sec"});c.appendChild(sg2);
+  var f3=el("div",{class:"sec field"},"<label class='lbl' for='s-c'>Message pour votre collègue</label>"),mi=el("input",{type:"text",id:"s-c",placeholder:"Facultatif"});f3.appendChild(mi);c.appendChild(f3);
+  var rec=el("div",{class:"recap"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
+  var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Envoyer la proposition");
+  row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row.appendChild(ok);c.appendChild(row);
+  fi.addEventListener("input",function(){ti.value="";upd();});ti.addEventListener("input",upd);
+  function upd(){
+    var mate=P(who[0]),mine=fi.value?dayInfo(me.id,fi.value).act:[];
+    myTxt.textContent=!fi.value?"":(mine.length?"Vos horaires ce jour-là : "+blTxt(mine)+" ("+hm(dur(mine))+")":"Vous ne travaillez pas ce jour-là.");
+    /* journées de la ou du collègue qui respectent toutes les règles, sur les 8 prochaines semaines */
+    sg2.innerHTML="";
+    if(mine.length){var opts=[];for(var k=1;k<=56&&opts.length<8;k++){var ds=dIso(dAdd(dParse(tIso),k));if(!swapPlan(me.id,fi.value,mate.id,ds).errs.length)opts.push(ds);}
+      sg2.appendChild(opts.length?el("div",{class:"lbl"},"Journées possibles de "+esc(mate.name)+" ("+hm(dur(mine))+" aussi)"):el("p",{class:"note"},"Pour cette journée, aucun échange n'est possible avec "+esc(mate.name)+" dans les 8 prochaines semaines (même nombre d'heures, sans chevauchement). Essayez une autre de vos journées."));
+      var box=el("div",{class:"chips"});opts.forEach(function(ds){var b=el("button",{class:"chip","aria-pressed":String(ti.value===ds)},dLong(ds));b.addEventListener("click",function(){ti.value=ds;upd();});box.appendChild(b);});sg2.appendChild(box);}
+    if(!fi.value||!ti.value){rec.textContent="Choisissez votre journée, puis celle de "+mate.name+".";er.textContent="";ok.disabled=true;return;}
+    var pl=swapPlan(me.id,fi.value,mate.id,ti.value);
+    rec.textContent=pl.errs.length?"":mate.name+" travaillerait le "+dLong(fi.value)+" ("+blTxt(pl.ga)+") à votre place, et vous le "+dLong(ti.value)+" ("+blTxt(pl.gb)+") à la sienne. "+hm(dur(pl.ga))+" chacun : vos soldes d'heures ne changent pas.";
+    er.textContent=pl.errs[0]||"";ok.disabled=!!pl.errs.length;
+  }
+  ok.addEventListener("click",function(){if(ok.disabled)return;var mate=P(who[0]),pl=swapPlan(me.id,fi.value,mate.id,ti.value);if(pl.errs.length)return;ok.disabled=true;
+    sb.from("echanges").insert({demandeur:me.id,collegue:mate.id,jour_demandeur:fi.value,jour_collegue:ti.value,blocs_demandeur:pl.ga,blocs_collegue:pl.gb,comment:mi.value.trim()||null}).then(check)
+      .then(function(){closeSheet();S.tab="myr";return afterSwap("Proposition envoyée à "+mate.name);}).catch(function(e){ok.disabled=false;er.textContent=(e&&e.message)||String(e);});});
+  upd();sheet(c);
+}
 function acctInfo(p){var a=S.accounts[p.id];if(p.access==="none")return {k:"none",l:"Sans accès"};if(a&&a.confirmed)return {k:"ok",l:"Compte activé"+(a.last_sign_in_at?" · vu le "+dShort(new Date(a.last_sign_in_at)):"")};if(a&&a.has_account)return {k:"sent",l:"Invitation envoyée"+(a.invited_at?" le "+dShort(new Date(a.invited_at)):"")};return {k:"none",l:"Pas encore invité(e)"};}
 function acctBadge(p){var i=acctInfo(p);return "<span class='acct acct-"+i.k+"'>"+esc(i.l)+"</span>";}
 function renderMy(){
@@ -1096,7 +1264,14 @@ function renderMy(){
   var b=document.getElementById("mycard");b.innerHTML="";b.appendChild(cardFor(ME(),true));
   var r=document.getElementById("myReqs");r.innerHTML="";
   var mine=S.requests.filter(function(x){return x.p===S.me;}).slice().reverse();
-  if(!mine.length)r.innerHTML="<div class='empty'>Aucune demande pour l'instant.</div>";
+  var ms=document.getElementById("mySwaps");ms.innerHTML="";
+  var sw=S.swaps.filter(function(x){return x.a===S.me||x.b===S.me;}).slice().reverse();
+  sw.sort(function(x,y){var k=function(z){return z.b===S.me&&z.status==="attente_collegue"?0:1;};return k(x)-k(y);});
+  sw.forEach(function(x){var acts=null;
+    if(x.b===S.me&&x.status==="attente_collegue")acts=[["Refuser",function(){answerSwap(x,false);}],["Accepter l'échange",function(){answerSwap(x,true);},true]];
+    else if(x.a===S.me&&(x.status==="attente_collegue"||x.status==="attente_titulaire"))acts=[["Retirer",function(){sb.from("echanges").delete().eq("id",x.id).then(check).then(function(){return afterSwap("Proposition retirée");}).catch(swapErr);}]];
+    ms.appendChild(swapLine(x,acts));});
+  if(!mine.length&&!sw.length)r.innerHTML="<div class='empty'>Aucune demande pour l'instant.</div>";
   mine.forEach(function(x){r.appendChild(reqLine(x,x.status==="pending"?[["Retirer",function(){snap();S.requests=S.requests.filter(function(y){return y!==x;});save();renderAll();toast("Demande retirée",true);}]]:null));});
 }
 
@@ -1213,10 +1388,11 @@ function openDay(pid,ds){
 function openRequest(ds){
   var p=ME(),t=["cp"];
   var c=el("div","", "<h2>Nouvelle demande</h2><div class='sub'>Elle sera envoyée aux responsables du planning, qui l'acceptent ou la refusent.</div>");
-  var s1=el("div",{class:"sec"},"<div class='lbl'>Type</div>");s1.appendChild(radio(["cp","recup","echange"],["Congé payé","Récupération","Échange de jour"],t,upd));c.appendChild(s1);
+  var s1=el("div",{class:"sec"},"<div class='lbl'>Type</div>");s1.appendChild(radio(["cp","recup"],["Congé payé","Récupération"],t,upd));c.appendChild(s1);
+  var sx=el("button",{class:"linkbtn",type:"button",onclick:function(){closeSheet();openSwap();}},"Échanger une journée avec un(e) collègue ?");c.appendChild(sx);
   var f1=el("div",{class:"sec field"},"<label class='lbl' for='r-from'>Du</label>"),fi=el("input",{type:"date",id:"r-from",min:dIso(FIRST)});fi.value=ds||dIso(dAdd(t0,7));f1.appendChild(fi);c.appendChild(f1);
   var f2=el("div",{class:"sec field"},"<label class='lbl' for='r-to'>Au (inclus)</label>"),ti=el("input",{type:"date",id:"r-to"});ti.value=fi.value;f2.appendChild(ti);c.appendChild(f2);
-  var f3=el("div",{class:"sec field"},"<label class='lbl' for='r-c'>Message</label>"),mi=el("input",{type:"text",id:"r-c",placeholder:"Ex. échange avec Camille le samedi suivant"});f3.appendChild(mi);c.appendChild(f3);
+  var f3=el("div",{class:"sec field"},"<label class='lbl' for='r-c'>Message</label>"),mi=el("input",{type:"text",id:"r-c",placeholder:"Facultatif"});f3.appendChild(mi);c.appendChild(f3);
   var rec=el("div",{class:"recap"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
   var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Envoyer la demande");
   row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row.appendChild(ok);c.appendChild(row);
@@ -1385,6 +1561,16 @@ document.getElementById("prevWk").addEventListener("click",function(){S.wk=dIso(
 document.getElementById("nextWk").addEventListener("click",function(){S.wk=dIso(dAdd(dParse(S.wk),7));renderAll();});
 document.getElementById("todayBtn").addEventListener("click",function(){S.wk=dIso(monOf(t0));S.pday=Math.min(5,wdOf(t0));renderAll();});
 document.getElementById("newReq").addEventListener("click",function(){openRequest(null);});
+document.getElementById("newSwap").addEventListener("click",function(){openSwap();});
+/* Aide à l'installation : seulement sur iPhone / iPad, dans Safari, tant que l'appli n'est pas sur l'écran d'accueil */
+(function(){
+  var ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  var installed=window.navigator.standalone===true||(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches);
+  var seen=false;try{seen=localStorage.getItem("psp_install")==="1";}catch(e){}
+  if(!ios||installed||seen)return;
+  document.querySelectorAll(".installhint").forEach(function(b){b.hidden=false;});
+  document.querySelectorAll(".hintx").forEach(function(b){b.addEventListener("click",function(){try{localStorage.setItem("psp_install","1");}catch(e){}document.querySelectorAll(".installhint").forEach(function(x){x.hidden=true;});});});
+})();
 document.addEventListener("keydown",function(e){if(e.key==="Escape")closeSheet();});
 
 /* ===================== Base de données (Supabase) ===================== */
@@ -1489,7 +1675,8 @@ function loadAll(){
       sb.from("leave_requests").select("*").order("created_at"),
       sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(300),
       sb.from("planning_settings").select("*").maybeSingle(),
-      sb.from("solde_ajustements").select("*").order("jour")
+      sb.from("solde_ajustements").select("*").order("jour"),
+      sb.from("echanges").select("*").order("cree_le")
     ]).then(function(res){
       res.forEach(check);
       var st=res[0].data||[],pv=res[1].data||[],tr=res[2].data||[],ch=res[3].data||[],rq=res[4].data||[],nt=res[5].data||[],set=res[6].data;
@@ -1499,7 +1686,8 @@ function loadAll(){
       tr.forEach(function(x){if(S.trame[x.week]&&S.trame[x.week][x.staff_id])S.trame[x.week][x.staff_id][x.weekday]=x.blocks||[];});
       S.changes={};ch.forEach(function(x){var ds=String(x.day).slice(0,10);if(!S.changes[ds])S.changes[ds]={};var o={b:x.blocks||[],t:x.kind};if(x.comment)o.c=x.comment;S.changes[ds][x.staff_id]=o;});
       S.requests=rq.map(function(x){return {id:x.id,p:x.staff_id,t:x.kind,from:String(x.date_from).slice(0,10),to:String(x.date_to).slice(0,10),c:x.comment||"",at:String(x.created_at).slice(0,10),status:x.status};});
-      S.notifs=nt.map(function(x){var p=P(x.staff_id);return {id:x.id,p:x.staff_id,by:x.by_name,at:x.created_at,lines:x.lines||[],read:!!x.read_at,mail:p?p.email:null,mailStatus:x.mail_status};});
+      S.notifs=nt.map(function(x){var p=P(x.staff_id);return {id:x.id,p:x.staff_id,by:x.by_name,at:x.created_at,lines:x.lines||[],read:!!x.read_at,mail:p?p.email:null,mailStatus:x.mail_status,origine:x.origine||"planning"};});
+      S.swaps=(res[8].data||[]).map(mapSwap);
       S.adjust=(res[7].data||[]).map(function(x){return {id:x.id,p:x.staff_id,day:String(x.jour).slice(0,10),kind:x.kind,min:x.minutes,cp:x.cp_jours==null?null:+x.cp_jours,label:x.motif||""};});
       S.cpMode=(set&&set.cp_mode)||"ouvrables";
       if(set){REF=dParse(String(set.cycle_ref_monday).slice(0,10));REFW=Math.max(0,W.indexOf(set.cycle_ref_week));}
@@ -1574,7 +1762,7 @@ document.addEventListener("visibilitychange",function(){
   if(Date.now()-lastLoad<60000||layer.innerHTML)return;
   saving.then(loadAll).then(function(ok){if(ok)renderAll();}).catch(function(){});
 });
-window.__app={S:S,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
+window.__app={S:S,swapPlan:swapPlan,openSwap:openSwap,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
 if(!sb){showScreen("login");document.getElementById("lgErr").textContent="Le service de connexion n'a pas pu se charger. Rechargez la page.";}
 else sb.auth.getSession().then(function(r){if(r.data&&r.data.session)startApp();else showScreen("login");}).catch(function(){showScreen("login");});
 })();
