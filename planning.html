@@ -262,6 +262,30 @@ button,a,.tab,.chip,.cell{touch-action:manipulation}
 .installhint .linkbtn{margin-top:6px;display:block}
 .sharei{display:inline-block;vertical-align:-3px}
 @supports (height:1dvh){.sheet{max-height:88dvh}.authwrap{min-height:100dvh}}
+/* l'heure et la batterie de l'iPhone restent lisibles : le contenu ne passe plus dessous */
+body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:60}
+.tl-hr:last-child{transform:translateX(-100%)}
+@media (max-width:560px){
+  .tl{--namew:92px;padding:8px}
+  .tl-name{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;row-gap:0;line-height:1.15;padding-left:7px;border-left:3px solid var(--pc,transparent)}
+  .tl-name .av{display:none}
+  .tl-name em{margin-left:0;font-size:.69rem}
+  .tl-name span{line-height:1.4}
+  .tl-hr{font-size:.69rem}
+  /* vue semaine : colonne des prénoms étroite et toujours visible, sans pastille */
+  .grid th:first-child,.grid td:first-child{width:94px;min-width:94px;max-width:94px;padding-left:8px;box-shadow:1px 0 0 var(--line)}
+  .grid .who{gap:0;border-left:3px solid var(--pc,transparent);padding-left:6px}
+  .grid .who .av{display:none}
+  .grid .who .n{font-size:.82rem;line-height:1.4}
+  .grid .who .h{font-size:.69rem;white-space:normal}
+  .tchip,.phgap{font-size:.69rem}
+  /* en-tête compact */
+  .top{gap:6px}
+  .top .btn{min-height:34px;padding:5px 11px;font-size:.8rem}
+  .viewas{font-size:.78rem}
+  #todayBtn{min-height:36px;padding:5px 11px;font-size:.8rem}
+  .wknav{margin-bottom:8px}
+}
 @media (pointer:coarse){.btn{min-height:44px}.iconbtn{width:44px;height:44px}.chip{min-height:40px}.linkbtn{min-height:36px}}
 @media (max-width:640px){
   .top .eyebrow,.top .sub{display:none}
