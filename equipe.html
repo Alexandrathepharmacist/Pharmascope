@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.31">
+<meta name="ps-version" content="e1.32">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -884,6 +884,37 @@ var SYNC_BASE={},SYNC_TS={};
 var ENVOIS={n:0};
 
 function avecDelai(p,ms){return Promise.race([p,new Promise(function(ok,ko){setTimeout(function(){ko(new Error("delai"))},ms)})])}
+/* ===== SUIVI AU JOUR RANGE MOIS PAR MOIS (v9.53) =====
+   Avant : tout le suivi jour par jour (cle tdg_ventes, ~2 Mo) etait renvoye en entier a chaque import.
+   Maintenant : une ligne par mois (tdg_ventes_m:AAAA-MM = {S,V} de ce mois) et une ligne sommaire
+   (tdg_ventes = {v:2, mois:[...], T, cov, imported...}). Seuls les mois modifies sont renvoyes.
+   Une ligne tdg_ventes sans v:2 est l'ancien format (tout en un) : elle est lue telle quelle. */
+var VENTES_MOIS_PREF="tdg_ventes_m:";
+function ventesCanon(o){
+if(o===null||typeof o!=="object")return JSON.stringify(o);
+if(Array.isArray(o))return"["+o.map(ventesCanon).join(",")+"]";
+return"{"+Object.keys(o).sort().map(function(k){return JSON.stringify(k)+":"+ventesCanon(o[k])}).join(",")+"}"}
+function ventesDecouper(v){var out={};
+["S","V"].forEach(function(k){var o=(v&&v[k])||{};Object.keys(o).forEach(function(code){var jours=o[code];if(!jours||typeof jours!=="object")return;
+Object.keys(jours).forEach(function(d){var m=/^\d{4}-\d{2}-/.test(d)?d.slice(0,7):"autres";var b=out[m]||(out[m]={S:{},V:{}});(b[k][code]||(b[k][code]={}))[d]=jours[d]})})});
+return out}
+function ventesSommaire(v,mois){var idx={};Object.keys(v||{}).forEach(function(k){if(k!=="S"&&k!=="V")idx[k]=v[k]});
+idx.v=2;idx.mois=mois;idx.vides={};
+["S","V"].forEach(function(k){var o=(v&&v[k])||{};idx.vides[k]=Object.keys(o).filter(function(c){return !o[c]||typeof o[c]!=="object"||!Object.keys(o[c]).length})});
+return idx}
+function ventesAssembler(idx,rows){var v={};Object.keys(idx||{}).forEach(function(k){if(k!=="v"&&k!=="mois"&&k!=="vides")v[k]=idx[k]});v.S={};v.V={};
+(rows||[]).forEach(function(r){var d=(r&&r.data)||{};["S","V"].forEach(function(k){var o=d[k]||{};Object.keys(o).forEach(function(code){var c=v[k][code]||(v[k][code]={});var j=o[code]||{};Object.keys(j).forEach(function(x){c[x]=j[x]})})})});
+["S","V"].forEach(function(k){((idx&&idx.vides&&idx.vides[k])||[]).forEach(function(code){if(!v[k][code])v[k][code]={}})});
+return v}
+/* lit les lignes des mois annonces par le sommaire ; refuse un resultat incomplet */
+function ventesLireMois(client,idx){
+var voulu={};(idx.mois||[]).forEach(function(m){voulu[VENTES_MOIS_PREF+m]=1});
+if(!Object.keys(voulu).length)return Promise.resolve([]);
+return client.from("app_data").select("id,data").like("id",VENTES_MOIS_PREF+"%").then(function(q){
+if(!q||q.error)throw new Error("lecture des mois");
+var rows=(q.data||[]).filter(function(r){return voulu[r.id]});
+if(rows.length<Object.keys(voulu).length)throw new Error("mois manquants");
+return rows})}
 function lireLignes(ids,avecData){
 return avecDelai(db.from("app_data").select(avecData?"id,data,updated_at":"id,updated_at").in("id",ids).then(function(r){
 if(r.error)throw r.error;return r.data||[]}),12000)}
@@ -1839,6 +1870,7 @@ if(r){setRea(r);tsRef.current.sales_data=tsm.sales_data}})}).catch(function(){})
 else setReaCharge(false);
 if(tsm.tdg_ventes&&tsm.tdg_ventes!==tsRef.current.tdg_ventes){
 lireLignes(["tdg_ventes"],true).then(function(rows){var v=rows[0]&&rows[0].data;
+if(v&&v.v===2&&Array.isArray(v.mois))return avecDelai(ventesLireMois(db,v),25000).then(function(lignes){return ventesAssembler(v,lignes)});return v}).then(function(v){
 if(v&&v.S){setVentes({S:v.S,T:v.T||{},V:v.V||{},cov:v.cov||[]});tsRef.current.tdg_ventes=tsm.tdg_ventes}}).catch(function(){})}
 var aVac=CLES_VAC.filter(function(k){return tsm[k]&&tsm[k]!==tsRef.current[k]});
 if(aVac.length)lireLignes(aVac,true).then(function(rows){var n={};rows.forEach(function(r){tsRef.current[r.id]=r.updated_at;n[r.id]=r.data});setVac(function(o){return Object.assign({},o,n)})}).catch(function(){});
