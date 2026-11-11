@@ -405,7 +405,7 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
     <div class="card gridbox" style="margin-top:10px"><table class="hrs" id="hrs"></table></div>
     <h2 style="margin-top:18px">Points de vigilance</h2>
     <div class="alerts" id="alerts"></div>
-    <p class="src">Présence d'un pharmacien : contrôlée sur tous les créneaux d'ouverture, car les préparateurs exercent sous le contrôle effectif d'un pharmacien (<a href="https://www.ordre.pharmacien.fr/jurisprudence/37-controle-effectif-du-pharmacien-sur-les-actes-du-preparateur" target="_blank" rel="noopener">Ordre des pharmaciens</a>). Durée du travail, pour les salariés et extras : amplitude de 12 h et 46 h par semaine au maximum (<a href="https://www.skello.io/blog/les-heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Skello</a>, <a href="https://www.swim.legal/blog/heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Swim Legal</a>). Une pause de 30 min maximum d'un pharmacien entre deux créneaux compte comme une présence sur place. Les heures prévues au-delà de 39 h dans une semaine et les journées de plus de 10 h comptent comme des heures normales.</p>
+    <p class="src">Présence d'un pharmacien : contrôlée sur tous les créneaux d'ouverture, car les préparateurs exercent sous le contrôle effectif d'un pharmacien (<a href="https://www.ordre.pharmacien.fr/jurisprudence/37-controle-effectif-du-pharmacien-sur-les-actes-du-preparateur" target="_blank" rel="noopener">Ordre des pharmaciens</a>). Durée du travail, pour les salariés et extras : amplitude de 12 h et 46 h par semaine au maximum (<a href="https://www.skello.io/blog/les-heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Skello</a>, <a href="https://www.swim.legal/blog/heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Swim Legal</a>). Une pause de 30 min maximum d'un pharmacien entre deux créneaux compte comme une présence sur place. Les heures prévues au-delà de 39 h dans une semaine et les journées de plus de 10 h comptent comme des heures normales. Quand la trame d'un salarié fait en moyenne moins d'heures que son contrat, l'écart moyen par semaine est retiré de son solde récup / échanges.</p>
   </section>
 
   <section id="p-team" hidden>
@@ -558,9 +558,16 @@ function weekStats(pid,mon){
     r.trameH+=e;
   }
   r.counted=r.worked+r.paid+(r.unpaid||0);
-  /* 11/11/2026 : les heures prévues au-delà de 39 h dans la semaine sont des heures normales, plus rien n'est ajouté au solde */
-  r.bank=0;
+  /* 11/11/2026 : les heures prévues au-delà de 39 h dans la semaine sont des heures normales, plus rien n'est ajouté au solde.
+     Écart trame / contrat : quand la trame d'un salarié fait en moyenne moins (ou plus) d'heures que son contrat,
+     l'écart moyen par semaine est porté au solde récup / échanges (r.bank), pour être régularisé par des échanges. */
+  r.bank=ecartContrat(P(pid));
   return r;
+}
+function ecartContrat(p){
+  if(!p||p.status!=="salarie"||!p.contract)return 0;
+  var t=0;W.forEach(function(w){t+=weekTotal(w,p.id);});
+  return Math.round(t/W.length-p.contract);
 }
 function monthWeeks(ym){var y=+ym.slice(0,4),mo=+ym.slice(5,7)-1,out=[];var d=monOf(new Date(Date.UTC(y,mo,1)));
   for(var k=0;k<6;k++){var th=dAdd(d,3);if(th.getUTCMonth()===mo&&th.getUTCFullYear()===y)out.push(d);d=dAdd(d,7);}return out;}
@@ -578,11 +585,11 @@ function personMonth(p,ym){
 /* Soldes cumulés : heures (récup / échanges) et congés payés */
 function latestReport(pid,field){var best=null;S.adjust.forEach(function(a){if(a.p===pid&&a.kind==="report"&&a[field]!=null&&(!best||a.day>best.day))best=a;});return best;}
 function hoursBalance(pid){
-  var rep=latestReport(pid,"min"),base=rep?rep.day:dIso(dAdd(FIRST,-1)),start=rep?rep.min:0,adj=0,plan=0;
+  var rep=latestReport(pid,"min"),base=rep?rep.day:dIso(dAdd(FIRST,-1)),start=rep?rep.min:0,adj=0,plan=0,ec=0;
   S.adjust.forEach(function(a){if(a.p===pid&&a.kind==="ajust"&&a.min!=null&&a.day>base)adj+=a.min;});
   var end=monOf(dParse(tIso));
-  for(var d=dAdd(monOf(dParse(base)),7);d<=end;d=dAdd(d,7)){var w=weekStats(pid,d);plan+=w.bal+w.bank;}
-  return {rep:rep,base:base,start:start,adj:adj,plan:plan,total:start+adj+plan};
+  for(var d=dAdd(monOf(dParse(base)),7);d<=end;d=dAdd(d,7)){var w=weekStats(pid,d);plan+=w.bal;ec+=w.bank;}
+  return {rep:rep,base:base,start:start,adj:adj,plan:plan,ec:ec,total:start+adj+plan+ec};
 }
 /* Jours de congés payés décomptés entre deux dates (après « after », jusqu'à « until » inclus).
    Mode « ouvrables » : du premier jour d'absence jusqu'à la veille de la reprise, du lundi au samedi, hors fériés.
@@ -619,6 +626,7 @@ function soldeBlock(p){
   out+="<details class='wk-detail'><summary>Comment c'est calculé</summary><div class='rows'>"+
     "<span><b>Heures</b> · "+(h.rep?"report au "+dFr(h.base):"départ au "+dFr(dIso(FIRST)))+"</span><span>"+sg(h.start)+"</span>"+
     "<span>Changements de planning depuis</span><span>"+sg(h.plan)+"</span>"+
+    (h.ec?"<span>Écart entre la trame et le contrat depuis ("+sg(ecartContrat(p))+" par semaine en moyenne)</span><span>"+sg(h.ec)+"</span>":"")+
     (h.adj?"<span>Ajustements (heures payées, régularisations)</span><span>"+sg(h.adj)+"</span>":"")+
     "<span><b>Congés</b> · "+(c.rep?"report au "+dFr(c.base):"départ au "+dFr(dIso(FIRST)))+"</span><span>"+jj(c.start)+"</span>"+
     "<span>Acquis depuis (2,5 jours ouvrables par mois)</span><span>+"+jj(c.acq)+"</span>"+
@@ -1039,7 +1047,7 @@ function cardFor(p,open){
     var pct=r.due?Math.min(130,r.counted/r.due*100):0;
     body+="<div><div class='big num "+(r.diff>=0?"pos":"neg")+"'>"+sg(r.diff)+"</div><div class='lbl2'>par rapport au contrat ("+r.rows.length+" semaines)</div></div>";
     body+="<div class='meter' title='Heures comptées par rapport au contrat'><i style='width:"+(pct/130*100)+"%'></i><b style='left:"+(100/130*100)+"%'></b></div>";
-    body+="<div class='rows'><span>Heures travaillées</span><span>"+hm(r.worked)+"</span><span>Absences payées (CP, férié, maladie, formation…)</span><span>"+hm(r.paid)+"</span><span>Dû au contrat</span><span>"+hm(r.due)+"</span><span><b>Solde récup / échanges du mois</b></span><span class='"+(r.bal>=0?"pos":"neg")+"'>"+sg(r.bal)+"</span></div>";
+    body+="<div class='rows'><span>Heures travaillées</span><span>"+hm(r.worked)+"</span><span>Absences payées (CP, férié, maladie, formation…)</span><span>"+hm(r.paid)+"</span><span>Dû au contrat</span><span>"+hm(r.due)+"</span><span><b>Solde récup / échanges du mois</b></span><span class='"+(r.bal>=0?"pos":"neg")+"'>"+sg(r.bal)+"</span>"+(r.bank?"<span>· dont changements de planning</span><span>"+sg(r.chg)+"</span><span>· dont écart entre la trame et le contrat</span><span>"+sg(r.bank)+"</span>":"")+"</div>";
   }else if(p.status==="facture"){
     var md=monthDaysWorked(p.id,S.month);
     body+="<div><div class='big num'>"+hm(md.t)+"</div><div class='lbl2'>à facturer en "+MOISL[+S.month.slice(5)-1].toLowerCase()+" ("+md.n+" jours)</div></div>";
