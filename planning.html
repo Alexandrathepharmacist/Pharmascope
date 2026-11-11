@@ -405,7 +405,7 @@ body::before{content:"";position:fixed;top:0;left:0;right:0;height:env(safe-area
     <div class="card gridbox" style="margin-top:10px"><table class="hrs" id="hrs"></table></div>
     <h2 style="margin-top:18px">Points de vigilance</h2>
     <div class="alerts" id="alerts"></div>
-    <p class="src">Présence d'un pharmacien : contrôlée sur tous les créneaux d'ouverture, car les préparateurs exercent sous le contrôle effectif d'un pharmacien (<a href="https://www.ordre.pharmacien.fr/jurisprudence/37-controle-effectif-du-pharmacien-sur-les-actes-du-preparateur" target="_blank" rel="noopener">Ordre des pharmaciens</a>). Durée du travail, pour les salariés et extras : 10 h de travail par jour au maximum, amplitude de 12 h, 46 h par semaine au maximum (<a href="https://www.skello.io/blog/les-heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Skello</a>, <a href="https://www.swim.legal/blog/heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Swim Legal</a>). Une pause de 30 min maximum d'un pharmacien entre deux créneaux compte comme une présence sur place. Heures prévues au-delà de 39 h dans une semaine : ajoutées au solde récup / échanges, en remplacement du paiement en heures sup (possible sur décision de l'employeur sans délégué syndical, <a href="https://code.travail.gouv.fr/code-du-travail/l3121-37" target="_blank" rel="noopener">article L3121-37</a>). À confirmer avec votre cabinet.</p>
+    <p class="src">Présence d'un pharmacien : contrôlée sur tous les créneaux d'ouverture, car les préparateurs exercent sous le contrôle effectif d'un pharmacien (<a href="https://www.ordre.pharmacien.fr/jurisprudence/37-controle-effectif-du-pharmacien-sur-les-actes-du-preparateur" target="_blank" rel="noopener">Ordre des pharmaciens</a>). Durée du travail, pour les salariés et extras : amplitude de 12 h et 46 h par semaine au maximum (<a href="https://www.skello.io/blog/les-heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Skello</a>, <a href="https://www.swim.legal/blog/heures-de-travail-legales-en-pharmacie" target="_blank" rel="noopener">Swim Legal</a>). Une pause de 30 min maximum d'un pharmacien entre deux créneaux compte comme une présence sur place. Les heures prévues au-delà de 39 h dans une semaine et les journées de plus de 10 h comptent comme des heures normales.</p>
   </section>
 
   <section id="p-team" hidden>
@@ -558,8 +558,8 @@ function weekStats(pid,mon){
     r.trameH+=e;
   }
   r.counted=r.worked+r.paid+(r.unpaid||0);
-  /* Heures prévues au-delà de 39 h dans la semaine : ajoutées au solde récup / échanges (pas d'heures sup) */
-  var pp=P(pid);r.bank=(pp&&pp.status==="salarie")?Math.max(0,r.trameH-2340):0;
+  /* 11/11/2026 : les heures prévues au-delà de 39 h dans la semaine sont des heures normales, plus rien n'est ajouté au solde */
+  r.bank=0;
   return r;
 }
 function monthWeeks(ym){var y=+ym.slice(0,4),mo=+ym.slice(5,7)-1,out=[];var d=monOf(new Date(Date.UTC(y,mo,1)));
@@ -618,7 +618,7 @@ function soldeBlock(p){
   if(!h.rep||!c.rep)out+="<div class='lbl2 warn'>⚠ Report de départ non renseigné pour "+(!h.rep&&!c.rep?"les heures et les congés":(!h.rep?"les heures":"les congés"))+" : le calcul part de zéro au "+dFr(dIso(FIRST))+". À confirmer avec Alexandra ou Éloi.</div>";
   out+="<details class='wk-detail'><summary>Comment c'est calculé</summary><div class='rows'>"+
     "<span><b>Heures</b> · "+(h.rep?"report au "+dFr(h.base):"départ au "+dFr(dIso(FIRST)))+"</span><span>"+sg(h.start)+"</span>"+
-    "<span>Changements de planning et heures au-delà de 39 h depuis</span><span>"+sg(h.plan)+"</span>"+
+    "<span>Changements de planning depuis</span><span>"+sg(h.plan)+"</span>"+
     (h.adj?"<span>Ajustements (heures payées, régularisations)</span><span>"+sg(h.adj)+"</span>":"")+
     "<span><b>Congés</b> · "+(c.rep?"report au "+dFr(c.base):"départ au "+dFr(dIso(FIRST)))+"</span><span>"+jj(c.start)+"</span>"+
     "<span>Acquis depuis (2,5 jours ouvrables par mois)</span><span>+"+jj(c.acq)+"</span>"+
@@ -631,7 +631,6 @@ function soldeBlock(p){
 /* Contrôles */
 function dayIssues(p,bl){
   var out=[];if(!legal(p)||!bl.length)return out;
-  var t=dur(bl);if(t>600)out.push(hm(t)+" de travail sur la journée (maximum 10 h)");
   var amp=bl[bl.length-1][1]-bl[0][0];if(amp>720)out.push("amplitude de "+hm(amp)+" (maximum 12 h)");
   return out;
 }
@@ -1040,7 +1039,7 @@ function cardFor(p,open){
     var pct=r.due?Math.min(130,r.counted/r.due*100):0;
     body+="<div><div class='big num "+(r.diff>=0?"pos":"neg")+"'>"+sg(r.diff)+"</div><div class='lbl2'>par rapport au contrat ("+r.rows.length+" semaines)</div></div>";
     body+="<div class='meter' title='Heures comptées par rapport au contrat'><i style='width:"+(pct/130*100)+"%'></i><b style='left:"+(100/130*100)+"%'></b></div>";
-    body+="<div class='rows'><span>Heures travaillées</span><span>"+hm(r.worked)+"</span><span>Absences payées (CP, férié, maladie, formation…)</span><span>"+hm(r.paid)+"</span><span>Dû au contrat</span><span>"+hm(r.due)+"</span><span><b>Solde récup / échanges du mois</b></span><span class='"+(r.bal>=0?"pos":"neg")+"'>"+sg(r.bal)+"</span><span>· dont changements de planning</span><span>"+sg(r.chg)+"</span><span>· dont heures au-delà de 39 h</span><span>"+sg(r.bank)+"</span></div>";
+    body+="<div class='rows'><span>Heures travaillées</span><span>"+hm(r.worked)+"</span><span>Absences payées (CP, férié, maladie, formation…)</span><span>"+hm(r.paid)+"</span><span>Dû au contrat</span><span>"+hm(r.due)+"</span><span><b>Solde récup / échanges du mois</b></span><span class='"+(r.bal>=0?"pos":"neg")+"'>"+sg(r.bal)+"</span></div>";
   }else if(p.status==="facture"){
     var md=monthDaysWorked(p.id,S.month);
     body+="<div><div class='big num'>"+hm(md.t)+"</div><div class='lbl2'>à facturer en "+MOISL[+S.month.slice(5)-1].toLowerCase()+" ("+md.n+" jours)</div></div>";
@@ -1195,8 +1194,6 @@ function swapPlan(aId,dsA,bId,dsB){
   if(isOff(aOnB))errs.push(a.name+" est absent(e) le "+dLong(dsB)+".");
   else if(overlapBl(aOnB.act,gb))errs.push(a.name+" travaille déjà sur ces horaires le "+dLong(dsB)+".");
   var nb=mergeBl(bOnA.act,ga),na=mergeBl(aOnB.act,gb);
-  if(legal(b)&&dur(nb)>600)errs.push(b.name+" dépasserait 10 h de travail le "+dLong(dsA)+".");
-  if(legal(a)&&dur(na)>600)errs.push(a.name+" dépasserait 10 h de travail le "+dLong(dsB)+".");
   out.res=[[aId,dsA,[],b.name],[bId,dsA,nb,a.name],[bId,dsB,[],a.name],[aId,dsB,na,b.name]];
   return out;
 }
