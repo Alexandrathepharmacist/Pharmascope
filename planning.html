@@ -644,7 +644,7 @@ var FERIES={};
   ["01-01","05-01","05-08","07-14","08-15","11-01","11-11","12-25"].forEach(function(md){FERIES[y+"-"+md]=1;});
   var e=easter(y);[1,39,50].forEach(function(n){FERIES[dIso(dAdd(e,n))]=1;});
 });
-var FIRST=dParse("2026-08-31"),LAST=null;
+var FIRST=dParse("2026-08-31"),LAST=null,FIRSTI="2026-08-31",HFIRST=dParse("2026-01-01");
 
 function m(s){if(!s)return null;var p=s.split(":");return (+p[0])*60+(+p[1]);}
 function hm(n){var neg=n<0;n=Math.abs(Math.round(n));var h=Math.floor(n/60),mm=n%60;return (neg?"−":"")+h+"h"+(mm?(mm<10?"0":"")+mm:"");}
@@ -655,11 +655,11 @@ function cp(x){return JSON.parse(JSON.stringify(x));}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
 
 /* État */
-var S={swaps:[],adjust:[],cpMode:"ouvrables",trame:{},changes:{},people:[],requests:[],notifs:[],accounts:{},tab:"plan",w:"A",wk:null,day:0,meas:"ratio",me:null,month:null};
+var S={histo:{},swaps:[],adjust:[],cpMode:"ouvrables",trame:{},changes:{},people:[],requests:[],notifs:[],accounts:{},tab:"plan",w:"A",wk:null,day:0,meas:"ratio",me:null,month:null};
 var today=new Date();var tIso=dIso(new Date(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())));
 var today0=tIso;var t0=dParse(tIso);LAST=dAdd(monOf(t0),7*60);if(t0<FIRST)t0=FIRST;
 var WIDE=!!(window.matchMedia&&window.matchMedia("(min-width:1100px)").matches);
-S.wk=dIso(monOf(t0));S.day=Math.min(5,wdOf(t0));S.month=tIso.slice(0,7);S.pview=WIDE?"week":"day";S.tview=WIDE?"week":"day";S.congRange="now";S.congList="abs";S.congWho="";S.congType="";S.pday=S.day;S.tday=0;
+S.wk=dIso(monOf(t0));S.day=Math.min(5,wdOf(t0));S.month=tIso.slice(0,7);S.pview=WIDE?"week":"day";S.tview=WIDE?"week":"day";S.congRange="cp"+(+tIso.slice(5,7)>=6?+tIso.slice(0,4):+tIso.slice(0,4)-1);S.congList="abs";S.congWho="";S.congType="";S.pday=S.day;S.tday=0;
 var hist=[];
 var pending=null,lastNotified=[];
 function save(){if(pending){notifyDiff(pending);pending=null;setTimeout(flushNotifToast,0);}persist();}
@@ -674,12 +674,23 @@ function legal(p){return p.status==="salarie"||p.status==="extra";}
 /* Journée réelle d'une personne */
 function dayInfo(pid,ds){
   var d=dParse(ds),wd=wdOf(d);if(wd>5)return {exp:[],act:[]};
+  if(ds<FIRSTI){
+    var hh=S.histo[ds]&&S.histo[ds][pid];
+    if(FERIES[ds]&&!(hh&&hh.b.length))return {exp:[],act:[],ferie:true,histo:true};
+    if(!hh)return {exp:[],act:[],histo:true};
+    return {exp:hh.e,act:hh.b,t:hh.t||null,c:hh.c,changed:!!hh.t,histo:true};
+  }
   var exp=(S.trame[letterOf(d)][pid]||[[],[],[],[],[],[]])[wd];
   if(FERIES[ds])return {exp:exp,act:[],t:exp.length?"ferie":null,ferie:true};
   var c=S.changes[ds]&&S.changes[ds][pid];
   if(c)return {exp:exp,act:c.b,t:c.t,c:c.c,changed:true};
   return {exp:exp,act:exp};
 }
+/* Qui afficher sur une semaine : avant la trame actuelle, seulement les personnes présentes dans l'historique ;
+   ensuite, tout le monde sauf les anciens renforts sans accès (présents seulement dans l'historique). */
+function inHisto(pid,mon){for(var i=0;i<6;i++){var x=S.histo[dIso(dAdd(mon,i))];if(x&&x[pid])return true;}return false;}
+function isAncien(p){if(!p.hors||p.access!=="none")return false;if(p._anc==null){var h=false,c=false;for(var k in S.histo)if(S.histo[k][p.id]){h=true;break;}for(var k2 in S.changes)if(S.changes[k2][p.id]){c=true;break;}p._anc=h&&!c;}return p._anc;}
+function shownWeek(p,mon){if(mon<FIRST)return inHisto(p.id,mon);return !isAncien(p);}
 function setChange(pid,ds,obj){if(!S.changes[ds])S.changes[ds]={};if(obj)S.changes[ds][pid]=obj;else{delete S.changes[ds][pid];if(!Object.keys(S.changes[ds]).length)delete S.changes[ds];}}
 function weekTotal(w,pid){var t=0;(S.trame[w][pid]||[]).forEach(function(bl){t+=dur(bl);});return t;}
 function teamTotal(w){var t=0;S.people.forEach(function(p){t+=weekTotal(w,p.id);});return t;}
@@ -699,7 +710,7 @@ function weekStats(pid,mon){
   /* 11/11/2026 : les heures prévues au-delà de 39 h dans la semaine sont des heures normales, plus rien n'est ajouté au solde.
      Écart trame / contrat : quand la trame d'un salarié fait en moyenne moins (ou plus) d'heures que son contrat,
      l'écart moyen par semaine est porté au solde récup / échanges (r.bank), pour être régularisé par des échanges. */
-  r.bank=ecartContrat(P(pid));
+  r.bank=mon<FIRST?0:ecartContrat(P(pid));
   return r;
 }
 function ecartContrat(p){
@@ -712,7 +723,7 @@ function monthWeeks(ym){var y=+ym.slice(0,4),mo=+ym.slice(5,7)-1,out=[];var d=mo
 function monthDaysWorked(pid,ym){var y=+ym.slice(0,4),mo=+ym.slice(5,7)-1,t=0,n=0;var d=new Date(Date.UTC(y,mo,1));
   while(d.getUTCMonth()===mo){var inf=dayInfo(pid,dIso(d));var a=dur(inf.act);if(a){t+=a;n++;}d=dAdd(d,1);}return {t:t,n:n};}
 function personMonth(p,ym){
-  var weeks=monthWeeks(ym),rows=weeks.map(function(mon){var s=weekStats(p.id,mon);s.mon=mon;return s;});
+  var weeks=monthWeeks(ym),rows=weeks.map(function(mon){var s=weekStats(p.id,mon);s.mon=mon;return s;}).filter(function(s){return s.mon>=FIRST||s.trameH>0||s.worked>0;});
   var r={rows:rows,counted:0,worked:0,paid:0,bal:0,chg:0,bank:0,abs:{}};
   rows.forEach(function(s){r.counted+=s.counted;r.worked+=s.worked;r.paid+=s.paid;r.chg+=s.bal;r.bank+=s.bank;r.bal+=s.bal+s.bank;
     for(var k in s.abs)r.abs[k]=(r.abs[k]||0)+s.abs[k];});
@@ -733,7 +744,7 @@ function hoursBalance(pid){
    Mode « ouvrables » : du premier jour d'absence jusqu'à la veille de la reprise, du lundi au samedi, hors fériés.
    Mode « poses » : seulement les jours marqués en congé payé au planning. */
 function cpDays(pid,after,until){
-  var n=0,inCp=false,d=dAdd(dParse(after),1),e=dParse(until),x=dAdd(d,-14);if(x<FIRST)x=FIRST;
+  var n=0,inCp=false,d=dAdd(dParse(after),1),e=dParse(until),x=dAdd(d,-14);if(x<HFIRST)x=HFIRST;
   for(;x<=e;x=dAdd(x,1)){
     var ds=dIso(x);if(wdOf(x)>5||FERIES[ds])continue;
     var inf=dayInfo(pid,ds),cnt=false;
@@ -915,20 +926,21 @@ function renderPlan(){
   var mon=dParse(S.wk),L=letterOf(mon);
   segSync("pseg",S.pview);document.getElementById("pdayv").hidden=S.pview!=="day";document.getElementById("pweekv").hidden=S.pview!=="week";
   document.getElementById("wkLabel").textContent="Semaine du "+dShort(mon);
-  document.getElementById("wkSub").textContent="Trame "+L+" · semaine "+Math.ceil(((mon-new Date(Date.UTC(mon.getUTCFullYear(),0,1)))/864e5+new Date(Date.UTC(mon.getUTCFullYear(),0,1)).getUTCDay()+1)/7);
+  document.getElementById("wkSub").textContent=(mon<FIRST?"Historique MonPlanningPharma":"Trame "+L)+" · semaine "+Math.ceil(((mon-new Date(Date.UTC(mon.getUTCFullYear(),0,1)))/864e5+new Date(Date.UTC(mon.getUTCFullYear(),0,1)).getUTCDay()+1)/7);
   document.getElementById("absBtn").hidden=!isEditor();
-  document.getElementById("prevWk").disabled=dAdd(mon,-7)<FIRST;document.getElementById("nextWk").disabled=dAdd(mon,7)>LAST;
+  document.getElementById("prevWk").disabled=dAdd(mon,-7)<monOf(HFIRST);document.getElementById("nextWk").disabled=dAdd(mon,7)>LAST;
   if(S.pview==="day"){renderPlanDay();return;}
   var admin=isEditor(),h="<thead><tr><th>Équipe</th>";
   for(var i=0;i<6;i++){var dd=dAdd(mon,i),ds=dIso(dd),gp=phGapsDate(ds);
     h+="<th data-di='"+i+"' title='Voir cette journée en détail' class='"+(FERIES[ds]?"fer":"")+"'>"+D[i]+"<span class='dt'>"+dd.getUTCDate()+"</span>"+(FERIES[ds]?"<div class='phgap' style='color:var(--ink-3);background:var(--sunk)'>férié</div>":"")+(FERIES[ds]?"":covStrip((function(x){return function(pid){return dayInfo(pid,x).act;};})(ds),i))+"</th>";}
   h+="</tr></thead><tbody>";
   S.people.forEach(function(p){
+    if(!shownWeek(p,mon))return;
     var ws=weekStats(p.id,mon);
     h+=sepRow(p,7)+"<tr class='"+(p.hors?"extra":"")+"' style='--pc:"+p.color+"'><td>"+whoCell(p,esc(p.role)+" · "+hm(ws.worked))+"</td>";
     for(var i=0;i<6;i++){
       var ds=dIso(dAdd(mon,i)),inf=dayInfo(p.id,ds);
-      var can=admin||(p.id===S.me);
+      var can=(admin||(p.id===S.me))&&ds>=FIRSTI;
       var attrs=" data-p='"+p.id+"' data-ds='"+ds+"'"+(can?"":" disabled");
       if(inf.ferie&&!inf.act.length){h+="<td><button class='cell fer' disabled>"+(inf.exp.length?"férié":"")+"</button></td>";continue;}
       if(!inf.act.length&&inf.t){
@@ -943,6 +955,7 @@ function renderPlan(){
   g.querySelectorAll("th[data-di]").forEach(function(th){th.addEventListener("click",function(){S.pday=+th.getAttribute("data-di");S.pview="day";renderAll();});});
   g.querySelectorAll(".cell[data-p]").forEach(function(c){if(c.disabled)return;c.addEventListener("click",function(){var pid=c.getAttribute("data-p"),ds=c.getAttribute("data-ds");if(isEditor())openDay(pid,ds);else openRequest(ds);});});
   var note=admin?"Touchez une case pour poser une absence, un échange ou des heures sup. Les changements depuis le 31 août viennent de l'historique MonPlanningPharma, avec leur catégorie et leur commentaire (touchez une case pour le lire).":"Vous voyez le planning de toute l'équipe. Touchez une de vos journées pour demander un congé, une récupération ou un échange.";
+  if(mon<FIRST)note="Semaine reprise de MonPlanningPharma (planning réel et motifs de l'historique) : consultation seule. La trame actuelle commence le "+dFr(FIRSTI)+".";
   document.getElementById("planNote").textContent=note;
 }
 
@@ -1081,12 +1094,12 @@ function renderPlanDay(){
   var mon=dParse(S.wk),d=S.pday,ds=dIso(dAdd(mon,d)),admin=isEditor();
   dayChips(document.getElementById("pdays"),d,function(i){var dd=dAdd(mon,i);return "<span>"+D[i]+"</span><b>"+dd.getUTCDate()+"</b>";},function(i){var x=dIso(dAdd(mon,i));if(FERIES[x])return "";return dayIssueKind(function(pid){return dayInfo(pid,x).act;},i);},function(i){S.pday=i;renderAll();});
   renderTimeline(document.getElementById("ptl"),{
-    d:d,closed:!!FERIES[ds],
+    d:d,closed:!!FERIES[ds],people:S.people.filter(function(p){return shownWeek(p,mon);}),
     getBlocks:function(pid){return dayInfo(pid,ds).act;},
     rowInfo:function(pid){var inf=dayInfo(pid,ds);return (!inf.act.length&&inf.t)?{abs:TYPES[inf.t].s,absT:inf.t,comment:inf.c}:{comment:inf.c};},
-    editable:function(){return admin;},
+    editable:function(){return admin&&ds>=FIRSTI;},
     showAll:admin,
-    onTap:function(pid){if(admin)openDay(pid,ds);else if(pid===S.me)openRequest(ds);},
+    onTap:function(pid){if(ds<FIRSTI){toast("Journée reprise de MonPlanningPharma : consultation seule");return;}if(admin)openDay(pid,ds);else if(pid===S.me)openRequest(ds);},
     onCommit:function(pid,nb){
       var inf=dayInfo(pid,ds),p=P(pid);snap();
       if(JSON.stringify(nb)===JSON.stringify(inf.exp))setChange(pid,ds,null);
@@ -1176,7 +1189,7 @@ function renderAff(){
 }
 
 /* Heures */
-var MONTHS=(function(){var out=[],d=new Date(Date.UTC(2026,8,1)),end=dAdd(t0,95);while(d<=end){out.push(dIso(d).slice(0,7));d=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1));}return out;})();
+var MONTHS=(function(){var out=[],d=new Date(Date.UTC(2026,0,1)),end=dAdd(t0,95);while(d<=end){out.push(dIso(d).slice(0,7));d=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1));}return out;})();
 function monthChips(id){
   var box=document.getElementById(id);box.innerHTML="";
   MONTHS.forEach(function(ym){box.appendChild(el("button",{class:"chip","aria-pressed":String(S.month===ym),onclick:function(){S.month=ym;renderAll();}},MOISL[+ym.slice(5)-1]));});
@@ -1458,17 +1471,17 @@ function absPeriods(pid,from,to){
   for(;d<=e;d=dAdd(d,1)){
     var ds=dIso(d),inf=dayInfo(pid,ds);
     if(isAbsDay(inf)){
-      if(cur&&cur.t===inf.t){cur.to=ds;cur.n++;cur.h+=dur(inf.exp);cur.days.push(ds);if(inf.c&&cur.cs.indexOf(inf.c)<0)cur.cs.push(inf.c);}
-      else{cur={p:pid,t:inf.t,from:ds,to:ds,n:1,h:dur(inf.exp),days:[ds],cs:inf.c?[inf.c]:[]};out.push(cur);}
+      if(cur&&cur.t===inf.t&&(dParse(ds)-dParse(cur.to))/864e5<=4){cur.to=ds;cur.n++;cur.h+=dur(inf.exp);cur.days.push(ds);cur.dh.push(dur(inf.exp));if(inf.c&&cur.cs.indexOf(inf.c)<0)cur.cs.push(inf.c);}
+      else{cur={p:pid,t:inf.t,from:ds,to:ds,n:1,h:dur(inf.exp),days:[ds],dh:[dur(inf.exp)],cs:inf.c?[inf.c]:[]};out.push(cur);}
     }else if(inf.act.length||inf.changed)cur=null;
   }
   return out;
 }
 function congRange(){
   var a,b;
-  if(S.congRange==="now"){var t=dParse(tIso);a=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()-2,1));b=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+10,0));}
+  if(S.congRange.indexOf("cp")===0){var y=+S.congRange.slice(2);a=new Date(Date.UTC(y,5,1));b=new Date(Date.UTC(y+1,4,31));}
   else{a=new Date(Date.UTC(+S.congRange,0,1));b=new Date(Date.UTC(+S.congRange,11,31));}
-  if(a<FIRST)a=FIRST;
+  if(a<HFIRST)a=HFIRST;
   return [dIso(a),dIso(b)];
 }
 function dRange(p){return p.from===p.to?"le "+dFr(p.from):"du "+dFr(p.from)+" au "+dFr(p.to);}
@@ -1477,7 +1490,9 @@ function renderCong(){
   document.getElementById("newAbs").hidden=!ed;
   /* choix de la période */
   var yb=document.getElementById("congYears");yb.innerHTML="";
-  var opts=[["now","12 mois autour d'aujourd'hui"]];for(var y=FIRST.getUTCFullYear();y<=LAST.getUTCFullYear();y++)opts.push([String(y),"Année "+y]);
+  var opts=[],y0=HFIRST.getUTCFullYear()-(HFIRST.getUTCMonth()<5?1:0),y;
+  for(y=y0;y<=LAST.getUTCFullYear()-(LAST.getUTCMonth()<5?1:0);y++)opts.push(["cp"+y,"Congés "+(y===y0&&HFIRST>new Date(Date.UTC(y,5,1))?MOIS[HFIRST.getUTCMonth()]+" "+HFIRST.getUTCFullYear():"juin "+y)+" – mai "+(y+1)]);
+  for(y=HFIRST.getUTCFullYear();y<=LAST.getUTCFullYear();y++)opts.push([String(y),"Année "+y]);
   opts.forEach(function(o){yb.appendChild(el("button",{class:"chip","aria-pressed":String(S.congRange===o[0]),onclick:function(){S.congRange=o[0];renderCong();}},o[1]));});
   /* frise */
   var all=[],byP={};
@@ -1508,8 +1523,10 @@ function renderCong(){
     var adm=isAdmin(),th="<thead><tr><th>Équipe</th><th>Congés payés</th><th>Récup / échanges</th><th>Maladie, accident</th><th>Autres absences</th>"+(adm?"<th>Congés restants à ce jour</th><th>Solde d'heures</th>":"")+"</tr></thead><tbody>";
     S.people.forEach(function(p){
       var ps=byP[p.id];if(p.hors&&!ps.length)return;
-      var gsum={cp:[0,0],recup:[0,0],maladie:[0,0],autre:[0,0]};ps.forEach(function(q){var k=tGroup(q.t);gsum[k][0]+=q.n;gsum[k][1]+=q.h;});
-      var c=function(k){return gsum[k][0]?"<td>"+gsum[k][0]+" j <span class='sm'>"+hm(gsum[k][1])+"</span></td>":"<td class='empty'>–</td>";};
+      var gsum={cp:[0,0,0,0],recup:[0,0,0,0],maladie:[0,0,0,0],autre:[0,0,0,0]};
+      ps.forEach(function(q){var k=tGroup(q.t);q.days.forEach(function(ds,i){var f=ds>tIso?2:0;gsum[k][f]++;gsum[k][f+1]+=q.dh[i];});});
+      var c=function(k){var g=gsum[k];if(!g[0]&&!g[2])return "<td class='empty'>–</td>";
+        return "<td>"+(g[0]?"<b>"+g[0]+" j</b> pris <span class='sm'>"+hm(g[1])+"</span>":"<span class='empty'>0 j pris</span>")+(g[2]?"<div class='sm' style='color:var(--t-cp)'>+ "+g[2]+" j à venir ("+hm(g[3])+")</div>":"")+"</td>";};
       th+="<tr><td><div class='who' style='--pc:"+p.color+"'>"+av(p)+"<span class='n'>"+esc(p.name)+"</span></div></td>"+c("cp")+c("recup")+c("maladie")+c("autre");
       if(adm){if(p.status==="salarie"){var cb=cpBalance(p.id),hb=hoursBalance(p.id);th+="<td>"+jj(cb.total)+(cb.planned?" <span class='sm'>dont "+jj(cb.planned)+" posés</span>":"")+"</td><td class='"+(hb.total>=0?"pos":"neg")+"'>"+sg(hb.total)+"</td>";}else th+="<td class='empty'>–</td><td class='empty'>–</td>";}
       th+="</tr>";
@@ -1532,7 +1549,8 @@ function renderCong(){
     if(up.length){head("En cours et à venir ("+up.length+")");up.forEach(function(q){box.appendChild(periodLine(q));});}
     if(past.length){head("Passées ("+past.length+")");past.forEach(function(q){box.appendChild(periodLine(q));});}
   }else{
-    var rows=[];Object.keys(S.changes).forEach(function(ds){if(ds<rg[0]||ds>rg[1])return;Object.keys(S.changes[ds]).forEach(function(pid){if(S.congWho&&pid!==S.congWho)return;var p=P(pid);if(!p)return;var inf=dayInfo(pid,ds);if(!inf.changed||!inf.act.length)return;rows.push({p:p,ds:ds,inf:inf});});});
+    var rows=[],keysAll={};Object.keys(S.changes).concat(Object.keys(S.histo)).forEach(function(k){keysAll[k]=1;});
+    Object.keys(keysAll).forEach(function(ds){if(ds<rg[0]||ds>rg[1])return;Object.keys((ds<FIRSTI?S.histo[ds]:S.changes[ds])||{}).forEach(function(pid){if(S.congWho&&pid!==S.congWho)return;var p=P(pid);if(!p)return;var inf=dayInfo(pid,ds);if(!inf.changed||!inf.act.length)return;rows.push({p:p,ds:ds,inf:inf});});});
     rows.sort(function(u,v){return u.ds<v.ds?1:(u.ds>v.ds?-1:0);});
     if(!rows.length)box.innerHTML="<div class='empty'>Aucun changement d'horaires sur cette période.</div>";
     else head(rows.length+" changement"+(rows.length>1?"s":"")+" d'horaires, du plus récent au plus ancien");
@@ -1541,7 +1559,7 @@ function renderCong(){
       d.innerHTML=av(r.p)+"<div class='body'><div><b>"+esc(r.p.name)+"</b> · "+dLong(r.ds)+" <span class='tchip t-"+r.inf.t+"'>"+esc(TYPES[r.inf.t].l)+"</span></div><div class='meta num'>"+blTxt(r.inf.act)+" au lieu de "+blTxt(r.inf.exp)+" · <b class='"+(df>=0?"pos":"neg")+"'>"+sg(df)+"</b></div>"+(r.inf.c?"<div class='meta'>« "+esc(r.inf.c)+" »</div>":"")+"</div>";
       d.addEventListener("click",function(){goPlan(r.ds);});box.appendChild(d);});
   }
-  document.getElementById("congNote").textContent=(ed?"Cliquez sur une absence pour la voir au planning ou la supprimer. ":"Vous voyez les absences de toute l'équipe, sans leur motif. ")+"Jours comptés : les jours où la personne était prévue au planning. L'historique commence au "+dFr(dIso(FIRST))+", date de la trame actuelle.";
+  document.getElementById("congNote").textContent=(ed?"Cliquez sur une absence pour la voir au planning ou la supprimer. ":"Vous voyez les absences de toute l'équipe, sans leur motif. ")+"Jours comptés : les jours où la personne était prévue au planning ; « pris » jusqu'à aujourd'hui inclus, « à venir » ensuite. Du "+dFr(dIso(HFIRST))+" au "+dFr(dIso(dAdd(FIRST,-1)))+" : planning réel et motifs repris de MonPlanningPharma (consultation seule). L'année de congés va du 1er juin au 31 mai, comme sur les bulletins de paie.";
 }
 function goPlan(ds){var d=dParse(ds);S.wk=dIso(monOf(d));S.pday=Math.min(5,wdOf(d));S.tab="plan";closeSheet();renderAll();window.scrollTo(0,0);}
 function periodLine(q){
@@ -1625,9 +1643,9 @@ function hoursBalanceAt(pid,dsEnd){
 function monthBilan(p,ym){
   var a=ym+"-01",b=monthEnd(ym),r={days:0,worked:0,ferie:0,chg:0,mondays:0,g:{cp:[0,0],recup:[0,0],maladie:[0,0],autre:[0,0]}};
   rangeDays(a,b).forEach(function(ds){
-    var d=dParse(ds);if(wdOf(d)>5||d<FIRST)return;
+    var d=dParse(ds);if(wdOf(d)>5||d<HFIRST)return;
     var inf=dayInfo(p.id,ds),w=dur(inf.act),e=dur(inf.exp);
-    if(wdOf(d)===0)r.mondays++;
+    if(wdOf(d)===0&&d>=FIRST)r.mondays++;
     if(w){r.worked+=w;r.days++;}
     if(inf.ferie){r.ferie+=e;return;}
     if(isAbsDay(inf)){var k=tGroup(inf.t);r.g[k][0]++;r.g[k][1]+=e;}
@@ -2085,7 +2103,8 @@ function loadAll(){
       sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(300),
       sb.from("planning_settings").select("*").maybeSingle(),
       sb.from("solde_ajustements").select("*").order("jour"),
-      sb.from("echanges").select("*").order("cree_le")
+      sb.from("echanges").select("*").order("cree_le"),
+      sb.rpc("planning_histo_view",{d1:"2000-01-01",d2:dIso(dAdd(FIRST,-1))})
     ]).then(function(res){
       res.forEach(check);
       var st=res[0].data||[],pv=res[1].data||[],tr=res[2].data||[],ch=res[3].data||[],rq=res[4].data||[],nt=res[5].data||[],set=res[6].data;
@@ -2097,6 +2116,8 @@ function loadAll(){
       S.requests=rq.map(function(x){return {id:x.id,p:x.staff_id,t:x.kind,from:String(x.date_from).slice(0,10),to:String(x.date_to).slice(0,10),c:x.comment||"",at:String(x.created_at).slice(0,10),status:x.status};});
       S.notifs=nt.map(function(x){var p=P(x.staff_id);return {id:x.id,p:x.staff_id,by:x.by_name,at:x.created_at,lines:x.lines||[],read:!!x.read_at,mail:p?p.email:null,mailStatus:x.mail_status,origine:x.origine||"planning"};});
       S.swaps=(res[8].data||[]).map(mapSwap);
+      S.histo={};var hmin=null;(res[9].data||[]).forEach(function(x){var ds=String(x.day).slice(0,10);if(!S.histo[ds])S.histo[ds]={};S.histo[ds][x.staff_id]={b:x.blocks||[],e:x.prevu||x.blocks||[],t:x.kind||null,c:x.comment||null};if(!hmin||ds<hmin)hmin=ds;});
+      HFIRST=hmin?dParse(hmin.slice(0,8)+"01"):FIRST;
       S.adjust=(res[7].data||[]).map(function(x){return {id:x.id,p:x.staff_id,day:String(x.jour).slice(0,10),kind:x.kind,min:x.minutes,cp:x.cp_jours==null?null:+x.cp_jours,label:x.motif||""};});
       S.cpMode=(set&&set.cp_mode)||"ouvrables";
       if(set){REF=dParse(String(set.cycle_ref_monday).slice(0,10));REFW=Math.max(0,W.indexOf(set.cycle_ref_week));}
