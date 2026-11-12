@@ -417,6 +417,30 @@ table.bil{min-width:980px}
   .field input[type=date],.field input[type=number],.field input[type=text]{max-width:none;width:100%}
 }
 @media screen and (min-width:1100px) and (prefers-reduced-motion:no-preference){.sheet{animation:side .2s ease-out}@keyframes side{from{transform:translateX(40px);opacity:.6}to{transform:none;opacity:1}}}
+
+/* ---- Gardes, vacances scolaires ---- */
+.gnext{background:linear-gradient(135deg,#1F2A5A,#3A4C8F);color:#fff;border-radius:18px;padding:16px 18px;margin:0 0 14px}
+.gnext .k{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;opacity:.8;font-weight:600}
+.gnext .t{font-family:var(--f-display);font-size:1.3rem;font-weight:700;margin-top:2px;line-height:1.2}
+.gnext .s{font-size:.88rem;opacity:.9;margin-top:4px}
+.gnext .srv{margin-top:10px;display:flex;flex-direction:column;gap:3px;font-size:.88rem}
+.gw{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.gw.now{border-color:#3A4C8F;box-shadow:0 0 0 2px #E4E8FA}
+.gw h3{font-size:.98rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap;line-height:1.3}
+.gw .meta{font-size:.8rem;color:var(--ink-3)}
+.glist{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.gline{display:grid;grid-template-columns:10px minmax(0,1fr) auto auto;gap:4px 10px;align-items:center;font-size:.86rem}
+.gline i{width:10px;height:10px;border-radius:50%;background:var(--pc)}
+.ginfo{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.gchip{display:inline-flex;align-items:center;gap:6px;border:0;border-radius:12px;padding:6px 12px;font-size:.82rem;font-weight:600;text-align:left;line-height:1.3}
+.gchip.vac{background:#FFF1BF;color:#6E5200}.gchip.gar{background:#E4E8FA;color:#25336E}
+.gt-vac{position:absolute;top:0;bottom:0;background:#FFE7A0;opacity:.35}
+.gt-bar.g-vacb{background:#E9B824;color:#3F2F00}.gt-bar.g-garb{background:#2B3A7A}
+.gt-row.gt-info .gt-name{font-size:.78rem;color:var(--ink-2)}
+#gList{margin-top:10px}
+.wknav .tl{border:0;padding:0;background:none;border-radius:0}
+@media (max-width:640px){.tab{flex:1 1 0;min-width:0;padding:4px 1px;font-size:.62rem}.tab>span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tab .badge{position:absolute;top:2px;right:2px;margin:0}}
+@media screen and (min-width:1100px){#gList{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:10px;align-items:start}#gList .lbl.grp,#gList .empty{grid-column:1/-1}.gnext{max-width:760px}}
 </style>
 </head>
 <body>
@@ -478,6 +502,7 @@ table.bil{min-width:980px}
       <button class="btn ghost" id="printBtn">Imprimer</button>
       <button class="btn ghost" id="absBtn" hidden>+ Absence</button>
     </div>
+    <div class="ginfo" id="planInfo" hidden></div>
     <div class="viewbar"><div class="seg" id="pseg"><button data-v="day">Jour</button><button data-v="week">Semaine</button></div></div>
     <div id="pdayv"><div class="daychips" id="pdays"></div><div id="ptl"></div></div>
     <div id="pweekv"><div class="card gridbox"><table class="grid" id="pgrid"></table></div></div>
@@ -499,6 +524,16 @@ table.bil{min-width:980px}
     <div class="chips" id="congType" style="margin-top:8px"></div>
     <div class="alerts" id="congList"></div>
     <p class="note" id="congNote"></p>
+  </section>
+
+  <section id="p-gard" hidden>
+    <div class="h2row" style="margin-top:0"><h2>Gardes de la pharmacie</h2><button class="btn primary" id="gAdd">+ Ajouter une garde</button></div>
+    <div class="gnext" id="gNext" hidden></div>
+    <div class="months" id="gYears"></div>
+    <div class="h2row"><h2 id="gSumTitle">Gardes</h2></div>
+    <div class="card gridbox"><table class="hrs" id="gSum"></table></div>
+    <div class="alerts" id="gList"></div>
+    <p class="note" id="gNote"></p>
   </section>
 
   <section id="p-trame" hidden>
@@ -553,6 +588,8 @@ table.bil{min-width:980px}
     <div class="people" id="people"></div>
     <div class="h2row"><h2>Décompte des congés payés</h2></div>
     <div class="card" style="padding:12px 14px" id="cpModeBox"></div>
+    <div class="h2row"><h2>Vacances scolaires</h2></div>
+    <div class="card" style="padding:12px 14px" id="zoneBox"></div>
     </div>
     <div class="h2row"><h2>Notifications envoyées</h2></div>
     <div class="alerts" id="notifSent"></div>
@@ -655,7 +692,7 @@ function cp(x){return JSON.parse(JSON.stringify(x));}
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
 
 /* État */
-var S={histo:{},swaps:[],adjust:[],cpMode:"ouvrables",trame:{},changes:{},people:[],requests:[],notifs:[],accounts:{},tab:"plan",w:"A",wk:null,day:0,meas:"ratio",me:null,month:null};
+var S={zone:"A",gardes:[],gYear:null,histo:{},swaps:[],adjust:[],cpMode:"ouvrables",trame:{},changes:{},people:[],requests:[],notifs:[],accounts:{},tab:"plan",w:"A",wk:null,day:0,meas:"ratio",me:null,month:null};
 var today=new Date();var tIso=dIso(new Date(Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())));
 var today0=tIso;var t0=dParse(tIso);LAST=dAdd(monOf(t0),7*60);if(t0<FIRST)t0=FIRST;
 var WIDE=!!(window.matchMedia&&window.matchMedia("(min-width:1100px)").matches);
@@ -681,7 +718,7 @@ function dayInfo(pid,ds){
     return {exp:hh.e,act:hh.b,t:hh.t||null,c:hh.c,changed:!!hh.t,histo:true};
   }
   var exp=(S.trame[letterOf(d)][pid]||[[],[],[],[],[],[]])[wd];
-  if(FERIES[ds])return {exp:exp,act:[],t:exp.length?"ferie":null,ferie:true};
+  if(FERIES[ds]){var cf=S.changes[ds]&&S.changes[ds][pid];if(cf&&cf.b.length)return {exp:[],act:cf.b,t:cf.t,c:cf.c,changed:true,ferie:true};return {exp:exp,act:[],t:exp.length?"ferie":null,ferie:true};}
   var c=S.changes[ds]&&S.changes[ds][pid];
   if(c)return {exp:exp,act:c.b,t:c.t,c:c.c,changed:true};
   return {exp:exp,act:exp};
@@ -897,23 +934,23 @@ function whoCell(p,sub){return "<div class='who'>"+av(p)+"<div style='min-width:
 function sepRow(p,cols){var ix=S.people.indexOf(p);return (p.hors&&!S.people[ix-1].hors)?"<tr class='sep'><td colspan='"+cols+"'>Renforts hors trame</td></tr>":"";}
 
 /* Onglets */
-var TABICON={cong:"🌴",plan:"📅",trame:"🔁",aff:"📈",hrs:"⏱️",team:"👥",myh:"⏳",notif:"🔔",myr:"✋"};
+var TABICON={gard:"🌙",cong:"🌴",plan:"📅",trame:"🔁",aff:"📈",hrs:"⏱️",team:"👥",myh:"⏳",notif:"🔔",myr:"✋"};
 function tabsFor(){
   var sw=S.swaps.filter(function(x){return x.status==="attente_titulaire"&&(isAdmin()||(x.a!==S.me&&x.b!==S.me));}).length;
   var swMe=S.swaps.filter(function(x){return x.b===S.me&&x.status==="attente_collegue";}).length;
   if(isAdmin()){var n=sw+S.requests.filter(function(r){return r.status==="pending";}).length;
-    return [["plan","Planning"],["cong","Congés"],["trame","Trame"],["aff","Affluence"],["hrs","Heures"],["team","Équipe"+(n?"<span class='badge'>"+n+"</span>":"")]];}
+    return [["plan","Planning"],["cong","Congés"],["gard","Gardes"],["trame","Trame"],["aff","Affluence"],["hrs","Heures"],["team","Équipe"+(n?"<span class='badge'>"+n+"</span>":"")]];}
   var mine=swMe+S.requests.filter(function(r){return r.p===S.me&&r.status==="pending";}).length;
   var unread=S.notifs.filter(function(n){return n.p===S.me&&!n.read;}).length;
   if(isEditor()){var n2=sw+S.requests.filter(function(r){return r.status==="pending"&&r.p!==S.me;}).length;
-    return [["plan","Planning"],["cong","Congés"],["trame","Trame"],["aff","Affluence"],["team","Demandes"+(n2?"<span class='badge'>"+n2+"</span>":"")],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];}
-  return [["plan","Planning"],["cong","Congés"],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];
+    return [["plan","Planning"],["cong","Congés"],["gard","Gardes"],["trame","Trame"],["aff","Affluence"],["team","Demandes"+(n2?"<span class='badge'>"+n2+"</span>":"")],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];}
+  return [["plan","Planning"],["cong","Congés"],["gard","Gardes"],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];
 }
 function renderTabs(){
   var t=tabsFor(),box=document.getElementById("tabs");box.innerHTML="";
   if(!t.some(function(x){return x[0]===S.tab;}))S.tab="plan";
   t.forEach(function(x){box.appendChild(el("button",{class:"tab",role:"tab","aria-selected":String(S.tab===x[0]),onclick:function(){S.tab=x[0];renderAll();window.scrollTo(0,0);}},"<span class='ti' aria-hidden='true'>"+(TABICON[x[0]]||"")+"</span><span>"+x[1]+"</span>"));});
-  ["plan","cong","trame","aff","hrs","team","myh","myr","notif"].forEach(function(k){document.getElementById("p-"+k).hidden=S.tab!==k;});
+  ["plan","cong","gard","trame","aff","hrs","team","myh","myr","notif"].forEach(function(k){document.getElementById("p-"+k).hidden=S.tab!==k;});
   document.getElementById("banner").hidden=true;
 }
 function renderViewAs(){
@@ -927,7 +964,7 @@ function renderPlan(){
   segSync("pseg",S.pview);document.getElementById("pdayv").hidden=S.pview!=="day";document.getElementById("pweekv").hidden=S.pview!=="week";
   document.getElementById("wkLabel").textContent="Semaine du "+dShort(mon);
   document.getElementById("wkSub").textContent=(mon<FIRST?"Historique MonPlanningPharma":"Trame "+L)+" · semaine "+Math.ceil(((mon-new Date(Date.UTC(mon.getUTCFullYear(),0,1)))/864e5+new Date(Date.UTC(mon.getUTCFullYear(),0,1)).getUTCDay()+1)/7);
-  document.getElementById("absBtn").hidden=!isEditor();
+  document.getElementById("absBtn").hidden=!isEditor();renderPlanInfo(mon);
   document.getElementById("prevWk").disabled=dAdd(mon,-7)<monOf(HFIRST);document.getElementById("nextWk").disabled=dAdd(mon,7)>LAST;
   if(S.pview==="day"){renderPlanDay();return;}
   var admin=isEditor(),h="<thead><tr><th>Équipe</th>";
@@ -942,7 +979,7 @@ function renderPlan(){
       var ds=dIso(dAdd(mon,i)),inf=dayInfo(p.id,ds);
       var can=(admin||(p.id===S.me))&&ds>=FIRSTI;
       var attrs=" data-p='"+p.id+"' data-ds='"+ds+"'"+(can?"":" disabled");
-      if(inf.ferie&&!inf.act.length){h+="<td><button class='cell fer' disabled>"+(inf.exp.length?"férié":"")+"</button></td>";continue;}
+      if(inf.ferie&&!inf.act.length){var cf2=admin&&ds>=FIRSTI;h+="<td><button class='cell fer"+(cf2?"":" ro")+"'"+(cf2?" data-p='"+p.id+"' data-ds='"+ds+"' title='Jour férié : touchez pour poser une garde ou une ouverture'":" disabled")+">"+(inf.exp.length?"férié":"")+"</button></td>";continue;}
       if(!inf.act.length&&inf.t){
         h+="<td><button class='cell abs"+(can?"":" ro")+"'"+attrs+"><span class='tchip t-"+inf.t+"'>"+TYPES[inf.t].s+"</span><span class='was num'>"+hm(dur(inf.exp))+"</span>"+(inf.c?"<span class='rng' style='font-style:italic'>"+esc(inf.c.length>22?inf.c.slice(0,21)+"…":inf.c)+"</span>":"")+"</button></td>";continue;}
       if(!inf.act.length){h+="<td><button class='cell off"+(can?"":" ro")+"'"+attrs+" aria-label='"+esc(p.name)+" "+DL[i]+"'>"+(can?"+":"")+"</button></td>";continue;}
@@ -1007,6 +1044,7 @@ function renderTimeline(box,o){
     var is=covIssues(segs),f=function(a){return a.map(function(g){return hm(g.s)+"–"+hm(g.e);}).join(", ");};
     if(o.closed){sum.className="tl-sum";sum.style.display="none";return;}
     sum.style.display="";
+    if(o.ferie){var any=segs.some(function(g){return g.n>0;});sum.className="tl-sum";sum.innerHTML="<b>Jour férié</b> · "+(any?"ouverture ou garde posée ce jour-là":"pharmacie fermée. Glissez sur une ligne ou touchez-la pour poser une garde ou une ouverture.");return;}
     if(is.none.length){sum.className="tl-sum bad";sum.innerHTML="<b>Personne au comptoir</b> "+f(is.none)+(is.np.length?"<br>Pas de pharmacien "+f(is.np):"");}
     else if(is.np.length){sum.className="tl-sum warn";sum.innerHTML="<b>Pas de pharmacien</b> "+f(is.np);}
     else{sum.className="tl-sum ok";sum.innerHTML="✓ Ouverture couverte de "+hm(OPEN)+" à "+hm(CLOSE[d])+", toujours au moins un pharmacien";}
@@ -1094,7 +1132,7 @@ function renderPlanDay(){
   var mon=dParse(S.wk),d=S.pday,ds=dIso(dAdd(mon,d)),admin=isEditor();
   dayChips(document.getElementById("pdays"),d,function(i){var dd=dAdd(mon,i);return "<span>"+D[i]+"</span><b>"+dd.getUTCDate()+"</b>";},function(i){var x=dIso(dAdd(mon,i));if(FERIES[x])return "";return dayIssueKind(function(pid){return dayInfo(pid,x).act;},i);},function(i){S.pday=i;renderAll();});
   renderTimeline(document.getElementById("ptl"),{
-    d:d,closed:!!FERIES[ds],people:S.people.filter(function(p){return shownWeek(p,mon);}),
+    d:d,closed:!!FERIES[ds]&&!(admin&&ds>=FIRSTI),ferie:!!FERIES[ds],people:S.people.filter(function(p){return shownWeek(p,mon);}),
     getBlocks:function(pid){return dayInfo(pid,ds).act;},
     rowInfo:function(pid){var inf=dayInfo(pid,ds);return (!inf.act.length&&inf.t)?{abs:TYPES[inf.t].s,absT:inf.t,comment:inf.c}:{comment:inf.c};},
     editable:function(){return admin&&ds>=FIRSTI;},
@@ -1322,6 +1360,10 @@ function renderTeam(){
   var cm=document.getElementById("cpModeBox");cm.innerHTML="";
   if(isAdmin()){var mode=[S.cpMode];cm.appendChild(radio(["ouvrables","poses"],["Jours ouvrables (règle légale : du 1er jour d'absence à la veille de la reprise, samedi compris)","Jours posés (seulement les jours marqués en congé au planning)"],mode,function(){
     if(mode[0]===S.cpMode)return;S.cpMode=mode[0];sb.from("planning_settings").update({cp_mode:S.cpMode}).eq("id",1).then(check).then(function(){toast("Décompte des congés mis à jour");}).catch(function(e){toast("Enregistrement impossible : "+(e&&e.message||e));});}));}
+  var zb=document.getElementById("zoneBox");zb.innerHTML="";
+  if(isAdmin()){var zc=[S.zone];zb.appendChild(el("p",{class:"sub",style:"margin:0 0 8px"},"Affichées sur le planning et la frise des congés. Veyrier-du-Lac (académie de Grenoble) est en zone A."));
+    zb.appendChild(radio(["A","B","C","aucune"],["Zone A","Zone B","Zone C","Ne pas afficher"],zc,function(){if(zc[0]===S.zone)return;S.zone=zc[0];
+      sb.from("planning_settings").update({vacances_zone:S.zone}).eq("id",1).then(check).then(function(){toast(S.zone==="aucune"?"Vacances scolaires masquées":"Vacances scolaires : zone "+S.zone);}).catch(function(e){toast("Enregistrement impossible : "+(e&&e.message||e));});}));}
   if(isAdmin())S.people.forEach(function(p){
     var b=el("button",{class:"pp",style:"--pc:"+p.color,onclick:function(){openPerson(p.id);}},av(p)+"<div style='min-width:0'><div class='n' style='font-weight:600'>"+esc(p.name)+"</div><div class='meta'>"+esc(p.role)+" · "+(p.status==="salarie"?"contrat "+hm(p.contract):STATUS[p.status])+"</div><div class='meta'>Accès : "+ACCESS[p.access]+"</div><div class='meta'>"+(p.email?esc(p.email):"Pas d'adresse mail")+"</div>"+acctBadge(p)+"</div>");
     pb.appendChild(b);
@@ -1506,17 +1548,25 @@ function renderCong(){
   }
   var todayMark=(tIso>=rg[0]&&tIso<=rg[1])?"<i class='gt-today' style='left:"+x(tIso)+"' title='Aujourd&#39;hui'></i>":"";
   var h="<div class='gt' style='min-width:"+Math.max(520,Math.round(tot*2.6)+110)+"px'><div class='gt-row gt-head'><div class='gt-name'></div><div class='gt-track'>"+labels+"</div></div>";
-  var idx=0,refs=[];
+  var idx=0,refs=[],vb="",vrow="",grow="";
+  vacSur(rg[0],rg[1]).forEach(function(v){var a2=v.a<rg[0]?rg[0]:v.a,b2=v.b>rg[1]?rg[1]:v.b,w2=(Math.round((dParse(b2)-dParse(a2))/864e5)+1)/tot*100;
+    vb+="<i class='gt-vac' style='left:"+x(a2)+";width:"+w2.toFixed(3)+"%'></i>";
+    vrow+="<span class='gt-bar g-vacb' style='left:"+x(a2)+";width:"+w2.toFixed(3)+"%' title='"+esc(vacNom(v)+" ("+zoneTxt()+") du "+dFr(v.a)+" au "+dFr(v.b))+"'>"+(w2>5?esc(v.l):"")+"</span>";});
+  gardesSur(rg[0],rg[1]).forEach(function(g){var a2=pLoc(g.a).ds,b2=pLoc(new Date(g.b.getTime()-60000)).ds;if(a2<rg[0])a2=rg[0];if(b2>rg[1])b2=rg[1];var w2=(Math.round((dParse(b2)-dParse(a2))/864e5)+1)/tot*100;
+    grow+="<button class='gt-bar g-garb' data-g='1' style='left:"+x(a2)+";width:"+w2.toFixed(3)+"%' title='"+esc("Garde "+gPeriode(g))+"'>"+(w2>4?"🌙":"")+"</button>";});
+  if(vrow)h+="<div class='gt-row gt-info'><div class='gt-name'><span>Vacances "+esc(zoneTxt())+"</span></div><div class='gt-track'>"+marks+todayMark+vrow+"</div></div>";
+  if(grow)h+="<div class='gt-row gt-info'><div class='gt-name'><span>🌙 Gardes</span></div><div class='gt-track'>"+marks+todayMark+grow+"</div></div>";
   S.people.forEach(function(p){
     var ps=byP[p.id];if(p.hors&&!ps.length)return;
-    h+="<div class='gt-row' style='--pc:"+p.color+"'><div class='gt-name'>"+av(p)+"<span>"+esc(p.name)+"</span></div><div class='gt-track'>"+marks+todayMark;
+    h+="<div class='gt-row' style='--pc:"+p.color+"'><div class='gt-name'>"+av(p)+"<span>"+esc(p.name)+"</span></div><div class='gt-track'>"+vb+marks+todayMark;
     ps.forEach(function(q){var w=(Math.round((dParse(q.to)-dParse(q.from))/864e5)+1)/tot*100;
       h+="<button class='gt-bar g-"+tGroup(q.t)+"' data-i='"+idx+"' style='left:"+x(q.from)+";width:"+w.toFixed(3)+"%' title='"+esc(p.name+" · "+TYPES[q.t].l+" "+dRange(q)+" · "+q.n+" jour"+(q.n>1?"s":"")+" prévu"+(q.n>1?"s":""))+"'>"+(w>7?esc(TYPES[q.t].s):"")+"</button>";refs[idx++]=q;});
     h+="</div></div>";
   });
   var g=document.getElementById("gantt");g.innerHTML=h+"</div>";
-  g.querySelectorAll(".gt-bar").forEach(function(bar){bar.addEventListener("click",function(){openPeriod(refs[+bar.getAttribute("data-i")]);});});
-  document.getElementById("congLegend").innerHTML=ed?"<span><i style='background:var(--t-cp)'></i>Congés payés</span><span><i style='background:var(--t-rec)'></i>Récup / échange</span><span><i style='background:var(--t-mal)'></i>Maladie, accident</span><span><i style='background:var(--t-aut)'></i>Autres absences</span><span><i style='background:var(--bad);width:2px'></i>Aujourd'hui</span>":"<span><i style='background:var(--t-aut)'></i>Absent(e)</span><span><i style='background:var(--bad);width:2px'></i>Aujourd'hui</span>";
+  g.querySelectorAll(".gt-bar[data-i]").forEach(function(bar){bar.addEventListener("click",function(){openPeriod(refs[+bar.getAttribute("data-i")]);});});
+  g.querySelectorAll(".gt-bar[data-g]").forEach(function(bar){bar.addEventListener("click",function(){S.tab="gard";renderAll();window.scrollTo(0,0);});});
+  document.getElementById("congLegend").innerHTML=ed?"<span><i style='background:var(--t-cp)'></i>Congés payés</span><span><i style='background:var(--t-rec)'></i>Récup / échange</span><span><i style='background:var(--t-mal)'></i>Maladie, accident</span><span><i style='background:var(--t-aut)'></i>Autres absences</span><span><i style='background:#E9B824'></i>Vacances scolaires</span><span><i style='background:#2B3A7A'></i>Semaine de garde</span><span><i style='background:var(--bad);width:2px'></i>Aujourd'hui</span>":"<span><i style='background:var(--t-aut)'></i>Absent(e)</span><span><i style='background:var(--bad);width:2px'></i>Aujourd'hui</span>";
   /* total par personne */
   var sb2=document.getElementById("congSumBox");sb2.hidden=!ed;
   if(ed){
@@ -1647,7 +1697,7 @@ function monthBilan(p,ym){
     var inf=dayInfo(p.id,ds),w=dur(inf.act),e=dur(inf.exp);
     if(wdOf(d)===0&&d>=FIRST)r.mondays++;
     if(w){r.worked+=w;r.days++;}
-    if(inf.ferie){r.ferie+=e;return;}
+    if(inf.ferie&&!w){r.ferie+=e;return;}
     if(isAbsDay(inf)){var k=tGroup(inf.t);r.g[k][0]++;r.g[k][1]+=e;}
     r.chg+=dayBal(p.id,ds);
   });
@@ -1670,25 +1720,25 @@ function renderBilan(){
   document.getElementById("bilanTitle").innerHTML="Bilan de fin de mois · "+mName+(done?"":" <span class='st st-pending'>mois en cours ou à venir : prévisionnel</span>");
   var hc=function(v){return v?hm(v):"<span class='empty'>–</span>";};
   var gc=function(x){return x[0]?x[0]+" j <span class='sm'>"+hm(x[1])+"</span>":"<span class='empty'>–</span>";};
-  var h="<thead><tr><th>Équipe</th><th>Jours travaillés</th><th>Heures travaillées</th><th>Congés payés</th><th>Maladie, accident</th><th>Récup / échanges posés</th><th>Autres absences</th><th>Fériés</th><th>Écart du mois</th><th>Solde d'heures fin de mois</th><th>Congés restants fin de mois</th></tr></thead><tbody>";
+  var h="<thead><tr><th>Équipe</th><th>Jours travaillés</th><th>Heures travaillées</th><th>Congés payés</th><th>Maladie, accident</th><th>Récup / échanges posés</th><th>Autres absences</th><th>Fériés</th><th>Gardes</th><th>Écart du mois</th><th>Solde d'heures fin de mois</th><th>Congés restants fin de mois</th></tr></thead><tbody>";
   var tot=0;
   rows.forEach(function(o){var p=o.p,r=o.r,sal=p.status==="salarie";tot+=r.worked;
     h+="<tr><td><div class='who' style='--pc:"+p.color+"'>"+av(p)+"<div style='min-width:0'><div class='n'>"+esc(p.name)+"</div><div class='h'>"+(sal?"contrat "+hm(p.contract)+"/sem.":(p.status==="facture"?"à facturer":STATUS[p.status]))+"</div></div></div></td>"+
       "<td>"+(r.days||"<span class='empty'>–</span>")+"</td><td class='avg'>"+hm(r.worked)+"</td>"+
-      "<td>"+(sal&&r.cpJ?jj(r.cpJ)+" <span class='sm'>"+hm(r.g.cp[1])+"</span>":gc(r.g.cp))+"</td><td>"+gc(r.g.maladie)+"</td><td>"+gc(r.g.recup)+"</td><td>"+gc(r.g.autre)+"</td><td>"+hc(r.ferie)+"</td>"+
+      "<td>"+(sal&&r.cpJ?jj(r.cpJ)+" <span class='sm'>"+hm(r.g.cp[1])+"</span>":gc(r.g.cp))+"</td><td>"+gc(r.g.maladie)+"</td><td>"+gc(r.g.recup)+"</td><td>"+gc(r.g.autre)+"</td><td>"+hc(r.ferie)+"</td><td>"+hc(monthGardes(p.id,ym))+"</td>"+
       (sal||p.status==="facture"?"<td class='"+(r.ecart>=0?"pos":"neg")+"'>"+(r.ecart?sg(r.ecart):"0h")+"</td>":"<td class='empty'>–</td>")+
       (sal?"<td class='avg "+(r.solde==null?"":(r.solde>=0?"pos":"neg"))+"'>"+(r.solde==null?"–":sg(r.solde))+"</td><td class='avg'>"+(r.cpRest==null?"–":jj(r.cpRest))+"</td>":"<td class='empty'>–</td><td class='empty'>–</td>")+"</tr>";
   });
-  h+="<tr class='tot'><td>Total équipe</td><td></td><td class='avg'>"+hm(tot)+"</td><td colspan='8'></td></tr>";
+  h+="<tr class='tot'><td>Total équipe</td><td></td><td class='avg'>"+hm(tot)+"</td><td colspan='9'></td></tr>";
   document.getElementById("bilan").innerHTML=h+"</tbody>";
-  document.getElementById("bilanNote").innerHTML="Mois civil, du 1<sup>er</sup> au dernier jour. Heures travaillées : heures réellement prévues au planning (trame + changements). Congés payés des salariés : décompte en jours "+(S.cpMode==="poses"?"posés":"ouvrables")+". Écart du mois : heures en plus ou en moins par rapport à la trame (échanges, récupérations), plus l'écart entre la trame et le contrat, compté chaque lundi. Les soldes « – » sont antérieurs au report saisi : le bulletin de paie fait foi.";
+  document.getElementById("bilanNote").innerHTML="Mois civil, du 1<sup>er</sup> au dernier jour. Heures travaillées : heures réellement prévues au planning (trame + changements). Congés payés des salariés : décompte en jours "+(S.cpMode==="poses"?"posés":"ouvrables")+". Écart du mois : heures en plus ou en moins par rapport à la trame (échanges, récupérations), plus l'écart entre la trame et le contrat, compté chaque lundi. Gardes : heures des créneaux de garde de l'onglet Gardes commencés dans le mois (agenda Google), en plus des heures travaillées. Les soldes « – » sont antérieurs au report saisi : le bulletin de paie fait foi.";
 }
 function bilanCsv(){
   var ym=S.month,rows=bilanRows(ym),dec=function(v){return (v/60).toFixed(2).replace(".",",");},q=function(s){return "\""+String(s).replace(/"/g,"\"\"")+"\"";};
   var L=[["Bilan de fin de mois",MOISL[+ym.slice(5)-1]+" "+ym.slice(0,4),"Pharmacie de Veyrier-du-Lac"].map(q).join(";"),
-    ["Prénom","Fonction","Statut","Contrat hebdo (h)","Jours travaillés","Heures travaillées","Congés payés (jours)","Congés payés (h)","Maladie, accident (jours)","Maladie, accident (h)","Récup / échanges posés (h)","Autres absences (h)","Fériés (h)","Écart du mois (h)","Solde d'heures fin de mois (h)","Congés restants fin de mois (jours)"].map(q).join(";")];
+    ["Prénom","Fonction","Statut","Contrat hebdo (h)","Jours travaillés","Heures travaillées","Congés payés (jours)","Congés payés (h)","Maladie, accident (jours)","Maladie, accident (h)","Récup / échanges posés (h)","Autres absences (h)","Fériés (h)","Gardes (h)","Écart du mois (h)","Solde d'heures fin de mois (h)","Congés restants fin de mois (jours)"].map(q).join(";")];
   rows.forEach(function(o){var p=o.p,r=o.r,sal=p.status==="salarie";
-    L.push([q(p.name),q(p.role||""),q(STATUS[p.status]||""),sal?dec(p.contract):"",r.days,dec(r.worked),String(sal?r.cpJ:r.g.cp[0]).replace(".",","),dec(r.g.cp[1]),r.g.maladie[0],dec(r.g.maladie[1]),dec(r.g.recup[1]),dec(r.g.autre[1]),dec(r.ferie),(sal||p.status==="facture")?dec(r.ecart):"",sal&&r.solde!=null?dec(r.solde):"",sal&&r.cpRest!=null?String(r.cpRest).replace(".",","):""].join(";"));});
+    L.push([q(p.name),q(p.role||""),q(STATUS[p.status]||""),sal?dec(p.contract):"",r.days,dec(r.worked),String(sal?r.cpJ:r.g.cp[0]).replace(".",","),dec(r.g.cp[1]),r.g.maladie[0],dec(r.g.maladie[1]),dec(r.g.recup[1]),dec(r.g.autre[1]),dec(r.ferie),dec(monthGardes(p.id,ym)),(sal||p.status==="facture")?dec(r.ecart):"",sal&&r.solde!=null?dec(r.solde):"",sal&&r.cpRest!=null?String(r.cpRest).replace(".",","):""].join(";"));});
   var blob=new Blob(["﻿"+L.join("\r\n")],{type:"text/csv;charset=utf-8"}),u=URL.createObjectURL(blob),a=el("a",{href:u,download:"bilan-planning-"+ym+".csv"});
   document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u);},500);
   toast("Bilan de "+MOISL[+ym.slice(5)-1].toLowerCase()+" exporté (fichier lisible dans Excel)");
@@ -1696,10 +1746,137 @@ function bilanCsv(){
 }
 function printOnly(what){document.body.setAttribute("data-print",what);var done=function(){document.body.removeAttribute("data-print");window.removeEventListener("afterprint",done);};window.addEventListener("afterprint",done);setTimeout(function(){window.print();},80);}
 
+/* ===================== Vacances scolaires : calendrier officiel (education.gouv.fr, service-public.fr F31952) =====================
+   Premier jour de vacances = samedi de fin des cours ; dernier jour = veille de la reprise. Toussaint, Noël, été et ponts : toutes zones. */
+var VAC_COMMUN=[["Toussaint","2025-10-18","2025-11-02"],["Noël","2025-12-20","2026-01-04"],["Pont de l'Ascension","2026-05-15","2026-05-16"],["Été","2026-07-04","2026-08-31"],
+ ["Toussaint","2026-10-17","2026-11-01"],["Noël","2026-12-19","2027-01-03"],["Pont de l'Ascension","2027-05-07","2027-05-08"],["Été","2027-07-03","2027-09-01"],
+ ["Toussaint","2027-10-23","2027-11-07"],["Noël","2027-12-18","2028-01-02"],["Pont de l'Ascension","2028-05-26","2028-05-27"],["Été","2028-07-04","2028-08-31"]];
+var VAC_ZONE={
+ A:[["Hiver","2026-02-07","2026-02-22"],["Printemps","2026-04-04","2026-04-19"],["Hiver","2027-02-13","2027-02-28"],["Printemps","2027-04-10","2027-04-25"],["Hiver","2028-02-19","2028-03-05"],["Printemps","2028-04-22","2028-05-08"]],
+ B:[["Hiver","2026-02-14","2026-03-01"],["Printemps","2026-04-11","2026-04-26"],["Hiver","2027-02-20","2027-03-07"],["Printemps","2027-04-17","2027-05-02"],["Hiver","2028-02-05","2028-02-20"],["Printemps","2028-04-08","2028-04-23"]],
+ C:[["Hiver","2026-02-21","2026-03-08"],["Printemps","2026-04-18","2026-05-03"],["Hiver","2027-02-06","2027-02-21"],["Printemps","2027-04-03","2027-04-18"],["Hiver","2028-02-12","2028-02-27"],["Printemps","2028-04-15","2028-05-01"]]};
+function vacances(){if(!S.zone||S.zone==="aucune")return [];return VAC_COMMUN.concat(VAC_ZONE[S.zone]||[]).map(function(v){return {l:v[0],a:v[1],b:v[2]};}).sort(function(x,y){return x.a<y.a?-1:1;});}
+function vacSur(a,b){return vacances().filter(function(v){return v.b>=a&&v.a<=b;});}
+function vacNom(v){return v.l.indexOf("Pont")===0?v.l:"Vacances "+(v.l==="Été"?"d'été":(v.l==="Hiver"?"d'hiver":(v.l==="Printemps"?"de printemps":(v.l==="Noël"?"de Noël":"de la "+v.l))));}
+function zoneTxt(){return S.zone&&S.zone!=="aucune"?"zone "+S.zone:"";}
+
+/* ===================== Gardes : semaines de garde et créneaux de chaque pharmacien ===================== */
+var DJ=["lun.","mar.","mer.","jeu.","ven.","sam.","dim."];
+var PFMT=new Intl.DateTimeFormat("fr-FR",{timeZone:"Europe/Paris",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hourCycle:"h23"});
+function pLoc(d){var o={};PFMT.formatToParts(d).forEach(function(x){o[x.type]=x.value;});return {ds:o.year+"-"+o.month+"-"+o.day,m:(+o.hour)*60+(+o.minute)};}
+function gDur(g){return Math.round((g.fin-g.debut)/60000);}
+function gParts(g){var n=0,s=0;for(var t=g.debut.getTime();t<g.fin.getTime();t+=15*60000){var l=pLoc(new Date(t));if(l.m>=1200||l.m<480)n+=15;if(wdOf(dParse(l.ds))===6||FERIES[l.ds])s+=15;}return {nuit:n,dim:s};}
+function jLong(ds){return DJ[wdOf(dParse(ds))]+" "+dFr(ds);}
+function gTxt(g){var a=pLoc(g.debut),b=pLoc(g.fin);return DJ[wdOf(dParse(a.ds))]+" "+dFr(a.ds).slice(0,5)+" "+hm(a.m)+" → "+(b.ds!==a.ds?DJ[wdOf(dParse(b.ds))]+" ":"")+hm(b.m);}
+function gPeriode(x){var a=pLoc(x.a),b=pLoc(new Date(x.b.getTime()-60000));return "du "+jLong(a.ds)+" au "+jLong(b.ds);}
+function loadGardes(){return sb.from("gardes").select("*").order("debut").then(check).then(function(r){
+  S.gardes=(r.data||[]).map(function(x){return {id:x.id,kind:x.kind,p:x.staff_id,debut:new Date(x.debut),fin:new Date(x.fin),titre:x.titre||"",note:x.note||"",source:x.source};});});}
+/* Les créneaux sont rattachés à la semaine de garde qui les contient ; ceux qui n'en ont pas sont regroupés par proximité */
+function gardeSemaines(){
+  var sem=S.gardes.filter(function(g){return g.kind==="semaine";}).map(function(w){return {w:w,a:w.debut,b:w.fin,serv:[]};}),orph=[];
+  S.gardes.filter(function(g){return g.kind==="service";}).forEach(function(s){var hit=null;
+    sem.forEach(function(x){if(x.w&&s.debut.getTime()<x.b.getTime()+864e5&&s.fin.getTime()>x.a.getTime()-864e5)hit=x;});
+    if(hit)hit.serv.push(s);else orph.push(s);});
+  orph.sort(function(a,b){return a.debut-b.debut;});var cur=null;
+  orph.forEach(function(s){if(cur&&s.debut-cur.b<=3*864e5){cur.serv.push(s);if(s.fin>cur.b)cur.b=s.fin;}else{cur={w:null,a:s.debut,b:s.fin,serv:[s]};sem.push(cur);}});
+  sem.forEach(function(x){x.serv.sort(function(a,b){return a.debut-b.debut;});});
+  return sem.sort(function(a,b){return a.a-b.a;});
+}
+function gardesSur(a,b){var A=dParse(a).getTime()-2*36e5,B=dParse(b).getTime()+22*36e5;return gardeSemaines().filter(function(x){return x.b.getTime()>A&&x.a.getTime()<B;});}
+function servLine(s,canDel){
+  var p=P(s.p),nm=p?p.name:(s.titre||"?"),col=p?p.color:"#767676";
+  var d=el("div",{class:"gline",style:"--pc:"+col},"<i></i><span><b>"+esc(nm)+"</b> · "+esc(gTxt(s))+"</span><span class='num'>"+hm(gDur(s))+"</span>");
+  if(canDel&&s.source==="appli"&&isEditor()){var x=el("button",{class:"linkbtn",style:"margin:0",title:"Supprimer ce créneau"},"Supprimer");
+    x.addEventListener("click",function(){x.disabled=true;sb.from("gardes").delete().eq("id",s.id).then(check).then(loadGardes).then(function(){renderAll();toast("Créneau de garde supprimé");}).catch(function(e){toast("Suppression impossible : "+(e&&e.message||e));});});d.appendChild(x);}
+  return d;
+}
+function gardeCard(x){
+  var now=Date.now(),st=x.a.getTime()>now?"avenir":(x.b.getTime()>now?"cours":"passe"),days=Math.ceil((x.a.getTime()-now)/864e5);
+  var c=el("div",{class:"gw"+(st==="cours"?" now":"")});
+  var tot=0,per={};x.serv.forEach(function(s){tot+=gDur(s);var k=s.p||"?";per[k]=(per[k]||0)+gDur(s);});
+  c.innerHTML="<h3>🌙 "+(x.w?"Semaine de garde":"Gardes")+" "+gPeriode(x)+" "+(st==="cours"?"<span class='st st-pending'>En cours</span>":(st==="avenir"?"<span class='st st-ok'>Dans "+days+" jour"+(days>1?"s":"")+"</span>":""))+"</h3>"+
+    (x.w&&x.w.note?"<div class='meta'>"+esc(x.w.note)+"</div>":"")+(!x.w?"<div class='meta'>Créneaux sans semaine de garde « GARDE PHARMACIE » dans l'agenda.</div>":"");
+  var list=el("div",{class:"glist"});
+  if(!x.serv.length)list.innerHTML="<div class='meta'>"+(st==="passe"?"Répartition entre pharmaciens non indiquée dans l'agenda.":"Répartition entre pharmaciens pas encore saisie. Ajoutez les créneaux dans l'agenda Google (titre « garde Alexandra », « garde Éloi »…) ou ici.")+"</div>";
+  x.serv.forEach(function(s){list.appendChild(servLine(s,true));});
+  c.appendChild(list);
+  if(x.serv.length)c.appendChild(el("div",{class:"meta",style:"margin-top:6px"},"Total "+hm(tot)+" · "+Object.keys(per).map(function(k){var p=P(k);return esc(p?p.name:"?")+" "+hm(per[k]);}).join(" · ")));
+  return c;
+}
+function renderGardes(){
+  var sem=gardeSemaines(),now=Date.now(),ed=isEditor();
+  document.getElementById("gAdd").hidden=!ed;
+  var nx=sem.filter(function(x){return x.b.getTime()>now;})[0],hero=document.getElementById("gNext");
+  if(nx){var cours=nx.a.getTime()<=now,days=Math.ceil((nx.a.getTime()-now)/864e5);
+    hero.innerHTML="<div class='k'>"+(cours?"Garde en cours":"Prochaine garde")+"</div><div class='t'>"+gPeriode(nx)+"</div><div class='s'>"+(cours?"Jusqu'au "+jLong(pLoc(new Date(nx.b.getTime()-60000)).ds):(days<=1?"Demain":"Dans "+days+" jours"))+(nx.w&&nx.w.note?" · "+esc(nx.w.note):"")+"</div>";
+    var srv=el("div",{class:"srv"});
+    if(nx.serv.length)nx.serv.forEach(function(s){var p=P(s.p);srv.appendChild(el("div","","<b>"+esc(p?p.name:s.titre)+"</b> · "+esc(gTxt(s))+" ("+hm(gDur(s))+")"));});
+    else srv.appendChild(el("div",{style:"opacity:.85"},"Répartition entre pharmaciens pas encore saisie."));
+    hero.appendChild(srv);hero.hidden=false;}
+  else hero.hidden=true;
+  var years={};sem.forEach(function(x){years[pLoc(x.a).ds.slice(0,4)]=1;});years[tIso.slice(0,4)]=1;
+  if(!S.gYear)S.gYear=tIso.slice(0,4);
+  var yb=document.getElementById("gYears");yb.innerHTML="";
+  Object.keys(years).sort().forEach(function(y){yb.appendChild(el("button",{class:"chip","aria-pressed":String(S.gYear===y),onclick:function(){S.gYear=y;renderGardes();}},"Année "+y));});
+  var inY=sem.filter(function(x){return pLoc(x.a).ds.slice(0,4)===S.gYear;});
+  /* totaux par pharmacien sur l'année */
+  var tt={},nb=0;inY.forEach(function(x){if(x.w)nb++;x.serv.forEach(function(s){var k=s.p||"?";if(!tt[k])tt[k]={n:0,h:0,nuit:0,dim:0};var q=gParts(s);tt[k].n++;tt[k].h+=gDur(s);tt[k].nuit+=q.nuit;tt[k].dim+=q.dim;});});
+  var h="<thead><tr><th>Pharmacien</th><th>Créneaux</th><th>Heures de garde</th><th>dont nuit (20h–8h)</th><th>dont dimanche ou férié</th></tr></thead><tbody>";
+  var ks=Object.keys(tt);
+  ks.forEach(function(k){var p=P(k),t=tt[k];h+="<tr><td><div class='who' style='--pc:"+(p?p.color:"#767676")+"'>"+(p?av(p):"")+"<span class='n'>"+esc(p?p.name:"Non attribué")+"</span></div></td><td>"+t.n+"</td><td class='avg'>"+hm(t.h)+"</td><td>"+hm(t.nuit)+"</td><td>"+hm(t.dim)+"</td></tr>";});
+  if(!ks.length)h+="<tr><td colspan='5' class='empty'>Aucun créneau de garde attribué en "+S.gYear+".</td></tr>";
+  document.getElementById("gSum").innerHTML=h+"</tbody>";
+  document.getElementById("gSumTitle").textContent="En "+S.gYear+" : "+nb+" semaine"+(nb>1?"s":"")+" de garde";
+  var box=document.getElementById("gList");box.innerHTML="";
+  var up=inY.filter(function(x){return x.b.getTime()>now;}),past=inY.filter(function(x){return x.b.getTime()<=now;}).reverse();
+  if(up.length){box.appendChild(el("div",{class:"lbl grp"},"À venir ("+up.length+")"));up.forEach(function(x){box.appendChild(gardeCard(x));});}
+  if(past.length){box.appendChild(el("div",{class:"lbl grp"},"Passées ("+past.length+")"));past.forEach(function(x){box.appendChild(gardeCard(x));});}
+  if(!inY.length)box.innerHTML="<div class='empty'>Aucune garde en "+S.gYear+".</div>";
+  document.getElementById("gNote").textContent="Gardes lues chaque soir dans l'agenda Google de la pharmacie : « GARDE PHARMACIE » = semaine de garde, « garde Alexandra », « garde Éloi »… = créneau assuré par ce pharmacien (« alex » est lu comme Alexandra). Les créneaux ajoutés ici restent dans PharmaScope."+(ed?" Pour corriger un créneau venu de l'agenda, modifiez-le dans l'agenda Google.":"");
+}
+function openGarde(){
+  var phs=S.people.filter(function(p){return p.ph&&!isAncien(p);}),who=[phs[0]?phs[0].id:null],kind=["service"];
+  var c=el("div","","<h2>Ajouter une garde</h2><div class='sub'>Visible de toute l'équipe dans l'onglet Gardes et sur le planning.</div>");
+  var s0=el("div",{class:"sec"},"<div class='lbl'>Quoi ?</div>");s0.appendChild(radio(["service","semaine"],["Créneau assuré par un pharmacien","Semaine de garde de la pharmacie"],kind,upd));c.appendChild(s0);
+  var s1=el("div",{class:"sec"},"<div class='lbl'>Qui ?</div>");s1.appendChild(radio(phs.map(function(p){return p.id;}),phs.map(function(p){return esc(p.name);}),who,upd));c.appendChild(s1);
+  var d1=el("div",{class:"sec two"}),f1=el("div",{class:"field"},"<label class='lbl' for='g-d1'>Début</label>"),i1=el("input",{type:"date",id:"g-d1"}),h1=el("input",{type:"time",id:"g-h1",step:"900"});
+  i1.value=tIso;h1.value="20:00";f1.appendChild(i1);f1.appendChild(h1);
+  var f2=el("div",{class:"field"},"<label class='lbl' for='g-d2'>Fin</label>"),i2=el("input",{type:"date",id:"g-d2"}),h2=el("input",{type:"time",id:"g-h2",step:"900"});
+  i2.value=dIso(dAdd(dParse(tIso),1));h2.value="08:00";f2.appendChild(i2);f2.appendChild(h2);d1.appendChild(f1);d1.appendChild(f2);c.appendChild(d1);
+  var quick=el("div",{class:"chips",style:"margin-top:8px"});
+  [["Nuit 20h → 8h","20:00","08:00",1],["Dimanche matin 8h → 13h","08:00","13:00",0],["Dimanche après-midi 13h → 20h","13:00","20:00",0],["Soirée 19h30 → 23h","19:30","23:00",0]].forEach(function(o){quick.appendChild(el("button",{class:"chip",type:"button",onclick:function(){h1.value=o[1];h2.value=o[2];i2.value=dIso(dAdd(dParse(i1.value||tIso),o[3]));upd();}},o[0]));});
+  c.appendChild(quick);
+  var f3=el("div",{class:"sec field"},"<label class='lbl' for='g-n'>Note</label>"),ni=el("input",{type:"text",id:"g-n",placeholder:"Facultatif"});f3.appendChild(ni);c.appendChild(f3);
+  var rec=el("div",{class:"recap"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
+  var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Ajouter");row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row.appendChild(ok);c.appendChild(row);
+  function iso(d,h){return new Date(d+"T"+(h||"00:00")+":00"+(pLoc(new Date(d+"T12:00:00Z")).m===13*60+0?"+01:00":"+02:00"));}
+  function vals(){return {a:iso(i1.value,h1.value),b:iso(i2.value,h2.value)};}
+  function upd(){s1.hidden=kind[0]!=="service";if(kind[0]==="semaine"&&h1.value==="20:00"){h1.value="00:00";h2.value="13:00";}
+    var v=vals();var bad=!i1.value||!i2.value||!(v.b>v.a);er.textContent=bad?"La fin doit être après le début.":"";ok.disabled=bad;
+    rec.textContent=bad?"":(kind[0]==="service"?(P(who[0])||{name:"?"}).name+" · ":"Semaine de garde · ")+gTxt({debut:v.a,fin:v.b})+" ("+hm(gDur({debut:v.a,fin:v.b}))+")";}
+  [i1,h1,i2,h2].forEach(function(x){x.addEventListener("input",upd);});
+  ok.addEventListener("click",function(){if(ok.disabled)return;ok.disabled=true;var v=vals();
+    sb.from("gardes").insert({kind:kind[0],staff_id:kind[0]==="service"?who[0]:null,debut:v.a.toISOString(),fin:v.b.toISOString(),titre:kind[0]==="service"?"garde "+((P(who[0])||{}).name||""):"GARDE PHARMACIE",note:ni.value.trim()||null,source:"appli"}).then(check)
+      .then(loadGardes).then(function(){closeSheet();renderAll();toast("Garde ajoutée");}).catch(function(e){ok.disabled=false;er.textContent="Enregistrement impossible : "+(e&&e.message||e);});});
+  upd();sheet(c);
+}
+/* Bandeau du planning : vacances scolaires et gardes de la semaine affichée */
+function renderPlanInfo(mon){
+  var a=dIso(mon),b=dIso(dAdd(mon,6)),box=document.getElementById("planInfo");box.innerHTML="";
+  vacSur(a,b).forEach(function(v){box.appendChild(el("span",{class:"gchip vac",title:"Calendrier scolaire officiel, "+zoneTxt()},"🎒 "+esc(vacNom(v))+(v.l.indexOf("Pont")===0?"":" ("+zoneTxt()+")")+" · du "+dFr(v.a).slice(0,5)+" au "+dFr(v.b).slice(0,5)));});
+  gardesSur(a,b).forEach(function(x){
+    var A=dParse(a).getTime()-2*36e5,B=dParse(b).getTime()+22*36e5,sv=x.serv.filter(function(s){return s.fin.getTime()>A&&s.debut.getTime()<B;});
+    var ch=el("button",{class:"gchip gar",title:"Voir l'onglet Gardes",onclick:function(){S.tab="gard";S.gYear=pLoc(x.a).ds.slice(0,4);renderAll();window.scrollTo(0,0);}},"🌙 "+(x.w?"Semaine de garde ":"Gardes ")+gPeriode(x).replace(/\/\d\d(?=\s|$)/g,"")+(sv.length?" · "+sv.map(function(s){var p=P(s.p);return (p?p.name:"?")+" "+gTxt(s);}).join(" · "):""));
+    box.appendChild(ch);});
+  box.hidden=!box.children.length;
+}
+function monthGardes(pid,ym){var t=0;S.gardes.forEach(function(g){if(g.kind==="service"&&g.p===pid&&pLoc(g.debut).ds.slice(0,7)===ym)t+=gDur(g);});return t;}
+
 function renderAll(){
   renderViewAs();renderTabs();
   if(S.tab==="plan")renderPlan();
   if(S.tab==="cong")renderCong();
+  if(S.tab==="gard")renderGardes();
   if(S.tab==="trame"){renderWeeks();renderGrid();}
   if(S.tab==="aff")renderAff();
   if(S.tab==="hrs")renderHrs();
@@ -1757,7 +1934,7 @@ function blocksToVals(bl){var v=["","","",""];if(bl[0]){v[0]=hhmm(bl[0][0]);v[1]
 /* Éditeur d'une journée réelle (titulaire) */
 function openDay(pid,ds){
   var p=P(pid),inf=dayInfo(pid,ds),d=dParse(ds);
-  var mode=[(!inf.act.length&&inf.exp.length)?"abs":"work"];
+  var mode=[(!inf.act.length&&inf.exp.length&&!inf.ferie)?"abs":"work"];
   var WORKK=["hs","extra","formation","autre","other"],ABSK=["cp","recup","rc","maladie","at","mat","parental","formation","ss","autre","other"];
   var wt=[inf.changed&&inf.act.length&&WORKK.indexOf(inf.t)>=0?inf.t:(p.status==="extra"?"extra":"hs")];
   var at=[inf.changed&&!inf.act.length&&ABSK.indexOf(inf.t)>=0?inf.t:"cp"];
@@ -1989,6 +2166,7 @@ document.getElementById("newAbs").addEventListener("click",function(){openAbsenc
 document.getElementById("congPrint").addEventListener("click",function(){printOnly("cong");});
 document.getElementById("bilanPrint").addEventListener("click",function(){printOnly("bilan");});
 document.getElementById("bilanCsv").addEventListener("click",bilanCsv);
+document.getElementById("gAdd").addEventListener("click",openGarde);
 /* Aide à l'installation : seulement sur iPhone / iPad, dans Safari, tant que l'appli n'est pas sur l'écran d'accueil */
 (function(){
   var ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
@@ -2119,10 +2297,10 @@ function loadAll(){
       S.histo={};var hmin=null;(res[9].data||[]).forEach(function(x){var ds=String(x.day).slice(0,10);if(!S.histo[ds])S.histo[ds]={};S.histo[ds][x.staff_id]={b:x.blocks||[],e:x.prevu||x.blocks||[],t:x.kind||null,c:x.comment||null};if(!hmin||ds<hmin)hmin=ds;});
       HFIRST=hmin?dParse(hmin.slice(0,8)+"01"):FIRST;
       S.adjust=(res[7].data||[]).map(function(x){return {id:x.id,p:x.staff_id,day:String(x.jour).slice(0,10),kind:x.kind,min:x.minutes,cp:x.cp_jours==null?null:+x.cp_jours,label:x.motif||""};});
-      S.cpMode=(set&&set.cp_mode)||"ouvrables";
+      S.cpMode=(set&&set.cp_mode)||"ouvrables";S.zone=(set&&set.vacances_zone)||"A";
       if(set){REF=dParse(String(set.cycle_ref_monday).slice(0,10));REFW=Math.max(0,W.indexOf(set.cycle_ref_week));}
       SAVED=snapshotState();hist=[];document.getElementById("undoBtn").disabled=true;lastLoad=Date.now();
-      return refreshAccounts().then(function(){return true;});
+      return Promise.all([refreshAccounts(),loadGardes().catch(function(){S.gardes=[];})]).then(function(){return true;});
     });
   });
 }
@@ -2192,7 +2370,7 @@ document.addEventListener("visibilitychange",function(){
   if(Date.now()-lastLoad<60000||layer.innerHTML)return;
   saving.then(loadAll).then(function(ok){if(ok)renderAll();}).catch(function(){});
 });
-window.__app={S:S,monthBilan:monthBilan,hoursBalanceAt:hoursBalanceAt,absPeriods:absPeriods,bilanCsv:bilanCsv,openAbsence:openAbsence,swapPlan:swapPlan,openSwap:openSwap,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
+window.__app={gardeSemaines:gardeSemaines,monthGardes:monthGardes,vacances:vacances,S:S,monthBilan:monthBilan,hoursBalanceAt:hoursBalanceAt,absPeriods:absPeriods,bilanCsv:bilanCsv,openAbsence:openAbsence,swapPlan:swapPlan,openSwap:openSwap,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
 if(!sb){showScreen("login");document.getElementById("lgErr").textContent="Le service de connexion n'a pas pu se charger. Rechargez la page.";}
 else sb.auth.getSession().then(function(r){if(r.data&&r.data.session)startApp();else showScreen("login");}).catch(function(){showScreen("login");});
 })();
