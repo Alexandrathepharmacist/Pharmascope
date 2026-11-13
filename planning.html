@@ -1361,6 +1361,10 @@ function titStats(p,a,b){
     /* seuls les jours où du travail était prévu comptent (l'historique MonPlanningPharma marque aussi les jours de repos inclus dans un congé) */
     if(isAbsDay(inf)&&dur(inf.exp)){if(tGroup(inf.t)==="cp"){r.cp++;r.cpH+=dur(inf.exp);}else{r.oth++;r.othH+=dur(inf.exp);}}});
   servicesRetenus().forEach(function(g){if(g.p!==p.id)return;var ds=pLoc(g.debut).ds;if(ds>=a&&ds<=b)r.g+=gDur(g);});
+  /* 13/11/2026 (décision d'Alexandra) : les jours de congé se comptent en jours ouvrables, comme pour les salariés :
+     du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris.
+     Une semaine de congé vaut ainsi 6 jours pour chacun, qu'il travaille sur 3 ou 4 jours. Les heures ne changent pas (un jour de repos = 0 h). */
+  var k=S.cpMode;S.cpMode="ouvrables";r.cp=cpDays(p.id,dIso(dAdd(dParse(a),-1)),b);S.cpMode=k;
   return r;
 }
 function nJ(n){return n+" j";}
@@ -1426,7 +1430,7 @@ function renderTit(){
     h+="</tr>";}
   h+="<tr class='tot'><td>Total "+Y+"</td>";T.forEach(function(t){h+="<td class='sep avg'>"+hm(t.w)+"</td><td>"+hm(t.cpH)+" <span class='sm'>("+nJ(t.cp)+")</span></td><td>"+hm(t.g)+"</td>";});if(data.length===2)h+="<td class='sep'></td><td></td>";
   document.getElementById("titTable").innerHTML=h+"</tr></tbody>";
-  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du 01/01/2026 ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé (le nombre de jours est indiqué entre parenthèses). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre des congés de l'année après ce congé.";
+  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du 01/01/2026 ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé. Entre parenthèses, les jours ouvrables : du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris (une semaine de congé = 6 jours pour chacun, comme pour les salariés). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre des congés de l'année après ce congé.";
 }
 function renderHrs(){
   monthChips("months");renderBilan();
