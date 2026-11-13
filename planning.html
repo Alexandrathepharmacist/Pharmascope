@@ -232,6 +232,20 @@ html,body{margin:0}
 /* ---- Titulaires : heures et congés ---- */
 #titBox{margin-bottom:22px}
 #titYears{align-items:center}
+/* ---- Changements à classer ---- */
+#clsBox{margin-bottom:22px}
+.clsall{display:flex;align-items:center;gap:6px;font-size:.86rem;color:var(--ink-2);cursor:pointer}
+.clsbar{position:sticky;top:0;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin:0 0 10px;box-shadow:var(--shadow)}
+.clsbar .lbl{margin:0 0 6px}
+.cls{display:grid;grid-template-columns:22px minmax(0,1fr);gap:6px 10px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--pc);border-radius:12px;padding:10px 12px;align-items:start}
+.cls input[type=checkbox]{width:18px;height:18px;margin-top:2px}
+.cls .hd{font-size:.92rem}
+.cls .hd .d{color:var(--ink-3);font-weight:500}
+.cls .meta{font-size:.8rem;color:var(--ink-3);margin-top:2px}
+.cls .chips{grid-column:2;margin-top:4px}
+.cls .chip{font-size:.8rem;padding:5px 10px}
+.cls.done{opacity:.45}
+.grpm{font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:10px 0 2px}
 .eq{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0 0;background:var(--surface)}
 .eq .k{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:6px}
 .eq .v{font-size:.88rem;margin-top:8px;line-height:1.4}
@@ -610,6 +624,12 @@ table.bil{min-width:980px}
   </section>
 
   <section id="p-hrs" hidden>
+    <div id="clsBox" hidden>
+      <div class="h2row" style="margin-top:0"><h2 id="clsTitle">Changements à classer</h2><label class="clsall"><input type="checkbox" id="clsAll"> Tout sélectionner</label></div>
+      <div class="clsbar" id="clsBar" hidden></div>
+      <div class="alerts" id="clsList"></div>
+      <p class="note" id="clsNote"></p>
+    </div>
     <div class="months" id="months"></div>
     <div id="bilanBox">
       <div class="h2row" style="margin-top:4px"><h2 id="bilanTitle">Bilan de fin de mois</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="bilanCsv">Exporter pour Excel</button><button class="btn" id="bilanPrint">Imprimer</button></div></div>
@@ -993,7 +1013,7 @@ function tabsFor(){
   var sw=S.swaps.filter(function(x){return x.status==="attente_titulaire"&&(isAdmin()||(x.a!==S.me&&x.b!==S.me));}).length;
   var swMe=S.swaps.filter(function(x){return x.b===S.me&&x.status==="attente_collegue";}).length;
   if(isAdmin()){var n=sw+S.requests.filter(function(r){return r.status==="pending";}).length;
-    return [["plan","Planning"],["cong","Congés"],["gard","Gardes"],["trame","Trame"],["aff","Affluence"],["hrs","Heures"]].concat(isTit()?[["tit","Titulaires"]]:[]).concat([["team","Équipe"+(n?"<span class='badge'>"+n+"</span>":"")]]);}
+    return [["plan","Planning"],["cong","Congés"],["gard","Gardes"],["trame","Trame"],["aff","Affluence"],["hrs","Heures"+(function(){var k=aClasser().length;return k?"<span class='badge'>"+k+"</span>":"";})()]].concat(isTit()?[["tit","Titulaires"]]:[]).concat([["team","Équipe"+(n?"<span class='badge'>"+n+"</span>":"")]]);}
   var mine=swMe+S.requests.filter(function(r){return r.p===S.me&&r.status==="pending";}).length;
   var unread=S.notifs.filter(function(n){return n.p===S.me&&!n.read;}).length;
   if(isEditor()){var n2=sw+S.requests.filter(function(r){return r.status==="pending"&&r.p!==S.me;}).length;
@@ -1446,8 +1466,60 @@ function renderTit(){
   document.getElementById("titTable").innerHTML=h+"</tr></tbody>";
   document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du 01/01/2026 ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé. Entre parenthèses, les jours ouvrables : du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris (une semaine de congé = 6 jours pour chacun, comme pour les salariés). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Équilibre (règle choisie par les titulaires le 13/11/2026) : mêmes heures à l'officine sur l'année civile, congés déjà posés compris ; les gardes sont suivies à part et n'entrent pas dans l'équilibre. L'équivalent en jours utilise la durée moyenne d'une journée dans la trame de la personne. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre après ce congé.";
 }
+/* ===== Changements de planning sans motif (« Non catégorisé ») : classement rapide, un par un ou par lot.
+   Pas de notification à la personne : seul le motif change, pas les horaires. ===== */
+var SANS_MOTIF={autre:1,modif:1,absent:1};
+var MOTIFS_ABS=["cp","recup","rc","maladie","at","formation","ss","other"],MOTIFS_H=["hs","recup","formation","maladie","extra","other"];
+function blTxt(bl){return bl.length?bl.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(" · "):"repos";}
+function aClasser(){
+  var out=[];
+  Object.keys(S.histo).forEach(function(ds){if(ds>=FIRSTI)return;var r=S.histo[ds];Object.keys(r).forEach(function(pid){var h=r[pid];if(h.t&&SANS_MOTIF[h.t]&&P(pid))out.push({ds:ds,p:pid,src:"histo",exp:h.e||[],act:h.b||[],c:h.c||""});});});
+  Object.keys(S.changes).forEach(function(ds){if(ds<FIRSTI)return;var r=S.changes[ds];Object.keys(r).forEach(function(pid){var c=r[pid];if(c.t&&SANS_MOTIF[c.t]&&P(pid)){var inf=dayInfo(pid,ds);out.push({ds:ds,p:pid,src:"chg",exp:inf.exp,act:c.b||[],c:c.c||""});}});});
+  return out.sort(function(a,b){return a.ds<b.ds?-1:(a.ds>b.ds?1:(P(a.p).name<P(b.p).name?-1:1));});
+}
+function classer(items,k){
+  var histo=items.filter(function(x){return x.src==="histo";}),chg=items.filter(function(x){return x.src==="chg";}),jobs=[];
+  histo.forEach(function(x){jobs.push(sb.from("planning_histo").update({kind:k}).match({day:x.ds,staff_id:x.p}).then(check).then(function(){S.histo[x.ds][x.p].t=k;}));});
+  return Promise.all(jobs).then(function(){
+    if(chg.length){chg.forEach(function(x){S.changes[x.ds][x.p].t=k;});return persist();}
+  }).then(function(){renderAll();toast(items.length+" changement"+(items.length>1?"s":"")+" classé"+(items.length>1?"s":"")+" : "+TYPES[k].l.toLowerCase());})
+    .catch(function(e){toast("Classement impossible : "+(e&&e.message||e));return loadAll().then(renderAll);});
+}
+function renderCls(){
+  var box=document.getElementById("clsBox");if(!isAdmin()){box.hidden=true;return;}
+  var L=aClasser(),list=document.getElementById("clsList"),bar=document.getElementById("clsBar"),all=document.getElementById("clsAll");
+  box.hidden=false;list.innerHTML="";S.clsSel=S.clsSel||{};
+  var key=function(x){return x.ds+"|"+x.p;};
+  Object.keys(S.clsSel).forEach(function(k){if(!L.some(function(x){return key(x)===k;}))delete S.clsSel[k];});
+  document.getElementById("clsTitle").innerHTML="Changements à classer "+(L.length?"<span class='st st-pending'>"+L.length+"</span>":"<span class='st st-ok'>Tout est classé</span>");
+  all.parentNode.hidden=L.length<2;all.checked=L.length>0&&L.every(function(x){return S.clsSel[key(x)];});
+  all.onchange=function(){L.forEach(function(x){if(all.checked)S.clsSel[key(x)]=1;else delete S.clsSel[key(x)];});renderCls();};
+  var sel=L.filter(function(x){return S.clsSel[key(x)];});
+  bar.innerHTML="";bar.hidden=!sel.length;
+  if(sel.length){var abs=sel.every(function(x){return !x.act.length;}),wk=sel.every(function(x){return x.act.length;});
+    var ks=abs?MOTIFS_ABS:(wk?MOTIFS_H:MOTIFS_ABS.concat(MOTIFS_H.filter(function(k){return MOTIFS_ABS.indexOf(k)<0;})));
+    bar.appendChild(el("div",{class:"lbl"},"Classer les "+sel.length+" sélectionnés en :"));
+    var ch=el("div",{class:"chips"});ks.forEach(function(k){var b=el("button",{class:"chip"},esc(TYPES[k].l));b.addEventListener("click",function(){[].forEach.call(bar.querySelectorAll("button"),function(x){x.disabled=true;});S.clsSel={};classer(sel,k);});ch.appendChild(b);});
+    var nb=el("button",{class:"linkbtn",style:"margin-left:6px"},"Désélectionner");nb.addEventListener("click",function(){S.clsSel={};renderCls();});ch.appendChild(nb);bar.appendChild(ch);}
+  if(!L.length){list.innerHTML="<div class='ok'>Aucun changement de planning sans motif.</div>";}
+  var lastM="";
+  L.forEach(function(x){var p=P(x.p),m=x.ds.slice(0,7);
+    if(m!==lastM){lastM=m;list.appendChild(el("div",{class:"grpm"},MOISL[+m.slice(5)-1]+" "+m.slice(0,4)));}
+    var e=dur(x.exp),a=dur(x.act),d=a-e;
+    var c=el("div",{class:"cls",style:"--pc:"+p.color});
+    var cb=el("input",{type:"checkbox","aria-label":"Sélectionner "+p.name+" "+dFr(x.ds)});cb.checked=!!S.clsSel[key(x)];
+    cb.addEventListener("change",function(){if(cb.checked)S.clsSel[key(x)]=1;else delete S.clsSel[key(x)];renderCls();});
+    c.appendChild(cb);
+    c.appendChild(el("div","","<div class='hd'><b>"+esc(p.name)+"</b> <span class='d'>· "+DJ[wdOf(dParse(x.ds))]+" "+dFr(x.ds)+"</span> · "+(a?(d===0?"horaires déplacés":"<b class='"+(d>0?"pos":"neg")+"'>"+sg(d)+"</b>"):"<b>absent(e)</b>")+"</div>"+
+      "<div class='meta'>Prévu : "+blTxt(x.exp)+" ("+hm(e)+") → "+(a?"fait : "+blTxt(x.act)+" ("+hm(a)+")":"rien au planning")+"</div>"+
+      (x.c?"<div class='meta'>« "+esc(x.c)+" »</div>":"")+(x.src==="histo"?"<div class='meta'>Repris de MonPlanningPharma</div>":"")));
+    var ch=el("div",{class:"chips"});
+    (a?MOTIFS_H:MOTIFS_ABS).forEach(function(k){var b=el("button",{class:"chip"},esc(TYPES[k].l));b.addEventListener("click",function(){c.classList.add("done");[].forEach.call(c.querySelectorAll("button,input"),function(z){z.disabled=true;});classer([x],k);});ch.appendChild(b);});
+    c.appendChild(ch);list.appendChild(c);});
+  document.getElementById("clsNote").textContent="Changements du planning marqués « Non catégorisé » (ou sans motif), depuis le 01/01/2026. Un clic sur un motif le classe tout de suite ; pour en classer plusieurs d'un coup, cochez-les puis choisissez le motif en haut. Seul le motif change : les horaires restent les mêmes et la personne n'est pas prévenue. Le motif compte pour les soldes : congés payés, maladie, formation… sont des absences payées ; heures sup, récup et échanges jouent sur le solde d'heures.";
+}
 function renderHrs(){
-  monthChips("months");renderBilan();
+  renderCls();monthChips("months");renderBilan();
   var box=document.getElementById("pcards");box.innerHTML="";
   var order=["salarie","facture","extra","titulaire"];
   order.forEach(function(st){S.people.forEach(function(p){if(p.status!==st)return;if(p.hors&&!monthDaysWorked(p.id,S.month).t)return;box.appendChild(cardFor(p,false));});});
