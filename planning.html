@@ -601,6 +601,7 @@ table.bil{min-width:980px}
     <div id="titBox" hidden>
       <div class="h2row" style="margin-top:0"><h2>Titulaires : heures, congés et gardes</h2></div>
       <div class="months" id="titYears"></div>
+      <div class="gnext" id="titEq" hidden></div>
       <div class="tcmp" id="titCmp"></div>
       <div class="pcards" id="titCards"></div>
       <div class="card gridbox" style="margin-top:10px"><table class="hrs" id="titTable"></table></div>
@@ -1381,12 +1382,22 @@ function equilibre(pid,from,to){
   var after=ts.map(function(t){return titStats(t,a,b);});S.changes=keep;
   return {Y:Y,ts:ts,before:before,after:after};
 }
+/* Règle d'équité retenue par les titulaires le 13/11/2026 (option 2) : mêmes heures à l'officine sur l'année civile,
+   congés posés compris ; les gardes sont suivies à part et n'entrent pas dans l'équilibre. */
+function hParJour(p){var t=0,n=0;W.forEach(function(w){((S.trame[w]||{})[p.id]||[]).forEach(function(bl){var d=dur(bl);if(d){t+=d;n++;}});});return n?t/n:480;}
+function deNom(n){return (/^[AEIOUYÉÈÊÀÂÎÔ]/i.test(n)?"d'":"de ")+esc(n);}
+function eqPhrase(ts,an,Y,passe){
+  if(ts.length!==2)return null;var d=an[0].w-an[1].w,i=d>=0?0:1,p=ts[i],o=ts[1-i],v=Math.abs(d);
+  if(v<60)return {t:"À égalité",s:"Moins d'une heure d'écart à l'officine sur "+Y+"."};
+  if(passe)return {t:esc(p.name)+" a travaillé "+hm(v)+" de plus",s:"à l'officine en "+Y+" (congés compris)."};
+  var j=Math.round(v/hParJour(p)*2)/2;
+  return {t:esc(p.name)+" peut encore poser "+hm(v)+" de congé",s:"≈ "+String(j).replace(".",",")+" jour"+(j>1?"s":"")+" de travail "+deNom(p.name)+", pour être à égalité avec "+esc(o.name)+" sur "+Y+" (heures à l'officine prévues sur l'année, congés déjà posés compris)."};
+}
 function equilibreHtml(q){
-  var it=function(arr){return q.ts.map(function(t,i){return {p:t,v:arr[i].cpH,s:arr[i]};});};
-  var av0=it(q.before),ap=it(q.after);
-  return "<div class='eq'><div class='k'>Équilibre des congés "+q.Y+" après ce congé</div>"+
-    bars(ap,function(x){return hm(x.v)+" <span class='sm' style='font-weight:400'>("+nJ(x.s.cp)+")</span>";})+
-    "<div class='v'>"+ecartTxt(ap,"de congé")+(q.ts.length===2?" <span class='sm'>Aujourd'hui : "+ecartTxt(av0,"de congé").replace(/<\/?b>/g,"")+"</span>":"")+"</div></div>";
+  var ap=q.ts.map(function(t,i){return {p:t,v:q.after[i].w};}),e1=eqPhrase(q.ts,q.after,q.Y,false),e0=eqPhrase(q.ts,q.before,q.Y,false);
+  return "<div class='eq'><div class='k'>Équilibre "+q.Y+" après ce congé · heures à l'officine sur l'année</div>"+
+    bars(ap,function(x){return hm(x.v);})+
+    (e1?"<div class='v'><b>"+e1.t+"</b> pour être à égalité.<br><span class='sm'>Avant ce congé : "+e0.t.replace(/<\/?b>/g,"")+".</span></div>":"")+"</div>";
 }
 function renderTit(){
   var box=document.getElementById("titBox"),ts=titulaires();
@@ -1400,6 +1411,9 @@ function renderTit(){
   var cut=tIso<b?tIso:b,passe=b<tIso,avenir=a>tIso,quand=passe?"en "+Y:(avenir?"prévues en "+Y:"au "+dFr(tIso));
   var data=ts.map(function(p){return {p:p,re:avenir?titStats(p,a,b):titStats(p,a,cut),an:titStats(p,a,b)};});
   /* comparaison : officine, congés, gardes, chacun à part */
+  var eqb=document.getElementById("titEq"),ep=eqPhrase(ts,data.map(function(x){return x.an;}),Y,passe);
+  if(ep){eqb.innerHTML="<div class='k'>Équilibre "+Y+" · heures à l'officine sur l'année</div><div class='t'>"+ep.t+"</div><div class='s'>"+ep.s+"</div>"+
+    "<div class='srv'>"+data.map(function(x){return "<div><b>"+esc(x.p.name)+"</b> · "+hm(x.an.w)+(passe?"":" prévues sur l'année")+(passe||avenir?"":" (dont "+hm(x.re.w)+" faites au "+dFr(tIso)+")")+"</div>";}).join("")+"</div>";eqb.hidden=false;}else eqb.hidden=true;
   var cmp=document.getElementById("titCmp");cmp.innerHTML="";
   function carte(titre,items,quoi,fmt){var c=el("div",{class:"tc"},"<div class='k'>"+titre+"</div><div class='v'>"+ecartTxt(items,quoi)+"</div>");c.insertAdjacentHTML("beforeend",bars(items,fmt));cmp.appendChild(c);}
   carte("Heures à l'officine "+quand,data.map(function(x){return {p:x.p,v:x.re.w};}),"à l'officine",function(x){return hm(x.v);});
@@ -1430,7 +1444,7 @@ function renderTit(){
     h+="</tr>";}
   h+="<tr class='tot'><td>Total "+Y+"</td>";T.forEach(function(t){h+="<td class='sep avg'>"+hm(t.w)+"</td><td>"+hm(t.cpH)+" <span class='sm'>("+nJ(t.cp)+")</span></td><td>"+hm(t.g)+"</td>";});if(data.length===2)h+="<td class='sep'></td><td></td>";
   document.getElementById("titTable").innerHTML=h+"</tr></tbody>";
-  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du 01/01/2026 ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé. Entre parenthèses, les jours ouvrables : du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris (une semaine de congé = 6 jours pour chacun, comme pour les salariés). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre des congés de l'année après ce congé.";
+  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du 01/01/2026 ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé. Entre parenthèses, les jours ouvrables : du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris (une semaine de congé = 6 jours pour chacun, comme pour les salariés). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Équilibre (règle choisie par les titulaires le 13/11/2026) : mêmes heures à l'officine sur l'année civile, congés déjà posés compris ; les gardes sont suivies à part et n'entrent pas dans l'équilibre. L'équivalent en jours utilise la durée moyenne d'une journée dans la trame de la personne. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre après ce congé.";
 }
 function renderHrs(){
   monthChips("months");renderBilan();
