@@ -1800,7 +1800,7 @@ var PFMT=new Intl.DateTimeFormat("fr-FR",{timeZone:"Europe/Paris",year:"numeric"
 function pLoc(d){var o={};PFMT.formatToParts(d).forEach(function(x){o[x.type]=x.value;});return {ds:o.year+"-"+o.month+"-"+o.day,m:(+o.hour)*60+(+o.minute)};}
 function gDur(g){return Math.round((g.fin-g.debut)/60000);}
 function gParts(g){var d=gDur(g);if(g.type==="NUIT")return {nuit:d,dim:0};if(g.type==="DIMANCHE"||g.type==="FÉRIÉ")return {nuit:0,dim:d};
-  var n=0,s=0;for(var t=g.debut.getTime();t<g.fin.getTime();t+=15*60000){var l=pLoc(new Date(t));if(l.m>=1140||l.m<540)n+=15;else if(wdOf(dParse(l.ds))===6||FERIES[l.ds])s+=15;}return {nuit:n,dim:s};}
+  var n=0,s=0;for(var t=g.debut.getTime();t<g.fin.getTime();t+=15*60000){var l=pLoc(new Date(t));if(l.m>=1170||l.m<510)n+=15;else if(wdOf(dParse(l.ds))===6||FERIES[l.ds])s+=15;}return {nuit:n,dim:s};}
 var GTYPE={"NUIT":"nuit","DIMANCHE":"dimanche","FÉRIÉ":"férié"};
 function jLong(ds){return DJ[wdOf(dParse(ds))]+" "+dFr(ds);}
 function gTxt(g){var a=pLoc(g.debut),b=pLoc(g.fin);return DJ[wdOf(dParse(a.ds))]+" "+dFr(a.ds).slice(0,5)+" "+hm(a.m)+" → "+(b.ds!==a.ds?DJ[wdOf(dParse(b.ds))]+" ":"")+hm(b.m);}
@@ -1893,6 +1893,11 @@ function servicesRetenus(){
 }
 function gNom(s){var p=P(s.p);return p?p.name:("Non attribué"+(s.tel?" (tél. "+s.tel+")":""));}
 /* Les créneaux sont rattachés à la semaine de garde qui les contient ; ceux qui n'en ont pas sont regroupés par proximité */
+/* Règle de la pharmacie (13/11/2026) : une nuit de garde va de 19h30 à 8h30 ; la même règle est appliquée par la base */
+function harmoNuit(d1,t1,d2,t2){function m(t){var p=String(t||"0:0").split(":");return +p[0]*60+(+p[1]);}function f(x){return ("0"+Math.floor(x/60)).slice(-2)+":"+("0"+x%60).slice(-2);}
+  var a=m(t1),b=m(t2);if(d2>d1&&b>=300&&b<=600)b=510;
+  if(a>=1080&&a<1290){if(d2>d1||b>1170)a=1170;}else if(d2===d1&&b>=1080&&b<=1290)b=1170;
+  return {h1:f(a),h2:f(b)};}
 function gardeSemaines(){
   var sem=S.gardes.filter(function(g){return g.kind==="semaine";}).map(function(w){return {w:w,a:w.debut,b:w.fin,serv:[]};}),orph=[];
   servicesRetenus().forEach(function(s){var hit=null;
@@ -1958,7 +1963,7 @@ function renderGardes(){
   if(past.length){box.appendChild(el("div",{class:"lbl grp"},"Passées ("+past.length+")"));past.forEach(function(x){box.appendChild(gardeCard(x));});}
   if(!inY.length)box.innerHTML="<div class='empty'>Aucune garde en "+S.gYear+".</div>";
   if(!vg){document.getElementById("gNote").textContent="Semaines où la pharmacie de Veyrier-du-Lac est de garde (nuits, dimanche et jours fériés). La répartition entre pharmaciens est réservée aux titulaires.";return;}
-  document.getElementById("gNote").textContent="Créneaux : d'après Résogardes (registre officiel, reçu le 13/11/2026, de mai 2025 à octobre 2026) ; le téléphone de garde indique le pharmacien. Ailleurs, d'après l'agenda Google lu chaque soir : « GARDE PHARMACIE » = semaine de garde, « garde Alexandra », « garde Éloi »… = créneau (« alex » est lu comme Alexandra). Quand les deux existent, Résogardes fait foi. Nuit = 19h → 9h, dimanche et férié = 9h → 19h."+(ed?" Pour corriger un créneau venu de l'agenda, modifiez-le dans l'agenda Google. Qui peut voir cette répartition : onglet Équipe.":"");
+  document.getElementById("gNote").textContent="Créneaux : d'après Résogardes (registre officiel, reçu le 13/11/2026, de mai 2025 à octobre 2026) ; le téléphone de garde indique le pharmacien. Ailleurs, d'après l'agenda Google lu chaque soir : « GARDE PHARMACIE » = semaine de garde, « garde Alexandra », « garde Éloi »… = créneau (« alex » est lu comme Alexandra). Quand les deux existent, Résogardes fait foi. Toutes les nuits sont comptées de 19h30 à 8h30 (règle de la pharmacie depuis la reprise) ; dimanche et férié en journée = 8h30 → 19h30."+(ed?" Pour corriger un créneau venu de l'agenda, modifiez-le dans l'agenda Google. Qui peut voir cette répartition : onglet Équipe.":"");
 }
 function openGarde(){
   var phs=S.people.filter(function(p){return p.ph&&!isAncien(p);}),who=[phs[0]?phs[0].id:null],kind=["service"];
@@ -1966,20 +1971,20 @@ function openGarde(){
   var s0=el("div",{class:"sec"},"<div class='lbl'>Quoi ?</div>");s0.appendChild(radio(["service","semaine"],["Créneau assuré par un pharmacien","Semaine de garde de la pharmacie"],kind,upd));c.appendChild(s0);
   var s1=el("div",{class:"sec"},"<div class='lbl'>Qui ?</div>");s1.appendChild(radio(phs.map(function(p){return p.id;}),phs.map(function(p){return esc(p.name);}),who,upd));c.appendChild(s1);
   var d1=el("div",{class:"sec two"}),f1=el("div",{class:"field"},"<label class='lbl' for='g-d1'>Début</label>"),i1=el("input",{type:"date",id:"g-d1"}),h1=el("input",{type:"time",id:"g-h1",step:"900"});
-  i1.value=tIso;h1.value="20:00";f1.appendChild(i1);f1.appendChild(h1);
+  i1.value=tIso;h1.value="19:30";f1.appendChild(i1);f1.appendChild(h1);
   var f2=el("div",{class:"field"},"<label class='lbl' for='g-d2'>Fin</label>"),i2=el("input",{type:"date",id:"g-d2"}),h2=el("input",{type:"time",id:"g-h2",step:"900"});
-  i2.value=dIso(dAdd(dParse(tIso),1));h2.value="08:00";f2.appendChild(i2);f2.appendChild(h2);d1.appendChild(f1);d1.appendChild(f2);c.appendChild(d1);
+  i2.value=dIso(dAdd(dParse(tIso),1));h2.value="08:30";f2.appendChild(i2);f2.appendChild(h2);d1.appendChild(f1);d1.appendChild(f2);c.appendChild(d1);
   var quick=el("div",{class:"chips",style:"margin-top:8px"});
-  [["Nuit 20h → 8h","20:00","08:00",1],["Dimanche matin 8h → 13h","08:00","13:00",0],["Dimanche après-midi 13h → 20h","13:00","20:00",0],["Soirée 19h30 → 23h","19:30","23:00",0]].forEach(function(o){quick.appendChild(el("button",{class:"chip",type:"button",onclick:function(){h1.value=o[1];h2.value=o[2];i2.value=dIso(dAdd(dParse(i1.value||tIso),o[3]));upd();}},o[0]));});
+  [["Nuit 19h30 → 8h30","19:30","08:30",1],["Dimanche matin 9h → 13h","09:00","13:00",0],["Dimanche après-midi 13h → 19h30","13:00","19:30",0],["Dimanche après-midi et nuit 13h → 8h30","13:00","08:30",1]].forEach(function(o){quick.appendChild(el("button",{class:"chip",type:"button",onclick:function(){h1.value=o[1];h2.value=o[2];i2.value=dIso(dAdd(dParse(i1.value||tIso),o[3]));upd();}},o[0]));});
   c.appendChild(quick);
   var f3=el("div",{class:"sec field"},"<label class='lbl' for='g-n'>Note</label>"),ni=el("input",{type:"text",id:"g-n",placeholder:"Facultatif"});f3.appendChild(ni);c.appendChild(f3);
   var rec=el("div",{class:"recap"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
   var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Ajouter");row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row.appendChild(ok);c.appendChild(row);
   function iso(d,h){return new Date(d+"T"+(h||"00:00")+":00"+(pLoc(new Date(d+"T12:00:00Z")).m===13*60+0?"+01:00":"+02:00"));}
-  function vals(){return {a:iso(i1.value,h1.value),b:iso(i2.value,h2.value)};}
-  function upd(){s1.hidden=kind[0]!=="service";if(kind[0]==="semaine"&&h1.value==="20:00"){h1.value="00:00";h2.value="13:00";}
+  function vals(){var r=kind[0]==="service"?harmoNuit(i1.value,h1.value,i2.value,h2.value):{h1:h1.value,h2:h2.value};return {a:iso(i1.value,r.h1),b:iso(i2.value,r.h2),adj:r.h1!==h1.value||r.h2!==h2.value};}
+  function upd(){s1.hidden=kind[0]!=="service";if(kind[0]==="semaine"&&h1.value==="19:30"){h1.value="00:00";h2.value="13:00";}
     var v=vals();var bad=!i1.value||!i2.value||!(v.b>v.a);er.textContent=bad?"La fin doit être après le début.":"";ok.disabled=bad;
-    rec.textContent=bad?"":(kind[0]==="service"?(P(who[0])||{name:"?"}).name+" · ":"Semaine de garde · ")+gTxt({debut:v.a,fin:v.b})+" ("+hm(gDur({debut:v.a,fin:v.b}))+")";}
+    rec.textContent=bad?"":(kind[0]==="service"?(P(who[0])||{name:"?"}).name+" · ":"Semaine de garde · ")+gTxt({debut:v.a,fin:v.b})+" ("+hm(gDur({debut:v.a,fin:v.b}))+")"+(v.adj?" — aligné sur la règle : nuit de 19h30 à 8h30":"");}
   [i1,h1,i2,h2].forEach(function(x){x.addEventListener("input",upd);});
   ok.addEventListener("click",function(){if(ok.disabled)return;ok.disabled=true;var v=vals();
     sb.from("gardes").insert({kind:kind[0],staff_id:kind[0]==="service"?who[0]:null,debut:v.a.toISOString(),fin:v.b.toISOString(),titre:kind[0]==="service"?"garde "+((P(who[0])||{}).name||""):"GARDE PHARMACIE",note:ni.value.trim()||null,source:"appli"}).then(check)
@@ -2496,7 +2501,7 @@ document.addEventListener("visibilitychange",function(){
   if(Date.now()-lastLoad<60000||layer.innerHTML)return;
   saving.then(loadAll).then(function(ok){if(ok)renderAll();}).catch(function(){});
 });
-window.__app={loadGardes:loadGardes,gardeSemaines:gardeSemaines,monthGardes:monthGardes,vacances:vacances,S:S,monthBilan:monthBilan,hoursBalanceAt:hoursBalanceAt,absPeriods:absPeriods,bilanCsv:bilanCsv,openAbsence:openAbsence,swapPlan:swapPlan,openSwap:openSwap,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
+window.__app={harmoNuit:harmoNuit,loadGardes:loadGardes,gardeSemaines:gardeSemaines,monthGardes:monthGardes,vacances:vacances,S:S,monthBilan:monthBilan,hoursBalanceAt:hoursBalanceAt,absPeriods:absPeriods,bilanCsv:bilanCsv,openAbsence:openAbsence,swapPlan:swapPlan,openSwap:openSwap,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
 if(!sb){showScreen("login");document.getElementById("lgErr").textContent="Le service de connexion n'a pas pu se charger. Rechargez la page.";}
 else sb.auth.getSession().then(function(r){if(r.data&&r.data.session)startApp();else showScreen("login");}).catch(function(){showScreen("login");});
 })();
