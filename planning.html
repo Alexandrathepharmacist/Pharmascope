@@ -591,6 +591,8 @@ table.bil{min-width:980px}
     <div class="card" style="padding:12px 14px" id="cpModeBox"></div>
     <div class="h2row"><h2>Vacances scolaires</h2></div>
     <div class="card" style="padding:12px 14px" id="zoneBox"></div>
+    <div class="h2row"><h2>Répartition des gardes</h2></div>
+    <div class="card" style="padding:12px 14px" id="gardAccBox"></div>
     </div>
     <div class="h2row"><h2>Notifications envoyées</h2></div>
     <div class="alerts" id="notifSent"></div>
@@ -706,6 +708,8 @@ function undo(){if(!hist.length)return;var o=JSON.parse(hist.pop());S.trame=o.tr
 function P(id){for(var i=0;i<S.people.length;i++)if(S.people[i].id===id)return S.people[i];}
 function ME(){return P(S.me);}
 function isAdmin(){var m=ME();return !!m&&m.access==="admin";}
+/* Répartition des gardes (qui fait quel créneau) : titulaires + personnes autorisées ; l'équipe ne voit que les semaines de garde (blocage aussi dans la base) */
+function voitGardes(){var m=ME();return !!m&&(m.access==="admin"||!!(P(m.id)||{}).voitGardes);}
 function isEditor(){var m=ME();return !!m&&(m.access==="admin"||m.access==="manager");}
 function legal(p){return p.status==="salarie"||p.status==="extra";}
 
@@ -1365,6 +1369,17 @@ function renderTeam(){
   if(isAdmin()){var zc=[S.zone];zb.appendChild(el("p",{class:"sub",style:"margin:0 0 8px"},"Affichées sur le planning et la frise des congés. Veyrier-du-Lac (académie de Grenoble) est en zone A."));
     zb.appendChild(radio(["A","B","C","aucune"],["Zone A","Zone B","Zone C","Ne pas afficher"],zc,function(){if(zc[0]===S.zone)return;S.zone=zc[0];
       sb.from("planning_settings").update({vacances_zone:S.zone}).eq("id",1).then(check).then(function(){toast(S.zone==="aucune"?"Vacances scolaires masquées":"Vacances scolaires : zone "+S.zone);}).catch(function(e){toast("Enregistrement impossible : "+(e&&e.message||e));});}));}
+  var ga=document.getElementById("gardAccBox");ga.innerHTML="";
+  if(isAdmin()){ga.appendChild(el("p",{class:"sub",style:"margin:0 0 8px"},"Qui fait quelle garde, et combien d'heures : visible des titulaires et des personnes cochées ici. Le reste de l'équipe voit seulement les semaines où la pharmacie est de garde."));
+    var gc=el("div",{class:"chips"});
+    S.people.filter(function(p){return p.access!=="none"&&!isAncien(p);}).forEach(function(p){var adm=p.access==="admin",on=adm||p.voitGardes;
+      var b=el("button",{class:"chip","aria-pressed":String(on),title:adm?"Titulaire : accès permanent":(on?"Retirer l'accès":"Donner l'accès")},(on?"✓ ":"")+esc(p.name)+(adm?" (titulaire)":""));
+      b.disabled=adm;
+      if(!adm)b.addEventListener("click",function(){var v=!p.voitGardes;b.disabled=true;
+        sb.from("staff").update({voit_gardes:v}).eq("id",p.id).then(check).then(function(){p.voitGardes=v;renderAll();toast(v?p.name+" voit maintenant la répartition des gardes":p.name+" ne voit plus la répartition des gardes");})
+          .catch(function(e){b.disabled=false;toast("Enregistrement impossible : "+(e&&e.message||e));});});
+      gc.appendChild(b);});
+    ga.appendChild(gc);}
   if(isAdmin())S.people.forEach(function(p){
     var b=el("button",{class:"pp",style:"--pc:"+p.color,onclick:function(){openPerson(p.id);}},av(p)+"<div style='min-width:0'><div class='n' style='font-weight:600'>"+esc(p.name)+"</div><div class='meta'>"+esc(p.role)+" · "+(p.status==="salarie"?"contrat "+hm(p.contract):STATUS[p.status])+"</div><div class='meta'>Accès : "+ACCESS[p.access]+"</div><div class='meta'>"+(p.email?esc(p.email):"Pas d'adresse mail")+"</div>"+acctBadge(p)+"</div>");
     pb.appendChild(b);
@@ -1805,7 +1820,8 @@ function gardeCard(x){
   var c=el("div",{class:"gw"+(st==="cours"?" now":"")});
   var tot=0,per={};x.serv.forEach(function(s){tot+=gDur(s);var k=s.p||"?";per[k]=(per[k]||0)+gDur(s);});var srcs={};x.serv.forEach(function(s){srcs[s.source]=1;});
   c.innerHTML="<h3>🌙 "+(x.w?"Semaine de garde":"Gardes")+" "+gPeriode(x)+" "+(st==="cours"?"<span class='st st-pending'>En cours</span>":(st==="avenir"?"<span class='st st-ok'>Dans "+days+" jour"+(days>1?"s":"")+"</span>":""))+"</h3>"+
-    (x.w&&x.w.note?"<div class='meta'>"+esc(x.w.note)+"</div>":"")+(srcs.resogardes?"<div class='meta'>Créneaux d'après Résogardes</div>":(x.serv.length?"<div class='meta'>Créneaux d'après l'agenda Google</div>":""))+(!x.w?"<div class='meta'>Créneaux sans semaine de garde « GARDE PHARMACIE » dans l'agenda.</div>":"");
+    (x.w&&x.w.note?"<div class='meta'>"+esc(x.w.note)+"</div>":"")+(!voitGardes()?"":(srcs.resogardes?"<div class='meta'>Créneaux d'après Résogardes</div>":(x.serv.length?"<div class='meta'>Créneaux d'après l'agenda Google</div>":"")))+(!x.w&&voitGardes()?"<div class='meta'>Créneaux sans semaine de garde « GARDE PHARMACIE » dans l'agenda.</div>":"");
+  if(!voitGardes())return c;
   var list=el("div",{class:"glist"});
   if(!x.serv.length)list.innerHTML="<div class='meta'>"+(st==="passe"?"Répartition entre pharmaciens non indiquée dans l'agenda.":"Répartition entre pharmaciens pas encore saisie. Ajoutez les créneaux dans l'agenda Google (titre « garde Alexandra », « garde Éloi »…) ou ici.")+"</div>";
   x.serv.forEach(function(s){list.appendChild(servLine(s,true));});
@@ -1814,13 +1830,15 @@ function gardeCard(x){
   return c;
 }
 function renderGardes(){
-  var sem=gardeSemaines(),now=Date.now(),ed=isEditor();
+  var sem=gardeSemaines(),now=Date.now(),ed=isAdmin(),vg=voitGardes();
   document.getElementById("gAdd").hidden=!ed;
+  document.getElementById("gSumTitle").parentNode.hidden=!vg;document.getElementById("gSum").parentNode.hidden=!vg;
   var nx=sem.filter(function(x){return x.b.getTime()>now;})[0],hero=document.getElementById("gNext");
   if(nx){var cours=nx.a.getTime()<=now,days=Math.ceil((nx.a.getTime()-now)/864e5);
     hero.innerHTML="<div class='k'>"+(cours?"Garde en cours":"Prochaine garde")+"</div><div class='t'>"+gPeriode(nx)+"</div><div class='s'>"+(cours?"Jusqu'au "+jLong(pLoc(new Date(nx.b.getTime()-60000)).ds):(days<=1?"Demain":"Dans "+days+" jours"))+(nx.w&&nx.w.note?" · "+esc(nx.w.note):"")+"</div>";
     var srv=el("div",{class:"srv"});
-    if(nx.serv.length)nx.serv.forEach(function(s){srv.appendChild(el("div","","<b>"+esc(gNom(s))+"</b> · "+esc(gTxt(s))+" ("+hm(gDur(s))+")"));});
+    if(!vg)srv.appendChild(el("div",{style:"opacity:.85"},"La pharmacie est de garde : nuits, dimanche et jours fériés de cette semaine."));
+    else if(nx.serv.length)nx.serv.forEach(function(s){srv.appendChild(el("div","","<b>"+esc(gNom(s))+"</b> · "+esc(gTxt(s))+" ("+hm(gDur(s))+")"));});
     else srv.appendChild(el("div",{style:"opacity:.85"},"Répartition entre pharmaciens pas encore saisie."));
     hero.appendChild(srv);hero.hidden=false;}
   else hero.hidden=true;
@@ -1842,7 +1860,8 @@ function renderGardes(){
   if(up.length){box.appendChild(el("div",{class:"lbl grp"},"À venir ("+up.length+")"));up.forEach(function(x){box.appendChild(gardeCard(x));});}
   if(past.length){box.appendChild(el("div",{class:"lbl grp"},"Passées ("+past.length+")"));past.forEach(function(x){box.appendChild(gardeCard(x));});}
   if(!inY.length)box.innerHTML="<div class='empty'>Aucune garde en "+S.gYear+".</div>";
-  document.getElementById("gNote").textContent="Créneaux : d'après Résogardes (registre officiel, reçu le 13/11/2026, de mai 2025 à octobre 2026) ; le téléphone de garde indique le pharmacien. Ailleurs, d'après l'agenda Google lu chaque soir : « GARDE PHARMACIE » = semaine de garde, « garde Alexandra », « garde Éloi »… = créneau (« alex » est lu comme Alexandra). Quand les deux existent, Résogardes fait foi. Nuit = 19h → 9h, dimanche et férié = 9h → 19h."+(ed?" Pour corriger un créneau venu de l'agenda, modifiez-le dans l'agenda Google.":"");
+  if(!vg){document.getElementById("gNote").textContent="Semaines où la pharmacie de Veyrier-du-Lac est de garde (nuits, dimanche et jours fériés). La répartition entre pharmaciens est réservée aux titulaires.";return;}
+  document.getElementById("gNote").textContent="Créneaux : d'après Résogardes (registre officiel, reçu le 13/11/2026, de mai 2025 à octobre 2026) ; le téléphone de garde indique le pharmacien. Ailleurs, d'après l'agenda Google lu chaque soir : « GARDE PHARMACIE » = semaine de garde, « garde Alexandra », « garde Éloi »… = créneau (« alex » est lu comme Alexandra). Quand les deux existent, Résogardes fait foi. Nuit = 19h → 9h, dimanche et férié = 9h → 19h."+(ed?" Pour corriger un créneau venu de l'agenda, modifiez-le dans l'agenda Google. Qui peut voir cette répartition : onglet Équipe.":"");
 }
 function openGarde(){
   var phs=S.people.filter(function(p){return p.ph&&!isAncien(p);}),who=[phs[0]?phs[0].id:null],kind=["service"];
@@ -2297,7 +2316,7 @@ function loadAll(){
       res.forEach(check);
       var st=res[0].data||[],pv=res[1].data||[],tr=res[2].data||[],ch=res[3].data||[],rq=res[4].data||[],nt=res[5].data||[],set=res[6].data;
       var priv={};pv.forEach(function(x){priv[x.staff_id]=x;});
-      S.people=st.filter(function(x){return x.access!=="none"||true;}).map(function(x){var q=priv[x.id]||{};return {id:x.id,slug:x.slug,name:x.name,color:x.color,role:x.role_label,ph:x.is_pharmacist,hors:x.hors_trame,access:x.access,sort:x.sort_order,status:q.status,contract:q.contract_minutes||undefined,email:q.email||null};});
+      S.people=st.filter(function(x){return x.access!=="none"||true;}).map(function(x){var q=priv[x.id]||{};return {id:x.id,slug:x.slug,name:x.name,color:x.color,role:x.role_label,ph:x.is_pharmacist,hors:x.hors_trame,access:x.access,voitGardes:!!x.voit_gardes,sort:x.sort_order,status:q.status,contract:q.contract_minutes||undefined,email:q.email||null};});
       S.trame={};W.forEach(function(w){S.trame[w]={};S.people.forEach(function(p){S.trame[w][p.id]=[[],[],[],[],[],[]];});});
       tr.forEach(function(x){if(S.trame[x.week]&&S.trame[x.week][x.staff_id])S.trame[x.week][x.staff_id][x.weekday]=x.blocks||[];});
       S.changes={};ch.forEach(function(x){var ds=String(x.day).slice(0,10);if(!S.changes[ds])S.changes[ds]={};var o={b:x.blocks||[],t:x.kind};if(x.comment)o.c=x.comment;S.changes[ds][x.staff_id]=o;});
