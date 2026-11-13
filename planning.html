@@ -229,6 +229,14 @@ html,body{margin:0}
 .pcard .rows{display:grid;grid-template-columns:1fr auto;gap:3px 12px;font-size:.85rem}
 .pcard .rows span:nth-child(even){text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 .pos{color:var(--good)}.neg{color:var(--bad)}
+.ynav{display:inline-flex;align-items:center;gap:6px;margin-right:6px}
+.ynav .yl{font-family:var(--f-display);font-weight:700;font-size:1.05rem;min-width:56px;text-align:center;white-space:nowrap}
+.ynav .iconbtn:disabled{opacity:.35}
+.months{align-items:center}
+.mchips{display:flex;flex-wrap:wrap;gap:6px}
+.mchips .chip{padding:6px 11px}
+.affnav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.affnav .lab{font-weight:700}
 /* ---- Titulaires : heures et congés ---- */
 #titBox{margin-bottom:22px}
 #titYears{align-items:center}
@@ -531,7 +539,7 @@ table.bil{min-width:980px}
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <span class="viewas" id="whoami"></span>
-      <button class="btn" id="undoBtn" disabled>↶ Annuler</button>
+      <button class="btn" id="undoBtn" disabled hidden>↶ Annuler</button>
       <button class="btn ghost" id="logoutBtn">Se déconnecter</button>
     </div>
   </div>
@@ -600,7 +608,7 @@ table.bil{min-width:980px}
   <section id="p-aff" hidden>
     <div class="card" style="padding:14px 14px 12px">
       <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline">
-        <h2 id="affTitle">Affluence</h2>
+        <div><div class="affnav"><button class="iconbtn" id="affPrev" aria-label="Semaine précédente">‹</button><span class="lab" id="affWk"></span><button class="iconbtn" id="affNext" aria-label="Semaine suivante">›</button><button class="btn ghost" id="affToday">Cette semaine</button></div><h2 id="affTitle">Affluence</h2></div>
         <div class="chips" id="dayChips"></div>
       </div>
       <div class="chips" id="measChips" style="margin-top:10px"></div>
@@ -608,7 +616,7 @@ table.bil{min-width:980px}
       <div class="legend" id="legend"></div>
       <div class="kpis" id="kpis"></div>
     </div>
-    <p class="note">Affluence : nombre moyen de tickets de caisse par demi-heure, du 02/01 au 06/03/2026 (55 jours d'ouverture en continu), calculé sur votre export Winpharma. Personnes présentes : planning réel de la semaine choisie dans l'onglet Planning.</p>
+    <p class="note">Affluence : nombre moyen de tickets de caisse par demi-heure, du 02/01 au 06/03/2026 (55 jours d'ouverture en continu), calculé sur votre export Winpharma. Personnes présentes : planning réel de la semaine choisie en haut de cette page (la même que dans l'onglet Planning).</p>
   </section>
 
   <section id="p-tit" hidden>
@@ -1029,7 +1037,7 @@ function renderTabs(){
 }
 function renderViewAs(){
   var m=ME();document.getElementById("whoami").textContent=m?m.name+" · "+ACCESS[m.access]:"";
-  document.getElementById("undoBtn").hidden=!isEditor();
+  document.getElementById("undoBtn").hidden=true;
 }
 
 /* Planning daté */
@@ -1266,6 +1274,9 @@ function renderGrid(){
 function staffAt(ds,slot){var n=0;S.people.forEach(function(p){dayInfo(p.id,ds).act.forEach(function(b){if(b[0]<=slot&&b[1]>=slot+30)n++;});});return n;}
 function renderAff(){
   var mon=dParse(S.wk);
+  document.getElementById("affWk").textContent="Semaine du "+dShort(mon)+" au "+dShort(dAdd(mon,5));
+  document.getElementById("affPrev").disabled=dAdd(mon,-7)<monOf(HFIRST);document.getElementById("affNext").disabled=dAdd(mon,7)>LAST;
+  document.getElementById("affToday").hidden=S.wk===dIso(monOf(dParse(tIso)));
   var dc=document.getElementById("dayChips");dc.innerHTML="";
   D.forEach(function(d,i){dc.appendChild(el("button",{class:"chip sq","aria-pressed":String(S.day===i),onclick:function(){S.day=i;renderAff();}},d+" "+dAdd(mon,i).getUTCDate()));});
   var mc=document.getElementById("measChips");mc.innerHTML="";
@@ -1306,9 +1317,22 @@ function renderAff(){
 
 /* Heures */
 var MONTHS=(function(){var out=[],d=new Date(Date.UTC(2026,0,1)),end=dAdd(t0,95);while(d<=end){out.push(dIso(d).slice(0,7));d=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1));}return out;})();
+/* Sélecteur d'année compact : ‹ 2026 › (13/11/2026 : remplace les longues rangées de boutons) */
+function yearNav(years,cur,onPick,lab){
+  years=years.map(String);var i=years.indexOf(String(cur));if(i<0)i=years.length-1;
+  var w=el("div",{class:"ynav"}),pv=el("button",{class:"iconbtn","aria-label":"Année précédente"},"‹"),nx=el("button",{class:"iconbtn","aria-label":"Année suivante"},"›");
+  pv.disabled=i<=0;nx.disabled=i>=years.length-1;
+  pv.addEventListener("click",function(){if(i>0)onPick(years[i-1]);});nx.addEventListener("click",function(){if(i<years.length-1)onPick(years[i+1]);});
+  w.appendChild(pv);w.appendChild(el("span",{class:"yl"},lab?lab(years[i]):years[i]));w.appendChild(nx);return w;
+}
 function monthChips(id){
   var box=document.getElementById(id);box.innerHTML="";
-  MONTHS.forEach(function(ym){box.appendChild(el("button",{class:"chip","aria-pressed":String(S.month===ym),onclick:function(){S.month=ym;renderAll();}},MOISL[+ym.slice(5)-1]));});
+  var ys=[];MONTHS.forEach(function(ym){var y=ym.slice(0,4);if(ys.indexOf(y)<0)ys.push(y);});
+  var Y=S.month.slice(0,4);
+  box.appendChild(yearNav(ys,Y,function(y){var ms=MONTHS.filter(function(ym){return ym.slice(0,4)===y;});var same=y+S.month.slice(4);S.month=ms.indexOf(same)>=0?same:(y<Y?ms[ms.length-1]:ms[0]);renderAll();}));
+  var ch=el("div",{class:"chips mchips"});
+  MONTHS.filter(function(ym){return ym.slice(0,4)===Y;}).forEach(function(ym){ch.appendChild(el("button",{class:"chip","aria-pressed":String(S.month===ym),onclick:function(){S.month=ym;renderAll();}},MOIS[+ym.slice(5)-1]));});
+  box.appendChild(ch);
 }
 function cardFor(p,open){
   var r=personMonth(p,S.month),c=el("div",{class:"pcard",style:"--pc:"+p.color});
@@ -1428,7 +1452,7 @@ function renderTit(){
   if(!isTit()||!ts.length){box.hidden=true;return;}box.hidden=false;
   var y0=HFIRST.getUTCFullYear(),y1=LAST.getUTCFullYear();if(!S.titYear)S.titYear=tIso.slice(0,4);
   var yb=document.getElementById("titYears");yb.innerHTML="";
-  for(var y=y0;y<=y1;y++)(function(y){yb.appendChild(el("button",{class:"chip","aria-pressed":String(S.titYear===String(y)),onclick:function(){S.titYear=String(y);renderTit();}},"Année "+y));})(y);
+  var tys=[];for(var y=y0;y<=y1;y++)tys.push(y);yb.appendChild(yearNav(tys,S.titYear,function(v){S.titYear=String(v);renderTit();}));
   var me=ME(),pc=el("button",{class:"btn primary",style:"margin-left:auto"},"+ Poser un congé");
   pc.addEventListener("click",function(){openAbsence(me&&me.status==="titulaire"?me.id:ts[0].id,null,"cp");});yb.appendChild(pc);
   var Y=S.titYear,a=Y+"-01-01",b=Y+"-12-31";if(a<dIso(HFIRST))a=dIso(HFIRST);
@@ -1787,10 +1811,12 @@ function renderCong(){
   document.getElementById("newAbs").hidden=!ed;
   /* choix de la période */
   var yb=document.getElementById("congYears");yb.innerHTML="";
-  var opts=[],y0=HFIRST.getUTCFullYear()-(HFIRST.getUTCMonth()<5?1:0),y;
-  for(y=y0;y<=LAST.getUTCFullYear()-(LAST.getUTCMonth()<5?1:0);y++)opts.push(["cp"+y,"Congés "+(y===y0&&HFIRST>new Date(Date.UTC(y,5,1))?MOIS[HFIRST.getUTCMonth()]+" "+HFIRST.getUTCFullYear():"juin "+y)+" – mai "+(y+1)]);
-  for(y=HFIRST.getUTCFullYear();y<=LAST.getUTCFullYear();y++)opts.push([String(y),"Année "+y]);
-  opts.forEach(function(o){yb.appendChild(el("button",{class:"chip","aria-pressed":String(S.congRange===o[0]),onclick:function(){S.congRange=o[0];renderCong();}},o[1]));});
+  var isCp=S.congRange.indexOf("cp")===0,Yc=+S.congRange.replace("cp",""),y0=HFIRST.getUTCFullYear()-(HFIRST.getUTCMonth()<5?1:0),y,ys=[];
+  if(isCp){for(y=y0;y<=LAST.getUTCFullYear()-(LAST.getUTCMonth()<5?1:0);y++)ys.push(y);}else{for(y=HFIRST.getUTCFullYear();y<=LAST.getUTCFullYear();y++)ys.push(y);}
+  yb.appendChild(yearNav(ys,Yc,function(v){S.congRange=(isCp?"cp":"")+v;renderCong();},function(v){v=+v;return isCp?((v===y0&&HFIRST>new Date(Date.UTC(v,5,1))?MOIS[HFIRST.getUTCMonth()]:"juin")+" "+v+" – mai "+(v+1)):String(v);}));
+  var sg2=el("div",{class:"seg"});[["cp","Année de congés"],["civ","Année civile"]].forEach(function(o){var b=el("button",{"aria-pressed":String((o[0]==="cp")===isCp)},o[1]);
+    b.addEventListener("click",function(){if((o[0]==="cp")===isCp)return;var t=+tIso.slice(0,4),m=+tIso.slice(5,7);S.congRange=o[0]==="cp"?"cp"+Math.max(y0,Yc-(m>=6?0:1)):String(Math.max(HFIRST.getUTCFullYear(),Yc+(m>=6?0:1)));renderCong();});sg2.appendChild(b);});
+  yb.appendChild(sg2);
   /* frise */
   var all=[],byP={};
   S.people.forEach(function(p){byP[p.id]=absPeriods(p.id,rg[0],rg[1]);all=all.concat(byP[p.id]);});
@@ -2170,7 +2196,7 @@ function renderGardes(){
   var years={};sem.forEach(function(x){years[pLoc(x.a).ds.slice(0,4)]=1;});years[tIso.slice(0,4)]=1;
   if(!S.gYear)S.gYear=tIso.slice(0,4);
   var yb=document.getElementById("gYears");yb.innerHTML="";
-  Object.keys(years).sort().forEach(function(y){yb.appendChild(el("button",{class:"chip","aria-pressed":String(S.gYear===y),onclick:function(){S.gYear=y;renderGardes();}},"Année "+y));});
+  yb.appendChild(yearNav(Object.keys(years).sort(),S.gYear,function(y){S.gYear=y;renderGardes();}));
   var inY=sem.filter(function(x){return pLoc(x.a).ds.slice(0,4)===S.gYear;});
   /* totaux par pharmacien sur l'année */
   var tt={},nb=0;inY.forEach(function(x){if(x.w)nb++;x.serv.forEach(function(s){var k=s.p||("?"+(s.tel||""));if(!tt[k])tt[k]={n:0,h:0,nuit:0,dim:0};var q=gParts(s);tt[k].n++;tt[k].h+=gDur(s);tt[k].nuit+=q.nuit;tt[k].dim+=q.dim;});});
@@ -2515,6 +2541,9 @@ document.getElementById("undoBtn").addEventListener("click",undo);
 document.getElementById("copyBtn").addEventListener("click",openCopy);
 document.getElementById("rotBtn").addEventListener("click",openRot);
 document.getElementById("clearBtn").addEventListener("click",openClear);
+document.getElementById("affPrev").addEventListener("click",function(){S.wk=dIso(dAdd(dParse(S.wk),-7));renderAll();});
+document.getElementById("affNext").addEventListener("click",function(){S.wk=dIso(dAdd(dParse(S.wk),7));renderAll();});
+document.getElementById("affToday").addEventListener("click",function(){S.wk=dIso(monOf(dParse(tIso)));renderAll();});
 document.getElementById("prevWk").addEventListener("click",function(){S.wk=dIso(dAdd(dParse(S.wk),-7));renderAll();});
 document.getElementById("nextWk").addEventListener("click",function(){S.wk=dIso(dAdd(dParse(S.wk),7));renderAll();});
 document.getElementById("todayBtn").addEventListener("click",function(){S.wk=dIso(monOf(t0));S.pday=Math.min(5,wdOf(t0));renderAll();});
