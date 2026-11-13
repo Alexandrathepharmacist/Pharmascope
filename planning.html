@@ -1215,8 +1215,12 @@ function renderPlanDay(){
     onCommit:function(pid,nb){
       var inf=dayInfo(pid,ds),p=P(pid);snap();
       if(JSON.stringify(nb)===JSON.stringify(inf.exp))setChange(pid,ds,null);
-      else setChange(pid,ds,{b:nb,t:(inf.changed&&inf.act.length&&!TYPES[inf.t].paid&&inf.t!=="absent"&&inf.t!=="modif")?inf.t:(p.status==="extra"?"extra":"hs"),c:inf.c});
+      else{var garde=inf.changed&&inf.act.length&&!TYPES[inf.t].paid&&!SANS_MOTIF[inf.t];
+        setChange(pid,ds,{b:nb,t:garde?inf.t:(p.status==="extra"?"extra":"autre"),c:inf.c});
+        /* 13/11/2026 : le motif est demandé tout de suite (sauf extras : contrat ponctuel) ; sans réponse, le changement reste « Non catégorisé » et apparaît dans Heures → Changements à classer */
+        var ask=!garde&&p.status!=="extra";}
       save();renderAll();toast(p.name+" "+DL[d].toLowerCase()+" : "+(nb.length?nb.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(" · "):"repos"),true);
+      if(ask)askMotif(pid,ds);
     }
   });
   document.getElementById("planNote").textContent=admin?"Glissez un créneau pour le déplacer, tirez ses bords pour l'allonger ou le raccourcir (pas de 15 min). Touchez une ligne pour poser une absence ou saisir des horaires précis. À l'ordinateur, tracez un nouveau créneau en glissant sur une ligne vide.":"Touchez votre ligne pour demander un congé, une récupération ou un échange.";
@@ -1517,6 +1521,22 @@ function renderCls(){
     (a?MOTIFS_H:MOTIFS_ABS).forEach(function(k){var b=el("button",{class:"chip"},esc(TYPES[k].l));b.addEventListener("click",function(){c.classList.add("done");[].forEach.call(c.querySelectorAll("button,input"),function(z){z.disabled=true;});classer([x],k);});ch.appendChild(b);});
     c.appendChild(ch);list.appendChild(c);});
   document.getElementById("clsNote").textContent="Changements du planning marqués « Non catégorisé » (ou sans motif), depuis le 01/01/2026. Un clic sur un motif le classe tout de suite ; pour en classer plusieurs d'un coup, cochez-les puis choisissez le motif en haut. Seul le motif change : les horaires restent les mêmes et la personne n'est pas prévenue. Le motif compte pour les soldes : congés payés, maladie, formation… sont des absences payées ; heures sup, récup et échanges jouent sur le solde d'heures.";
+}
+/* Fenêtre « Motif du changement » après un glisser au planning : un clic enregistre le motif (sans nouvelle notification) */
+function askMotif(pid,ds){
+  var p=P(pid),inf=dayInfo(pid,ds),cur=S.changes[ds]&&S.changes[ds][pid];if(!p||!cur)return;
+  var a=dur(inf.act),e=dur(inf.exp),ks=inf.act.length?MOTIFS_H:MOTIFS_ABS;
+  var c=el("div","","<h2>Motif du changement</h2><div class='sub'><b>"+esc(p.name)+"</b> · "+DJ[wdOf(dParse(ds))]+" "+dFr(ds)+" : "+blTxt(inf.act)+" ("+hm(a)+", "+(a===e?"horaires déplacés":sg(a-e)+" par rapport à la trame")+")</div>");
+  var f=el("div",{class:"sec field"},"<label class='lbl' for='mo-c'>Commentaire (facultatif)</label>"),ci=el("input",{type:"text",id:"mo-c",placeholder:"Ex. échange avec Camille, réunion labo…"});ci.value=cur.c||"";f.appendChild(ci);
+  var s1=el("div",{class:"sec"},"<div class='lbl'>Pourquoi ?</div>"),ch=el("div",{class:"chips"});
+  ks.forEach(function(k){var b=el("button",{class:"chip"},esc(TYPES[k].l));b.addEventListener("click",function(){
+    var x=S.changes[ds]&&S.changes[ds][pid];if(x){x.t=k;x.c=ci.value.trim()||undefined;}closeSheet();persist();renderAll();toast("Motif enregistré : "+TYPES[k].l.toLowerCase());});ch.appendChild(b);});
+  s1.appendChild(ch);c.appendChild(s1);c.appendChild(f);
+  var row=el("div",{class:"row"}),later=el("button",{class:"btn"},"Plus tard");
+  later.addEventListener("click",function(){closeSheet();toast("À classer plus tard : onglet Heures");});
+  row.appendChild(later);c.appendChild(row);
+  c.appendChild(el("p",{class:"note",style:"margin:10px 0 0"},"Sans motif, le changement reste « Non catégorisé » et apparaît dans l'onglet Heures, rubrique « Changements à classer »."));
+  sheet(c);
 }
 function renderHrs(){
   renderCls();monthChips("months");renderBilan();
@@ -1870,9 +1890,9 @@ function openPeriod(q){
 /* Absence prolongée posée directement par un responsable du planning (sans passer par une demande) */
 var condense=null;
 function openAbsence(pid,from,motif){
-  var ABSK=["cp","recup","rc","maladie","at","mat","parental","formation","ss","autre","other"];
+  var ABSK=["cp","recup","rc","maladie","at","mat","parental","formation","ss","other"];
   var people=S.people.filter(function(p){return !p.hors;});
-  var who=[pid||people[0].id],at=[motif||"maladie"];
+  var who=[pid||people[0].id],at=[motif||null];
   var c=el("div","","<h2>"+(motif==="cp"?"Poser un congé":"Absence prolongée")+"</h2><div class='sub'>Posée directement au planning, sans demande de congé. La personne est prévenue.</div>");
   var s1=el("div",{class:"sec"},"<div class='lbl'>Qui ?</div>");s1.appendChild(radio(people.map(function(p){return p.id;}),people.map(function(p){return esc(p.name);}),who,upd));c.appendChild(s1);
   var s2=el("div",{class:"sec"},"<div class='lbl'>Motif</div>");s2.appendChild(radio(ABSK,ABSK.map(function(k){return TYPES[k].l;}),at,upd));c.appendChild(s2);
@@ -1897,6 +1917,7 @@ function openAbsence(pid,from,motif){
   }
   function upd(){
     if(!fi.value||!ti.value||ti.value<fi.value){er.textContent="Choisissez une date de fin après la date de début.";ok.disabled=true;rec.textContent="";return;}
+    if(!at[0]){er.textContent="Choisissez le motif de l'absence.";ok.disabled=true;rec.textContent="";eqb.innerHTML="";return;}
     var r=scan(),T=TYPES[at[0]];er.textContent="";ok.disabled=!r.n;
     eqb.innerHTML=(r.n&&at[0]==="cp"&&isAdmin()&&r.p.status==="titulaire"&&titulaires().length>1)?equilibreHtml(equilibre(r.p.id,fi.value,ti.value)):"";
     if(!r.n){rec.textContent=r.p.name+" n'est pas prévu(e) au planning sur ces dates : rien à poser.";return;}
@@ -2269,9 +2290,10 @@ function blocksToVals(bl){var v=["","","",""];if(bl[0]){v[0]=hhmm(bl[0][0]);v[1]
 function openDay(pid,ds){
   var p=P(pid),inf=dayInfo(pid,ds),d=dParse(ds);
   var mode=[(!inf.act.length&&inf.exp.length&&!inf.ferie)?"abs":"work"];
-  var WORKK=["hs","extra","formation","autre","other"],ABSK=["cp","recup","rc","maladie","at","mat","parental","formation","ss","autre","other"];
-  var wt=[inf.changed&&inf.act.length&&WORKK.indexOf(inf.t)>=0?inf.t:(p.status==="extra"?"extra":"hs")];
-  var at=[inf.changed&&!inf.act.length&&ABSK.indexOf(inf.t)>=0?inf.t:"cp"];
+  /* 13/11/2026 : le motif doit être choisi (plus de motif présélectionné, plus de « Non catégorisé ») */
+  var WORKK=["hs","extra","formation","other"],ABSK=["cp","recup","rc","maladie","at","mat","parental","formation","ss","other"];
+  var wt=[inf.changed&&inf.act.length&&WORKK.indexOf(inf.t)>=0?inf.t:(p.status==="extra"?"extra":null)];
+  var at=[inf.changed&&!inf.act.length&&ABSK.indexOf(inf.t)>=0?inf.t:null];
   var vals=blocksToVals(inf.act.length?inf.act:inf.exp);
   var c=el("div");
   c.appendChild(el("div",{class:"who",style:"--pc:"+p.color},av(p)+"<div><h2>"+esc(p.name)+"</h2><div class='sub'>"+DL[wdOf(d)]+" "+dShort(d)+" · trame "+letterOf(d)+" : "+(inf.exp.length?inf.exp.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(", ")+" ("+hm(dur(inf.exp))+")":"repos")+"</div></div>"));
@@ -2284,9 +2306,9 @@ function openDay(pid,ds){
   PRESETS.forEach(function(pr){chips.appendChild(el("button",{class:"chip",onclick:function(){for(var i=0;i<4;i++)vals[i]=pr.b[i];te.refill();upd();}},pr.l));});
   pc.appendChild(chips);var tw=el("div",{style:"margin-top:10px"});tw.appendChild(te);pc.appendChild(tw);var er=el("div",{class:"err"});pc.appendChild(er);work.appendChild(pc);
   var wtSec=el("div",{class:"sec"},"<div class='lbl'>Motif</div>");
-  wtSec.appendChild(radio(WORKK,WORKK.map(function(k){return TYPES[k].l;}),wt,upd));work.appendChild(wtSec);
+  wtSec.appendChild(radio(WORKK,WORKK.map(function(k){return TYPES[k].l;}),wt,upd));var wtH=el("div",{class:"err"});wtSec.appendChild(wtH);work.appendChild(wtSec);
   var aSec=el("div",{class:"sec"},"<div class='lbl'>Motif de l'absence</div>");
-  aSec.appendChild(radio(ABSK,ABSK.map(function(k){return TYPES[k].l;}),at,upd));abs.appendChild(aSec);
+  aSec.appendChild(radio(ABSK,ABSK.map(function(k){return TYPES[k].l;}),at,upd));var atH=el("div",{class:"err"});aSec.appendChild(atH);abs.appendChild(aSec);
   var toSec=el("div",{class:"sec field"},"<label class='lbl' for='d-to'>Jusqu'au (inclus)</label>");
   var toInp=el("input",{type:"date",id:"d-to",min:ds});toInp.value=ds;toInp.addEventListener("input",upd);toSec.appendChild(toInp);abs.appendChild(toSec);
   c.appendChild(work);c.appendChild(abs);
@@ -2300,16 +2322,19 @@ function openDay(pid,ds){
   bA.addEventListener("click",function(){mode[0]="abs";bA.setAttribute("aria-pressed","true");bW.setAttribute("aria-pressed","false");upd();});
   function upd(){
     work.hidden=mode[0]!=="work";abs.hidden=mode[0]!=="abs";
+    wtH.textContent="";atH.textContent="";
     if(mode[0]==="work"){var res=readBlocks(vals);er.textContent=res.err||"";ok.disabled=!!res.err;if(res.err){rec.textContent="";return;}
+      if(!wt[0]&&JSON.stringify(res.bl)!==JSON.stringify(inf.exp)){ok.disabled=true;wtH.textContent="Choisissez le motif du changement pour pouvoir enregistrer.";}
       var diff=dur(res.bl)-dur(inf.exp),iss=dayIssues(p,res.bl);
       rec.innerHTML="<b>"+hm(dur(res.bl))+"</b> travaillées · écart avec la trame <b class='"+(diff>=0?"pos":"neg")+"'>"+sg(diff)+"</b>"+(iss.length?"<div style='color:var(--warn);margin-top:4px'>⚠ "+iss.join(" ; ")+"</div>":"");}
-    else{var to=toInp.value||ds;ok.disabled=to<ds;var n=0,h=0;rangeDays(ds,to<ds?ds:to).forEach(function(x){var i2=dayInfo(pid,x);if(i2.exp.length&&!FERIES[x]){n++;h+=dur(i2.exp);}});
+    else{var to=toInp.value||ds;ok.disabled=to<ds||!at[0];if(!at[0])atH.textContent="Choisissez le motif de l'absence pour pouvoir enregistrer.";
+      if(!at[0]){rec.textContent="";return;}var n=0,h=0;rangeDays(ds,to<ds?ds:to).forEach(function(x){var i2=dayInfo(pid,x);if(i2.exp.length&&!FERIES[x]){n++;h+=dur(i2.exp);}});
       rec.innerHTML="<b>"+n+" jour"+(n>1?"s":"")+"</b> de travail prévu"+(n>1?"s":"")+" concerné"+(n>1?"s":"")+" ("+hm(h)+") · "+(TYPES[at[0]].paid?"compte comme des heures dues, sans effet sur le solde":(TYPES[at[0]].neutral?"heures retirées du contrat, sans effet sur le solde":"solde heures sup / récup "+sg(-h)));}
   }
   ok.addEventListener("click",function(){
     snap();
     if(mode[0]==="work"){var res=readBlocks(vals);if(res.err)return;
-      if(JSON.stringify(res.bl)===JSON.stringify(inf.exp)&&!ci.value)setChange(pid,ds,null);else setChange(pid,ds,{b:res.bl,t:wt[0],c:ci.value||undefined});
+      if(JSON.stringify(res.bl)===JSON.stringify(inf.exp)&&!ci.value)setChange(pid,ds,null);else setChange(pid,ds,{b:res.bl,t:wt[0]||"other",c:ci.value||undefined});
       toast("Journée de "+p.name+" enregistrée",true);}
     else{var to=toInp.value&&toInp.value>=ds?toInp.value:ds;var n=applyAbsence(pid,ds,to,at[0],ci.value);toast("Absence enregistrée ("+TYPES[at[0]].l.toLowerCase()+") : "+n+" jour"+(n>1?"s":""),true);}
     save();closeSheet();renderAll();
@@ -2704,7 +2729,7 @@ document.addEventListener("visibilitychange",function(){
   if(Date.now()-lastLoad<60000||layer.innerHTML)return;
   saving.then(loadAll).then(function(ok){if(ok)renderAll();}).catch(function(){});
 });
-window.__app={harmoNuit:harmoNuit,loadGardes:loadGardes,gardeSemaines:gardeSemaines,monthGardes:monthGardes,vacances:vacances,S:S,monthBilan:monthBilan,hoursBalanceAt:hoursBalanceAt,absPeriods:absPeriods,bilanCsv:bilanCsv,openAbsence:openAbsence,swapPlan:swapPlan,openSwap:openSwap,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
+window.__app={openDay:openDay,askMotif:askMotif,harmoNuit:harmoNuit,loadGardes:loadGardes,gardeSemaines:gardeSemaines,monthGardes:monthGardes,vacances:vacances,S:S,monthBilan:monthBilan,hoursBalanceAt:hoursBalanceAt,absPeriods:absPeriods,bilanCsv:bilanCsv,openAbsence:openAbsence,swapPlan:swapPlan,openSwap:openSwap,hoursBalance:hoursBalance,cpBalance:cpBalance,invite:invite,persist:persist,loadAll:loadAll,dayInfo:dayInfo,personMonth:personMonth,hm:hm,P:P,saving:function(){return saving;}};
 if(!sb){showScreen("login");document.getElementById("lgErr").textContent="Le service de connexion n'a pas pu se charger. Rechargez la page.";}
 else sb.auth.getSession().then(function(r){if(r.data&&r.data.session)startApp();else showScreen("login");}).catch(function(){showScreen("login");});
 })();
