@@ -231,6 +231,10 @@ html,body{margin:0}
 .pos{color:var(--good)}.neg{color:var(--bad)}
 /* ---- Titulaires : heures et congés ---- */
 #titBox{margin-bottom:22px}
+#titYears{align-items:center}
+.eq{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin:10px 0 0;background:var(--surface)}
+.eq .k{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:6px}
+.eq .v{font-size:.88rem;margin-top:8px;line-height:1.4}
 .tcmp{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin:0 0 10px}
 .tcmp .tc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;min-width:0}
 .tcmp .tc .k{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
@@ -1350,58 +1354,75 @@ function titStats(p,a,b){
   var r={w:0,d:0,cp:0,cpH:0,oth:0,othH:0,g:0};if(b<a)return r;
   rangeDays(a,b).forEach(function(ds){var d=dParse(ds);if(wdOf(d)>5||d<HFIRST)return;
     var inf=dayInfo(p.id,ds),w=dur(inf.act);if(w){r.w+=w;r.d++;}
-    if(isAbsDay(inf)){if(tGroup(inf.t)==="cp"){r.cp++;r.cpH+=dur(inf.exp);}else{r.oth++;r.othH+=dur(inf.exp);}}});
+    /* seuls les jours où du travail était prévu comptent (l'historique MonPlanningPharma marque aussi les jours de repos inclus dans un congé) */
+    if(isAbsDay(inf)&&dur(inf.exp)){if(tGroup(inf.t)==="cp"){r.cp++;r.cpH+=dur(inf.exp);}else{r.oth++;r.othH+=dur(inf.exp);}}});
   servicesRetenus().forEach(function(g){if(g.p!==p.id)return;var ds=pLoc(g.debut).ds;if(ds>=a&&ds<=b)r.g+=gDur(g);});
   return r;
 }
-function semFr(n,js){if(!js)return "–";var v=Math.round(n/js*10)/10;return String(v).replace(".",",")+" sem.";}
+function nJ(n){return n+" j";}
 function bars(items,fmt){var mx=Math.max.apply(null,items.map(function(x){return x.v;}).concat([1]));
   return "<div class='tbars'>"+items.map(function(x){return "<div class='tbar' style='--pc:"+x.p.color+"'><span>"+esc(x.p.name)+"</span><span class='tr'><i style='width:"+(x.v/mx*100).toFixed(1)+"%'></i></span><span class='tv'>"+fmt(x)+"</span></div>";}).join("")+"</div>";}
+function ecartTxt(items,quoi){if(items.length!==2)return "";var d=items[0].v-items[1].v,pl=d>=0?items[0]:items[1];
+  return Math.abs(d)<60?"Équilibré : moins d'une heure d'écart.":"<b>"+esc(pl.p.name)+"</b> a <b>"+hm(Math.abs(d))+"</b> "+quoi+" de plus.";}
+/* Équilibre des congés d'une année entre titulaires, avant et après un congé simulé (jours prévus à la trame passés en congé payé) */
+function equilibre(pid,from,to){
+  var Y=from.slice(0,4),a=Y+"-01-01",b=Y+"-12-31";if(a<dIso(HFIRST))a=dIso(HFIRST);
+  var ts=titulaires(),before=ts.map(function(t){return titStats(t,a,b);});
+  var keep=S.changes;S.changes=cp(S.changes);
+  rangeDays(from,to<b?to:b).forEach(function(ds){var inf=dayInfo(pid,ds);if(!inf.exp.length||FERIES[ds])return;setChange(pid,ds,{b:[],t:"cp"});});
+  var after=ts.map(function(t){return titStats(t,a,b);});S.changes=keep;
+  return {Y:Y,ts:ts,before:before,after:after};
+}
+function equilibreHtml(q){
+  var it=function(arr){return q.ts.map(function(t,i){return {p:t,v:arr[i].cpH,s:arr[i]};});};
+  var av0=it(q.before),ap=it(q.after);
+  return "<div class='eq'><div class='k'>Équilibre des congés "+q.Y+" après ce congé</div>"+
+    bars(ap,function(x){return hm(x.v)+" <span class='sm' style='font-weight:400'>("+nJ(x.s.cp)+")</span>";})+
+    "<div class='v'>"+ecartTxt(ap,"de congé")+(q.ts.length===2?" <span class='sm'>Aujourd'hui : "+ecartTxt(av0,"de congé").replace(/<\/?b>/g,"")+"</span>":"")+"</div></div>";
+}
 function renderTit(){
   var box=document.getElementById("titBox"),ts=titulaires();
   if(!isAdmin()||!ts.length){box.hidden=true;return;}box.hidden=false;
   var y0=HFIRST.getUTCFullYear(),y1=LAST.getUTCFullYear();if(!S.titYear)S.titYear=tIso.slice(0,4);
   var yb=document.getElementById("titYears");yb.innerHTML="";
   for(var y=y0;y<=y1;y++)(function(y){yb.appendChild(el("button",{class:"chip","aria-pressed":String(S.titYear===String(y)),onclick:function(){S.titYear=String(y);renderTit();}},"Année "+y));})(y);
+  var me=ME(),pc=el("button",{class:"btn primary",style:"margin-left:auto"},"+ Poser un congé");
+  pc.addEventListener("click",function(){openAbsence(me&&me.status==="titulaire"?me.id:ts[0].id,null,"cp");});yb.appendChild(pc);
   var Y=S.titYear,a=Y+"-01-01",b=Y+"-12-31";if(a<dIso(HFIRST))a=dIso(HFIRST);
-  var cut=tIso<b?tIso:b,passe=b<tIso,avenir=a>tIso,quand=passe?"sur l'année "+Y:(avenir?"":"au "+dFr(tIso));
-  var data=ts.map(function(p){return {p:p,js:joursSem(p),re:titStats(p,a,cut),an:titStats(p,a,b)};});
-  /* comparaison */
+  var cut=tIso<b?tIso:b,passe=b<tIso,avenir=a>tIso,quand=passe?"en "+Y:(avenir?"prévues en "+Y:"au "+dFr(tIso));
+  var data=ts.map(function(p){return {p:p,re:avenir?titStats(p,a,b):titStats(p,a,cut),an:titStats(p,a,b)};});
+  /* comparaison : officine, congés, gardes, chacun à part */
   var cmp=document.getElementById("titCmp");cmp.innerHTML="";
-  var hItems=data.map(function(x){var s=avenir?x.an:x.re;return {p:x.p,v:s.w+s.g,s:s};});
-  var c1=el("div",{class:"tc"},"<div class='k'>Heures travaillées "+(avenir?"prévues en "+Y:quand)+"</div>");
-  if(data.length===2){var d=hItems[0].v-hItems[1].v,plus=d>=0?hItems[0]:hItems[1];
-    c1.appendChild(el("div",{class:"v"},Math.abs(d)<60?"Équilibré : moins d'une heure d'écart.":"<b>"+esc(plus.p.name)+"</b> a travaillé <b>"+hm(Math.abs(d))+"</b> de plus (planning + gardes)."));}
-  c1.insertAdjacentHTML("beforeend",bars(hItems,function(x){return hm(x.v);}));cmp.appendChild(c1);
-  var lItems=data.map(function(x){return {p:x.p,v:x.js?x.an.cp/x.js:0,x:x};});
-  var c2=el("div",{class:"tc"},"<div class='k'>Congés "+Y+" (posés à venir compris), en semaines</div>");
-  if(data.length===2){var e=lItems[0].v-lItems[1].v,pl=e>=0?lItems[0]:lItems[1];
-    c2.appendChild(el("div",{class:"v"},Math.abs(e)<0.1?"Équilibré : même nombre de semaines de congé.":"<b>"+esc(pl.p.name)+"</b> a "+String(Math.round(Math.abs(e)*10)/10).replace(".",",")+" semaine"+(Math.abs(e)>=1.95?"s":"")+" de congé de plus."));}
-  c2.insertAdjacentHTML("beforeend",bars(lItems,function(o){return semFr(o.x.an.cp,o.x.js)+" <span class='sm' style='font-weight:400'>("+o.x.an.cp+" j)</span>";}));cmp.appendChild(c2);
+  function carte(titre,items,quoi,fmt){var c=el("div",{class:"tc"},"<div class='k'>"+titre+"</div><div class='v'>"+ecartTxt(items,quoi)+"</div>");c.insertAdjacentHTML("beforeend",bars(items,fmt));cmp.appendChild(c);}
+  carte("Heures à l'officine "+quand,data.map(function(x){return {p:x.p,v:x.re.w};}),"à l'officine",function(x){return hm(x.v);});
+  carte("Congés "+Y+" en heures (posés à venir compris)",data.map(function(x){return {p:x.p,v:x.an.cpH,s:x.an};}),"de congé",function(x){return hm(x.v)+" <span class='sm' style='font-weight:400'>("+nJ(x.s.cp)+")</span>";});
+  carte("Gardes "+quand,data.map(function(x){return {p:x.p,v:x.re.g};}),"de garde",function(x){return hm(x.v);});
   /* fiches */
   var cards=document.getElementById("titCards");cards.innerHTML="";
   data.forEach(function(x){var re=x.re,an=x.an,c=el("div",{class:"pcard",style:"--pc:"+x.p.color});
-    c.innerHTML="<div class='top'><div class='who' style='--pc:"+x.p.color+"'>"+av(x.p)+"<div><div class='n' style='font-weight:700'>"+esc(x.p.name)+"</div><div class='lbl2'>travaille sur "+String(x.js).replace(".",",")+" j/sem. (trame)</div></div></div></div>"+
-      (avenir?"":"<div><div class='big num'>"+hm(re.w+re.g)+"</div><div class='lbl2'>heures travaillées "+quand+"</div></div>")+
-      "<div class='rows'>"+(avenir?"":"<span>Au planning (officine)</span><span>"+hm(re.w)+"</span><span>Gardes</span><span>"+hm(re.g)+"</span><span>Jours travaillés</span><span>"+re.d+"</span>")+
-      (passe?"":"<span>Prévu sur l'année "+Y+"</span><span>"+hm(an.w+an.g)+"</span>")+
-      "<span>Congés pris"+(passe?"":" (à ce jour)")+"</span><span>"+re.cp+" j · "+semFr(re.cp,x.js)+"</span>"+
-      (passe?"":"<span>Congés posés à venir</span><span>"+(an.cp-re.cp)+" j · "+semFr(an.cp-re.cp,x.js)+"</span>")+
-      "<span>Autres absences (récup, maladie…)</span><span>"+an.oth+" j</span></div>";
+    c.innerHTML="<div class='top'><div class='who' style='--pc:"+x.p.color+"'>"+av(x.p)+"<div><div class='n' style='font-weight:700'>"+esc(x.p.name)+"</div><div class='lbl2'>travaille sur "+joursSem(x.p)+" j/sem. (trame)</div></div></div></div>"+
+      "<div><div class='big num'>"+hm(re.w)+"</div><div class='lbl2'>heures à l'officine "+quand+"</div></div>"+
+      "<div class='rows'>"+(passe||avenir?"":"<span>Officine, prévu sur l'année</span><span>"+hm(an.w)+"</span>")+
+      "<span>Jours travaillés"+(passe||avenir?"":" à ce jour")+"</span><span>"+re.d+"</span>"+
+      "<span><b>Congés "+Y+"</b></span><span>"+hm(an.cpH)+" ("+nJ(an.cp)+")</span>"+
+      (passe||avenir?"":"<span>dont déjà pris</span><span>"+hm(re.cpH)+" ("+nJ(re.cp)+")</span><span>dont posés à venir</span><span>"+hm(an.cpH-re.cpH)+" ("+nJ(an.cp-re.cp)+")</span>")+
+      "<span>Autres absences (récup, maladie…)</span><span>"+hm(an.othH)+" ("+nJ(an.oth)+")</span>"+
+      "<span><b>Gardes</b> "+(passe?"en "+Y:(avenir?"prévues":"à ce jour"))+"</span><span>"+hm(re.g)+"</span>"+(passe||avenir||an.g===re.g?"":"<span>Gardes prévues sur l'année</span><span>"+hm(an.g)+"</span>")+"</div>";
     cards.appendChild(c);});
   /* tableau mois par mois */
-  var h="<thead><tr><th>Mois</th>";data.forEach(function(x){h+="<th class='sep'>"+esc(x.p.name)+" · heures</th><th>dont gardes</th><th>Congés</th>";});
-  if(data.length===2)h+="<th class='sep'>Écart d'heures cumulé</th>";h+="</tr></thead><tbody>";
-  var cum=0,T=data.map(function(){return {w:0,g:0,cp:0};});
+  var h="<thead><tr><th>Mois</th>";data.forEach(function(x){h+="<th class='sep'>"+esc(x.p.name)+" · officine</th><th>Congés</th><th>Gardes</th>";});
+  if(data.length===2)h+="<th class='sep'>Écart officine cumulé</th><th>Écart congés cumulé</th>";h+="</tr></thead><tbody>";
+  var cw=0,cc=0,T=data.map(function(){return {w:0,g:0,cp:0,cpH:0};});
+  var who=function(v){return Math.abs(v)<60?"=":esc((v>0?data[0]:data[1]).p.name)+" +"+hm(Math.abs(v));};
   for(var mo=1;mo<=12;mo++){var ym=Y+"-"+(mo<10?"0":"")+mo,ma=ym+"-01",mb=monthEnd(ym);if(mb<dIso(HFIRST))continue;if(ma<dIso(HFIRST))ma=dIso(HFIRST);
     var fut=ma>tIso,row=data.map(function(x){return titStats(x.p,ma,mb);});
     h+="<tr class='"+(fut?"fut":"")+"'><td>"+MOISL[mo-1]+(fut?" <span class='sm'>prévu</span>":(mb>=tIso?" <span class='sm'>en cours</span>":""))+"</td>";
-    row.forEach(function(r,i){T[i].w+=r.w;T[i].g+=r.g;T[i].cp+=r.cp;h+="<td class='sep avg'>"+hm(r.w+r.g)+"</td><td>"+(r.g?hm(r.g):"–")+"</td><td>"+(r.cp?r.cp+" j":"–")+"</td>";});
-    if(data.length===2){cum+=(row[0].w+row[0].g)-(row[1].w+row[1].g);h+="<td class='sep'>"+(Math.abs(cum)<60?"=":esc((cum>0?data[0]:data[1]).p.name)+" +"+hm(Math.abs(cum)))+"</td>";}
+    row.forEach(function(r,i){T[i].w+=r.w;T[i].g+=r.g;T[i].cp+=r.cp;T[i].cpH+=r.cpH;h+="<td class='sep avg'>"+hm(r.w)+"</td><td>"+(r.cp?hm(r.cpH)+" <span class='sm'>("+nJ(r.cp)+")</span>":"–")+"</td><td>"+(r.g?hm(r.g):"–")+"</td>";});
+    if(data.length===2){cw+=row[0].w-row[1].w;cc+=row[0].cpH-row[1].cpH;h+="<td class='sep'>"+who(cw)+"</td><td>"+who(cc)+"</td>";}
     h+="</tr>";}
-  h+="<tr class='tot'><td>Total "+Y+"</td>";T.forEach(function(t,i){h+="<td class='sep avg'>"+hm(t.w+t.g)+"</td><td>"+hm(t.g)+"</td><td>"+t.cp+" j · "+semFr(t.cp,data[i].js)+"</td>";});if(data.length===2)h+="<td class='sep'></td>";
+  h+="<tr class='tot'><td>Total "+Y+"</td>";T.forEach(function(t){h+="<td class='sep avg'>"+hm(t.w)+"</td><td>"+hm(t.cpH)+" <span class='sm'>("+nJ(t.cp)+")</span></td><td>"+hm(t.g)+"</td>";});if(data.length===2)h+="<td class='sep'></td><td></td>";
   document.getElementById("titTable").innerHTML=h+"</tr></tbody>";
-  document.getElementById("titNote").textContent="Visible seulement des titulaires. Heures travaillées : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), plus les heures de garde de l'onglet Gardes (nuits de 19h30 à 8h30). Le planning est connu à partir du 01/01/2026 ; les mois à venir sont prévisionnels (trame et congés déjà posés). Congés : jours de travail prévus à la trame et posés en congé payé. Pour comparer un temps de travail sur 4 jours et sur 3 jours, ils sont aussi exprimés en semaines : jours de congé ÷ jours travaillés par semaine dans la trame (le nombre de jours le plus courant ; les samedis en roulement ne sont pas comptés). Les autres absences (récupération, maladie…) sont comptées à part.";
+  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du 01/01/2026 ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé (le nombre de jours est indiqué entre parenthèses). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre des congés de l'année après ce congé.";
 }
 function renderHrs(){
   renderTit();monthChips("months");renderBilan();
@@ -1754,23 +1775,23 @@ function openPeriod(q){
 }
 /* Absence prolongée posée directement par un responsable du planning (sans passer par une demande) */
 var condense=null;
-function openAbsence(pid,from){
+function openAbsence(pid,from,motif){
   var ABSK=["cp","recup","rc","maladie","at","mat","parental","formation","ss","autre","other"];
   var people=S.people.filter(function(p){return !p.hors;});
-  var who=[pid||people[0].id],at=["maladie"];
-  var c=el("div","","<h2>Absence prolongée</h2><div class='sub'>Posée directement au planning, sans demande de congé. La personne est prévenue.</div>");
+  var who=[pid||people[0].id],at=[motif||"maladie"];
+  var c=el("div","","<h2>"+(motif==="cp"?"Poser un congé":"Absence prolongée")+"</h2><div class='sub'>Posée directement au planning, sans demande de congé. La personne est prévenue.</div>");
   var s1=el("div",{class:"sec"},"<div class='lbl'>Qui ?</div>");s1.appendChild(radio(people.map(function(p){return p.id;}),people.map(function(p){return esc(p.name);}),who,upd));c.appendChild(s1);
   var s2=el("div",{class:"sec"},"<div class='lbl'>Motif</div>");s2.appendChild(radio(ABSK,ABSK.map(function(k){return TYPES[k].l;}),at,upd));c.appendChild(s2);
   var dates=el("div",{class:"sec two"});
   var f1=el("div",{class:"field"},"<label class='lbl' for='ab-from'>Du</label>"),fi=el("input",{type:"date",id:"ab-from",min:dIso(FIRST)});fi.value=from||tIso;f1.appendChild(fi);dates.appendChild(f1);
-  var f2=el("div",{class:"field"},"<label class='lbl' for='ab-to'>Au (inclus)</label>"),ti=el("input",{type:"date",id:"ab-to",min:dIso(FIRST)});ti.value=dIso(dAdd(dParse(fi.value),13));f2.appendChild(ti);dates.appendChild(f2);
+  var f2=el("div",{class:"field"},"<label class='lbl' for='ab-to'>Au (inclus)</label>"),ti=el("input",{type:"date",id:"ab-to",min:dIso(FIRST)});ti.value=dIso(dAdd(dParse(fi.value),motif==="cp"?6:13));f2.appendChild(ti);dates.appendChild(f2);
   c.appendChild(dates);
   var quick=el("div",{class:"chips",style:"margin-top:8px"});
   [["1 semaine",6],["2 semaines",13],["1 mois",null,1],["3 mois",null,3],["6 mois",null,6]].forEach(function(o){quick.appendChild(el("button",{class:"chip",type:"button",onclick:function(){if(!fi.value)return;var d=dParse(fi.value);ti.value=dIso(o[2]?dAdd(new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+o[2],d.getUTCDate())),-1):dAdd(d,o[1]));upd();}},o[0]));});
   c.appendChild(quick);
   var f3=el("div",{class:"sec field"},"<label class='lbl' for='ab-c'>Commentaire (visible seulement des responsables et de la personne)</label>"),ci=el("input",{type:"text",id:"ab-c",placeholder:"Facultatif"});f3.appendChild(ci);c.appendChild(f3);
-  var rec=el("div",{class:"recap num"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
-  var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Poser l'absence");
+  var rec=el("div",{class:"recap num"});c.appendChild(rec);var eqb=el("div");c.appendChild(eqb);var er=el("div",{class:"err"});c.appendChild(er);
+  var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},motif==="cp"?"Poser le congé":"Poser l'absence");
   row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row.appendChild(ok);c.appendChild(row);
   fi.addEventListener("input",function(){if(fi.value&&(!ti.value||ti.value<fi.value))ti.value=fi.value;upd();});ti.addEventListener("input",upd);
   function scan(){
@@ -1783,6 +1804,7 @@ function openAbsence(pid,from){
   function upd(){
     if(!fi.value||!ti.value||ti.value<fi.value){er.textContent="Choisissez une date de fin après la date de début.";ok.disabled=true;rec.textContent="";return;}
     var r=scan(),T=TYPES[at[0]];er.textContent="";ok.disabled=!r.n;
+    eqb.innerHTML=(r.n&&at[0]==="cp"&&isAdmin()&&r.p.status==="titulaire"&&titulaires().length>1)?equilibreHtml(equilibre(r.p.id,fi.value,ti.value)):"";
     if(!r.n){rec.textContent=r.p.name+" n'est pas prévu(e) au planning sur ces dates : rien à poser.";return;}
     rec.innerHTML="<b>"+esc(r.p.name)+"</b> · "+esc(T.l.toLowerCase())+" "+(fi.value===ti.value?"le "+dFr(fi.value):"du "+dFr(fi.value)+" au "+dFr(ti.value))+"<br><b>"+r.n+" jour"+(r.n>1?"s":"")+"</b> de travail prévu"+(r.n>1?"s":"")+" ("+hm(r.h)+") · "+(T.paid?"heures comptées comme dues, sans effet sur le solde d'heures":(T.neutral?"heures retirées du contrat, sans effet sur le solde d'heures":"solde d'heures "+sg(-r.h)))+
       (r.over?"<div style='color:var(--warn);margin-top:4px'>⚠ "+r.over+" journée"+(r.over>1?"s":"")+" déjà modifiée"+(r.over>1?"s":"")+" sur cette période (échange, horaires, autre absence) : "+(r.over>1?"elles seront remplacées":"elle sera remplacée")+" par cette absence.</div>":"")+
