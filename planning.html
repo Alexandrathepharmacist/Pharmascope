@@ -472,7 +472,7 @@ table.bil{min-width:980px}
 .gt-row.gt-info .gt-name{font-size:.78rem;color:var(--ink-2)}
 #gList{margin-top:10px}
 .wknav .tl{border:0;padding:0;background:none;border-radius:0}
-@media (max-width:640px){.tab{flex:1 1 0;min-width:0;padding:4px 1px;font-size:.62rem}.tab>span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tab .badge{position:absolute;top:2px;right:2px;margin:0}}
+@media (max-width:640px){.tab{flex:1 1 0;min-width:0;padding:4px 1px;font-size:.62rem}#tabs.t8 .tab{font-size:.56rem;letter-spacing:-.02em;padding:4px 0}.tab>span:last-child{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tab .badge{position:absolute;top:2px;right:2px;margin:0}}
 @media screen and (min-width:1100px){#gList{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:10px;align-items:start}#gList .lbl.grp,#gList .empty{grid-column:1/-1}.gnext{max-width:760px}}
 </style>
 </head>
@@ -597,16 +597,18 @@ table.bil{min-width:980px}
     <p class="note">Affluence : nombre moyen de tickets de caisse par demi-heure, du 02/01 au 06/03/2026 (55 jours d'ouverture en continu), calculé sur votre export Winpharma. Personnes présentes : planning réel de la semaine choisie dans l'onglet Planning.</p>
   </section>
 
-  <section id="p-hrs" hidden>
+  <section id="p-tit" hidden>
     <div id="titBox" hidden>
-      <div class="h2row" style="margin-top:0"><h2>Titulaires : heures et congés</h2></div>
+      <div class="h2row" style="margin-top:0"><h2>Titulaires : heures, congés et gardes</h2></div>
       <div class="months" id="titYears"></div>
       <div class="tcmp" id="titCmp"></div>
       <div class="pcards" id="titCards"></div>
       <div class="card gridbox" style="margin-top:10px"><table class="hrs" id="titTable"></table></div>
       <p class="note" id="titNote"></p>
     </div>
-    <div class="h2row" style="margin-top:0"><h2>Équipe</h2></div>
+  </section>
+
+  <section id="p-hrs" hidden>
     <div class="months" id="months"></div>
     <div id="bilanBox">
       <div class="h2row" style="margin-top:4px"><h2 id="bilanTitle">Bilan de fin de mois</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="bilanCsv">Exporter pour Excel</button><button class="btn" id="bilanPrint">Imprimer</button></div></div>
@@ -752,6 +754,8 @@ function undo(){if(!hist.length)return;var o=JSON.parse(hist.pop());S.trame=o.tr
 function P(id){for(var i=0;i<S.people.length;i++)if(S.people[i].id===id)return S.people[i];}
 function ME(){return P(S.me);}
 function isAdmin(){var m=ME();return !!m&&m.access==="admin";}
+/* Onglet Titulaires : réservé aux titulaires (accès administrateur + statut titulaire) */
+function isTit(){var m=ME();return !!m&&m.access==="admin"&&m.status==="titulaire";}
 /* Répartition des gardes (qui fait quel créneau) : titulaires + personnes autorisées ; l'équipe ne voit que les semaines de garde (blocage aussi dans la base) */
 function voitGardes(){var m=ME();return !!m&&(m.access==="admin"||!!(P(m.id)||{}).voitGardes);}
 function isEditor(){var m=ME();return !!m&&(m.access==="admin"||m.access==="manager");}
@@ -983,12 +987,12 @@ function whoCell(p,sub){return "<div class='who'>"+av(p)+"<div style='min-width:
 function sepRow(p,cols){var ix=S.people.indexOf(p);return (p.hors&&!S.people[ix-1].hors)?"<tr class='sep'><td colspan='"+cols+"'>Renforts hors trame</td></tr>":"";}
 
 /* Onglets */
-var TABICON={gard:"🌙",cong:"🌴",plan:"📅",trame:"🔁",aff:"📈",hrs:"⏱️",team:"👥",myh:"⏳",notif:"🔔",myr:"✋"};
+var TABICON={tit:"⚖️",gard:"🌙",cong:"🌴",plan:"📅",trame:"🔁",aff:"📈",hrs:"⏱️",team:"👥",myh:"⏳",notif:"🔔",myr:"✋"};
 function tabsFor(){
   var sw=S.swaps.filter(function(x){return x.status==="attente_titulaire"&&(isAdmin()||(x.a!==S.me&&x.b!==S.me));}).length;
   var swMe=S.swaps.filter(function(x){return x.b===S.me&&x.status==="attente_collegue";}).length;
   if(isAdmin()){var n=sw+S.requests.filter(function(r){return r.status==="pending";}).length;
-    return [["plan","Planning"],["cong","Congés"],["gard","Gardes"],["trame","Trame"],["aff","Affluence"],["hrs","Heures"],["team","Équipe"+(n?"<span class='badge'>"+n+"</span>":"")]];}
+    return [["plan","Planning"],["cong","Congés"],["gard","Gardes"],["trame","Trame"],["aff","Affluence"],["hrs","Heures"]].concat(isTit()?[["tit","Titulaires"]]:[]).concat([["team","Équipe"+(n?"<span class='badge'>"+n+"</span>":"")]]);}
   var mine=swMe+S.requests.filter(function(r){return r.p===S.me&&r.status==="pending";}).length;
   var unread=S.notifs.filter(function(n){return n.p===S.me&&!n.read;}).length;
   if(isEditor()){var n2=sw+S.requests.filter(function(r){return r.status==="pending"&&r.p!==S.me;}).length;
@@ -996,10 +1000,10 @@ function tabsFor(){
   return [["plan","Planning"],["cong","Congés"],["gard","Gardes"],["myh","Mes soldes"],["notif","Notifications"+(unread?"<span class='badge'>"+unread+"</span>":"")],["myr","Mes demandes"+(mine?"<span class='badge'>"+mine+"</span>":"")]];
 }
 function renderTabs(){
-  var t=tabsFor(),box=document.getElementById("tabs");box.innerHTML="";
+  var t=tabsFor(),box=document.getElementById("tabs");box.innerHTML="";box.classList.toggle("t8",t.length>=8);
   if(!t.some(function(x){return x[0]===S.tab;}))S.tab="plan";
   t.forEach(function(x){box.appendChild(el("button",{class:"tab",role:"tab","aria-selected":String(S.tab===x[0]),onclick:function(){S.tab=x[0];renderAll();window.scrollTo(0,0);}},"<span class='ti' aria-hidden='true'>"+(TABICON[x[0]]||"")+"</span><span>"+x[1]+"</span>"));});
-  ["plan","cong","gard","trame","aff","hrs","team","myh","myr","notif"].forEach(function(k){document.getElementById("p-"+k).hidden=S.tab!==k;});
+  ["plan","cong","gard","trame","aff","hrs","tit","team","myh","myr","notif"].forEach(function(k){document.getElementById("p-"+k).hidden=S.tab!==k;});
   document.getElementById("banner").hidden=true;
 }
 function renderViewAs(){
@@ -1382,7 +1386,7 @@ function equilibreHtml(q){
 }
 function renderTit(){
   var box=document.getElementById("titBox"),ts=titulaires();
-  if(!isAdmin()||!ts.length){box.hidden=true;return;}box.hidden=false;
+  if(!isTit()||!ts.length){box.hidden=true;return;}box.hidden=false;
   var y0=HFIRST.getUTCFullYear(),y1=LAST.getUTCFullYear();if(!S.titYear)S.titYear=tIso.slice(0,4);
   var yb=document.getElementById("titYears");yb.innerHTML="";
   for(var y=y0;y<=y1;y++)(function(y){yb.appendChild(el("button",{class:"chip","aria-pressed":String(S.titYear===String(y)),onclick:function(){S.titYear=String(y);renderTit();}},"Année "+y));})(y);
@@ -1425,7 +1429,7 @@ function renderTit(){
   document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du 01/01/2026 ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé (le nombre de jours est indiqué entre parenthèses). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre des congés de l'année après ce congé.";
 }
 function renderHrs(){
-  renderTit();monthChips("months");renderBilan();
+  monthChips("months");renderBilan();
   var box=document.getElementById("pcards");box.innerHTML="";
   var order=["salarie","facture","extra","titulaire"];
   order.forEach(function(st){S.people.forEach(function(p){if(p.status!==st)return;if(p.hors&&!monthDaysWorked(p.id,S.month).t)return;box.appendChild(cardFor(p,false));});});
@@ -2119,6 +2123,7 @@ function renderAll(){
   if(S.tab==="trame"){renderWeeks();renderGrid();}
   if(S.tab==="aff")renderAff();
   if(S.tab==="hrs")renderHrs();
+  if(S.tab==="tit")renderTit();
   if(S.tab==="team")renderTeam();
   if(S.tab==="myh"||S.tab==="myr")renderMy();
   if(S.tab==="notif")renderNotif();
