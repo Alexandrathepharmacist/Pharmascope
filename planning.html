@@ -852,12 +852,12 @@ function personMonth(p,ym){
 
 /* Soldes cumulés : heures (récup / échanges) et congés payés */
 function latestReport(pid,field){var best=null;S.adjust.forEach(function(a){if(a.p===pid&&a.kind==="report"&&a[field]!=null&&(!best||a.day>best.day))best=a;});return best;}
-function hoursBalance(pid){
-  var rep=latestReport(pid,"min"),base=rep?rep.day:dIso(dAdd(FIRST,-1)),start=rep?rep.min:0,adj=0,plan=0,ec=0;
-  S.adjust.forEach(function(a){if(a.p===pid&&a.kind==="ajust"&&a.min!=null&&a.day>base)adj+=a.min;});
-  var end=monOf(dParse(tIso));
-  for(var d=dAdd(monOf(dParse(base)),7);d<=end;d=dAdd(d,7)){var w=weekStats(pid,d);plan+=w.bal;ec+=w.bank;}
-  return {rep:rep,base:base,start:start,adj:adj,plan:plan,ec:ec,total:start+adj+plan+ec};
+/* 16/11/2026 : le solde d'heures s'arrête au dernier jour du mois civil (plus à la fin de la semaine),
+   avec exactement le même calcul que le bilan de fin de mois. */
+function hoursBalance(pid,ym){
+  var end=monthEnd(ym||today0.slice(0,7)),r=hoursBalanceAt(pid,end);
+  if(!r){var rep=latestReport(pid,"min");r={rep:rep,base:rep.day,start:0,adj:0,plan:0,ec:0,total:null};}
+  r.end=end;return r;
 }
 /* Jours de congés payés décomptés entre deux dates (après « after », jusqu'à « until » inclus).
    Mode « ouvrables » : du premier jour d'absence jusqu'à la veille de la reprise, du lundi au samedi, hors fériés.
@@ -888,21 +888,24 @@ function cpBalance(pid,at){
 function jj(n){var v=Math.round(n*2)/2;return (v<0?"−":"")+String(Math.abs(v)).replace(".",",")+" j";}
 function dFr(ds){var p=ds.split("-");return p[2]+"/"+p[1]+"/"+p[0].slice(2);}
 function soldeBlock(p){
-  var h=hoursBalance(p.id),c=cpBalance(p.id);
+  var ym=S.month||today0.slice(0,7),h=hoursBalance(p.id,ym),c=cpBalance(p.id),mois=MOISL[+ym.slice(5)-1].toLowerCase();
+  var prevEnd=dIso(dAdd(dParse(ym+"-01"),-1)),hp=hoursBalanceAt(p.id,prevEnd),moisP=MOISL[+prevEnd.slice(5,7)-1].toLowerCase();
+  var sous=h.total==null?"pas de solde avant le report du "+dFr(h.base):"au "+dFr(h.end)+" au soir"+(h.end>=today0?", d'après le planning prévu":"");
   var out="<div class='soldes'>"+
-    "<div class='sol'><div class='lbl2'>Solde d'heures (récup / échanges)</div><div class='big num "+(h.total>=0?"pos":"neg")+"'>"+sg(h.total)+"</div><div class='lbl2'>à la fin de cette semaine</div></div>"+
+    "<div class='sol'><div class='lbl2'>Solde d'heures fin "+mois+"</div><div class='big num "+(h.total==null?"":(h.total>=0?"pos":"neg"))+"'>"+(h.total==null?"—":sg(h.total))+"</div><div class='lbl2'>"+sous+"</div>"+
+      (hp&&h.total!=null?"<div class='lbl2'>Fin "+moisP+" : <b class='"+(hp.total>=0?"pos":"neg")+"'>"+sg(hp.total)+"</b></div>":"")+"</div>"+
     "<div class='sol'><div class='lbl2'>Congés payés restants</div><div class='big num "+(c.total>=0?"":"neg")+"'>"+jj(c.total)+"</div><div class='lbl2'>"+(c.planned?"dont "+jj(c.planned)+" déjà posés à venir · "+jj(c.free)+" libres":"aucun congé posé à venir")+"</div></div></div>";
   if(!h.rep||!c.rep)out+="<div class='lbl2 warn'>⚠ Report de départ non renseigné pour "+(!h.rep&&!c.rep?"les heures et les congés":(!h.rep?"les heures":"les congés"))+" : le calcul part de zéro au "+dFr(dIso(FIRST))+". À confirmer avec Alexandra ou Éloi.</div>";
   out+="<details class='wk-detail'><summary>Comment c'est calculé</summary><div class='rows'>"+
     "<span><b>Heures</b> · "+(h.rep?"report au "+dFr(h.base):"départ au "+dFr(dIso(FIRST)))+"</span><span>"+sg(h.start)+"</span>"+
-    "<span>Changements de planning depuis</span><span>"+sg(h.plan)+"</span>"+
+    "<span>Changements de planning jusqu'au "+dFr(h.end)+"</span><span>"+sg(h.plan)+"</span>"+
     (h.ec?"<span>Écart entre la trame et le contrat depuis ("+sg(ecartContrat(p))+" par semaine en moyenne)</span><span>"+sg(h.ec)+"</span>":"")+
     (h.adj?"<span>Ajustements (heures payées, régularisations)</span><span>"+sg(h.adj)+"</span>":"")+
     "<span><b>Congés</b> · "+(c.rep?"report au "+dFr(c.base):"départ au "+dFr(dIso(FIRST)))+"</span><span>"+jj(c.start)+"</span>"+
     "<span>Acquis depuis (2,5 jours ouvrables par mois)</span><span>+"+jj(c.acq)+"</span>"+
     "<span>Pris depuis"+(S.cpMode==="poses"?" (jours posés au planning)":" (jours ouvrables, du lundi au samedi)")+"</span><span>−"+jj(c.taken)+"</span>"+
     (c.adj?"<span>Ajustements</span><span>"+jj(c.adj)+"</span>":"")+
-    "</div><div class='lbl2'>Congés : 2,5 jours ouvrables acquis par mois de travail, soit 30 par an (<a href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033020789' target='_blank' rel='noopener'>article L3141-3 du Code du travail</a>). Le bulletin de paie fait foi en cas d'écart.</div></details>";
+    "</div><div class='lbl2'>Le solde d'heures est arrêté au dernier jour du mois, comme dans le bilan de fin de mois. Congés : 2,5 jours ouvrables acquis par mois de travail, soit 30 par an (<a href='https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000033020789' target='_blank' rel='noopener'>article L3141-3 du Code du travail</a>). Le bulletin de paie fait foi en cas d'écart.</div></details>";
   return out;
 }
 
@@ -1340,10 +1343,12 @@ function cardFor(p,open){
   var body="";
   if(p.status==="salarie"){
     body+=soldeBlock(p)+"<div class='lbl2' style='margin-top:6px;font-weight:600'>"+MOISL[+S.month.slice(5)-1]+"</div>";
+    /* solde du mois sur le mois civil, comme le solde de fin de mois et le bilan : fin du mois précédent + solde du mois = fin du mois */
+    var mb=monthBilan(p,S.month);
     var pct=r.due?Math.min(130,r.counted/r.due*100):0;
     body+="<div><div class='big num "+(r.diff>=0?"pos":"neg")+"'>"+sg(r.diff)+"</div><div class='lbl2'>par rapport au contrat ("+r.rows.length+" semaines)</div></div>";
     body+="<div class='meter' title='Heures comptées par rapport au contrat'><i style='width:"+(pct/130*100)+"%'></i><b style='left:"+(100/130*100)+"%'></b></div>";
-    body+="<div class='rows'><span>Heures travaillées</span><span>"+hm(r.worked)+"</span><span>Absences payées (CP, férié, maladie, formation…)</span><span>"+hm(r.paid)+"</span><span>Dû au contrat</span><span>"+hm(r.due)+"</span><span><b>Solde récup / échanges du mois</b></span><span class='"+(r.bal>=0?"pos":"neg")+"'>"+sg(r.bal)+"</span>"+(r.bank?"<span>· dont changements de planning</span><span>"+sg(r.chg)+"</span><span>· dont écart entre la trame et le contrat</span><span>"+sg(r.bank)+"</span>":"")+"</div>";
+    body+="<div class='rows'><span>Heures travaillées</span><span>"+hm(r.worked)+"</span><span>Absences payées (CP, férié, maladie, formation…)</span><span>"+hm(r.paid)+"</span><span>Dû au contrat</span><span>"+hm(r.due)+"</span><span><b>Solde récup / échanges du mois</b> <span class='sm'>(du 1er au "+(+monthEnd(S.month).slice(8))+")</span></span><span class='"+(mb.ecart>=0?"pos":"neg")+"'>"+sg(mb.ecart)+"</span>"+(mb.bank?"<span>· dont changements de planning</span><span>"+sg(mb.chg)+"</span><span>· dont écart entre la trame et le contrat</span><span>"+sg(mb.bank)+"</span>":"")+"</div>";
   }else if(p.status==="facture"){
     var md=monthDaysWorked(p.id,S.month);
     body+="<div><div class='big num'>"+hm(md.t)+"</div><div class='lbl2'>à facturer en "+MOISL[+S.month.slice(5)-1].toLowerCase()+" ("+md.n+" jours)</div></div>";
@@ -1851,7 +1856,7 @@ function renderCong(){
   /* total par personne */
   var sb2=document.getElementById("congSumBox");sb2.hidden=!ed;
   if(ed){
-    var adm=isAdmin(),th="<thead><tr><th>Équipe</th><th>Congés payés</th><th>Récup / échanges</th><th>Maladie, accident</th><th>Autres absences</th>"+(adm?"<th>Congés restants à ce jour</th><th>Solde d'heures</th>":"")+"</tr></thead><tbody>";
+    var adm=isAdmin(),th="<thead><tr><th>Équipe</th><th>Congés payés</th><th>Récup / échanges</th><th>Maladie, accident</th><th>Autres absences</th>"+(adm?"<th>Congés restants à ce jour</th><th>Solde d'heures fin du mois</th>":"")+"</tr></thead><tbody>";
     S.people.forEach(function(p){
       var ps=byP[p.id];if(p.hors&&!ps.length)return;
       var gsum={cp:[0,0,0,0],recup:[0,0,0,0],maladie:[0,0,0,0],autre:[0,0,0,0]};
@@ -1971,7 +1976,7 @@ function hoursBalanceAt(pid,dsEnd){
   var start=rep?rep.min:0,adj=0,plan=0,ec=0,e=ecartContrat(P(pid)),end=dParse(dsEnd);
   S.adjust.forEach(function(a){if(a.p===pid&&a.kind==="ajust"&&a.min!=null&&a.day>base&&a.day<=dsEnd)adj+=a.min;});
   for(var d=dAdd(dParse(base),1);d<=end;d=dAdd(d,1)){if(wdOf(d)>5)continue;plan+=dayBal(pid,dIso(d));if(wdOf(d)===0)ec+=e;}
-  return {start:start,adj:adj,plan:plan,ec:ec,total:start+adj+plan+ec};
+  return {rep:rep,base:base,start:start,adj:adj,plan:plan,ec:ec,total:start+adj+plan+ec};
 }
 function monthBilan(p,ym){
   var a=ym+"-01",b=monthEnd(ym),r={days:0,worked:0,ferie:0,chg:0,mondays:0,g:{cp:[0,0],recup:[0,0],maladie:[0,0],autre:[0,0]}};
@@ -2387,7 +2392,7 @@ function openRequest(ds){
     rec.textContent=n?"Vous êtes prévu(e) "+n+" jour"+(n>1?"s":"")+" sur cette période ("+hm(h)+").":"Vous n'êtes pas prévu(e) au planning sur ces dates.";
     if(p.status==="salarie"&&t[0]==="cp"){var nb=0;rangeDays(fi.value,ti.value).forEach(function(x){if(wdOf(dParse(x))<=5&&!FERIES[x])nb++;});var cb=cpBalance(p.id);
       rec.textContent+=" Cette demande représente environ "+jj(nb)+" de congés. Votre solde : "+jj(cb.total)+(cb.planned?", dont "+jj(cb.planned)+" déjà posés":"")+"."+(nb>cb.free?" Attention : c'est plus que votre solde disponible.":"");}
-    if(p.status==="salarie"&&t[0]==="recup"){rec.textContent+=" Votre solde d'heures : "+sg(hoursBalance(p.id).total)+".";}
+    if(p.status==="salarie"&&t[0]==="recup"){var hb2=hoursBalance(p.id,fi.value?fi.value.slice(0,7):null);if(hb2.total!=null)rec.textContent+=" Votre solde d'heures fin "+MOISL[+hb2.end.slice(5,7)-1].toLowerCase()+" : "+sg(hb2.total)+".";}
   }
   ok.addEventListener("click",function(){if(ok.disabled)return;snap();
     S.requests.push({id:uuid(),p:p.id,t:t[0],from:fi.value,to:ti.value,c:mi.value,at:tIso,status:"pending"});
