@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.70">
+<meta name="ps-version" content="v9.71">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -885,7 +885,7 @@ var VST2={};var G2={},TVA2={},TVAM2={},FACT={},JOURS={},L2={},P2={},V2={},VCA2={
 var REC_JOURS=14;
 /* Affluence : tickets distincts et CA par jour et par heure. Paniers : produits
    (hors rembourse) presents sur un meme ticket, pour les ventes associees. */
-var HEATJ={},TK={},TKJ={},TKR={};
+var HEATJ={},TK={},TKJ={},TKR={};var DERNV="";/* v9.71 : date et heure de la derniere vente du fichier ("2026-11-18 18:27") */
 /* Seuil au-dela duquel une ligne est consideree exceptionnelle (medicament
    d exception, retrocession...). Ces lignes sont reelles mais non recurrentes :
    on les isole pour ne pas fausser le rythme journalier du mois en cours. */
@@ -927,6 +927,7 @@ if(facture){if(!FACTHO[mo])FACTHO[mo]={};FACTHO[mo][facture]=1}}
 if((tvaF===2.1||dispoR)&&facture&&qte>0&&/^\d{7,14}$/.test(code)){var tkR=jour+"|"+facture;if(!TKR[tkR])TKR[tkR]={};TKR[tkR][code]=1;if(!TKJ[tkR])TKJ[tkR]=dp[2]+"-"+dp[1]+"-"+dp[0]}
 if(!JOURS[mo])JOURS[mo]={};JOURS[mo][jour]=1;
 var hh=parseInt(((r0.split(" ")[1])||"").split(":")[0],10);
+var hmV=((r0.split(" ")[1])||"").slice(0,5);if(/^\d{1,2}:\d{2}$/.test(hmV)){var kV=dp[2]+"-"+dp[1]+"-"+dp[0]+" "+(hmV.length===4?"0"+hmV:hmV);if(kV>DERNV)DERNV=kV}
 if(facture&&!isNaN(hh)&&hh>=0&&hh<24){var jkH=dp[2]+"-"+dp[1]+"-"+dp[0];
 if(!HEATJ[jkH])HEATJ[jkH]={t:{},c:{},m:{}};var hj=HEATJ[jkH];
 if(!hj.t[hh])hj.t[hh]={};hj.t[hh][facture]=1;hj.c[hh]=(hj.c[hh]||0)+ca;hj.m[hh]=(hj.m[hh]||0)+marge;if(ca>SEUIL_EXC){if(!hj.x)hj.x=[0,0,0];hj.x[0]++;hj.x[1]+=ca;hj.x[2]+=marge}}
@@ -1103,7 +1104,7 @@ else STKV[cd2]=[v4,((stockData.names&&stockData.names[cd])||"").substring(0,40),
 else if(curPd&&curPd.STKV){STKV=curPd.STKV}
 return{M:months,G:fG,FREQ:fFREQ,EXC:fEXC,F:fF,TVA:fTVA,TVAM:fTVAM,L:fL,P:fP,V:fV,
 REC:fREC,RECD:fenetre,STKU:STKU,STKL:STKL,STKG:STKG,VCA:fVCA,STKV:STKV,HEAT:fHEAT,ASSOC:fASSOC,VST:fVST,
-UPD:new Date().toLocaleDateString("fr-FR"),ts:Date.now(),
+UPD:new Date().toLocaleDateString("fr-FR"),ts:Date.now(),DERNV:DERNV||null,
 stats:{lines:cnt,sups:Object.keys(fL).length,prods:nbProds,vendeurs:Object.keys(fV).length,months:months.length}}}
 
 
@@ -1360,6 +1361,7 @@ if(v)md[m]=v});
 if(Object.keys(md).length)vd[lab]=md});
 if(Object.keys(vd).length)out.V[vn]=vd});
 out.UPD=fresh.UPD;out.ts=fresh.ts;
+var dvF=fresh.DERNV||"",dvP=prev.DERNV||"";out.DERNV=(dvF>dvP?dvF:dvP)||null;
 out.stats=fresh.stats;
 return out}
 
@@ -1801,7 +1803,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMDAgQDAwMEBAQFBgoGBgUFBgwICQcKDgwPDg4MDQ0PERYTDxAVEQ0NExoTFRcYGRkZDxIbHRsYHRYYGRj/2wBDAQQEBAYFBgsGBgsYEA0QGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBj/wAARCACAAIADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDt2YetV5GHWmPMPWqsk/XmvHp02fhE5oWV15qlJMOgps0/vVCa4AyAa9ClSOGpURJLPz1qlLPnPNRTXHvzVCS46813U6RxyncnlnHc1SmuAcioZbkdzVOWcdjXXGCRkouTJZJuoqtJNgY7VBJcccGqsk2e9aqx1U6JO8w5FVZJRmonk96geQmrujshRHvJzVaSXmkd+etV3bHemjshTFklGKqyvSu+BVaVsiqaOynA+j5ZuvNUprgetRSze9UJ5sA8187RongVKxLPcA8A1nzXHOM1BNP2zVKWevRp0rHHKbZNNcVQlucZ5qKafrzWfLPk4BJPoK3skaU6TkWZbnNU5bmvpfwp+ya+o+Gbe/8AFfiW6sL6dBIbKzhVvIBGdrM3VvXAwD69a2G/Y88MMOfGOtf9+Iv8KxlXifX0OEcfKKlyWv3aPkZ7n3qBrjnrX14f2NvC5/5nPWv+/EP+FZ+o/sY6c1ux0nx7eRygfKLuyR1J9yrKRUqujsXCmOS+Bfej5RM4NRNLk9q9D+I3wH+Ifw3tZNS1Gyi1LSE+9qWnEyRxj1kUgMn1Ix715d5w7muiE1LY8ytgKuHlyVY2ZZeTmoXcVCZM96YZPeuiIo07DpG4qpK3FSO+arSHir6HTTie7yznbwazppuvNPlm+Xk1mzzcmvPpU7HxDk5PQJp+aozXHHWmTzgCs+W45rdux10aFyWabNQWc2ddsh63Mf8A6GKpzXA9aisJgfEFiBz/AKTF/wChis5vQ9fC0PeR+rGRk896otrejK5VtWsAQSCDcJwfTrRdzBdw9DXxv+1l4d0aw8R6H4ksLOC3u9RWaG78tAomaPYVcgfxYcgnvgelebGV5cp+xZnj5YOi6sY81vOx9jHXdG6DV7D/AMCU/wAatCVZEV0YMrDIZTkH6GvygdUK8Iv5V2Hw2+Lnir4WeKbe/wBMv7ibSvMH23SnkJhuI8/NhTwr4zhhgg+oyK3eHbV0zw8LxXGpNRqU7Lve/wCh+lkgSWJ4pUV0cFWVhkMD1BHcV8DftO/CS1+G/jG18QeHYPJ8PayzBbdR8tpcDlo19EYfMo7YYdAK+8rG9ttS0q21Gzk8y3uYUnif+8jKGU/kRXgn7XGoeH7v4K/8IlJdpN4mvby3m0jS4FMtxO6yYYqigkDYXG48HpzWVGbjI9rN8LTxGGblutU/67nwitwD3p/mA19BfC/9knX9Zlt9T+I96+hWLMD/AGZblXvJBno7crF/483sK8K8T2lrpXjvW9LslZLW01C4t4VZtxCJKyqCT1OAOa9GlXjJ2R8JiMvqUYKc1a5QZuKrytwaeWyKgkOK609DmhHU9jml4rNnl681Ynes+Vutc0VofEUIFWeU9jXcfCD4U33xa8U3dmt//Z2mWEayXl2E3sNxIVEXoWOG5PAAJ54FefXL4Br6c/Y6m2aX4zOf+W1p/wCgy1jXk4xuj63h/BUsTi4U6q93X8Fc3ZP2P/AOPm8VeJc+xg/+Iq/4Y/Zd+G/hbxXaa/LfazrEtnIJobe+kjEIkU5VmVFBbBwQCcZHOa9bvtXit8mRyB9M1gzeLNML+WuoQh/7rNtP615ksRJ9T9Blhcuw8k4wSaOgv77gndXyp+1pciSx8Kc5xNdf+gx17lqXiKNAcuB+NfMH7TWuJfW3hwK4Ply3BPPqsdTQd6qPMzTGxrQlST1Z4p53HBqpIJbmdbe3jaWaVhHHGgyXYnAAHckkCul8F/Db4hfEKVV8J+Fr++gJwbwp5Vuv1lfC/kSa+tPhD+zXovwxuE8d/EPWLG91SyHnRLv2WWnsP+Whd8b3HYnAHUAnBr1ZVowXmeVgMmrV5p2tHq3sezWGh69pvwR07wzpesQ6TrVro8FnHqEsAuEglSJVLFCQGAIPf35xivjT4PeP9U0r413enP4btPGfiLUbySGfxT9tkMxiVsNIrupCwgDdwFJGB6CvR/i98cL7x/Fc+AfhZ5rafMDFqOuNmNZEPBjjJ5CHu3VhwBgkmp8NfDekeCNONvpym71S6AFxdBPnkxzsQdQg6479T7edUkoRalu+h6+Z5rRlWhToSuo9f8v8z6ATVgJlw3AYY/Ovzb8aSFvil4lI76tdn/yM9df8TvjRrfivxvZzeGdRu9P07SZvMspYnKPLL0MzfhkBT/CTn7xrzy6urjUdTudRvGD3NzK88rABdzsSzHA6ck8V0YOjKHvS6nBjcV7WKTGg8VDK1SkADFV5j1r1lsebBXZ6zKwx1qhMeDzU8r5HFU5W61mfGUY2KNyeDzX0R+yPq1nBP4s0Z51W9nW3uYoieZETerkDvguufY5r52nBNVI7i906/jvtOvLizuojujnt5DG6H1DDkVhXp88XE+jynF/Va0atr2/XQ/QLxJe7IXIb9a8J8Z6wVWT5/WvBbz4l/EicFZvG+uSD/auSaxf+Ez8UPeq9/q91fREgPHO2/I9vQ15ywck7s780qSxyfsnb1PafA6/EHxh4uTw94SLXIPzzC5Y/Z7ePu7t/APpyTwAa98v/AAR8G/h8lnqXxIubbxDrdsDJDBcxefsY4z5dsMjHAw0mfqKZoVo3wp+FFn4Y0GNU8RX8S3eq3+0Fo5HXIQe6g7R2AyerVyulfDTVvGOtSsmW3NuuL25JYKT3J6s3t1+lZucVLRG2Fw7y+MKdGn7TEed2o36JdWur6feHiv8Aam1NITY+BvCkFlCg2R3OpneVHQbYUwq/ixrxnVtc8ffE3VEPiHUtT11g2Us4lJhQ/wCzFGNo+uM+9fZfhn4M+BfDsSSPo0Oq3g5N1fxiTn/ZQ/Ko/An3ruoLWG0iEdpbJAg6JDGEH5AVsqqitEezLIc1x8f9txPKn0iv+GX5nyd4K+DHjzUYYlm01dCsupkvRsOPaIfMT9cfWvSvHFn4b+CXwB8R+IkkNzq7WT2dtdz4EklxMCiKg6KMksQOcKcmvQ/GfxC8G/D7Rn1Lxfr9npkYBKRSNmaY+kcQ+Zz9B+Vfn78dPjdqfxk8WQiCCbT/AA3p7N9gsXbLux4M0uOC5HAA4UcDOSSqVN1Jc1jaOWYHJqblF81To3q1522X5+Z5NbxhQo6gACrqjio0UAVISAOtetCNj5ycuZiO3aqkzdamkaqsrcVt0Lpx1PVXPFVZO9TM4z1qvIwrniz42mrEEi1Ulj4q071XduppnbTujMni61WtI1OuWSuAVNxHkHuN4q/Ocg1Us/8AkPWX/XzF/wChiomtD18I3zI/SNfDL6/4iuLi5YrG0peWTvyfuj37e1d5aWdrp9glpZwrDDGMKij9fc+9SQwJbQ+UgHUkn1PrSs3ymvGjHlP1PC4OFC8kvee7Pzj+NXxG+IumftFeM9O0vx54ls7ODVJY4ba31KaOOJRjCqobAHsK4KX4lfE64iMc/wARPFToeqtqs+D/AOPVt/HTn9pzxz/2F5v6Vw6rxXq04JpaHxGNxVSNaaUnuyGY3F5dtdXlxNczv96Wdy7t9WOSaeke0dKmKgCmniuiMDzpVHLcTI6UxmGKGIzULN71qkEYjXPFVpGxmpXaq0jcGmzqpxPU3cAc1Xkf8aR24qFnrlifHwgNd81EzjHWhie1Qua2R1QiQzHIqhMp3ZUkHrkcEVddqgZc0nE7aT5T6q8H/tp2dj4UtbHxv4V1K81O3jWJ73TpY9tzgY3sjkbWPfBIzkjHStmf9t7wOLdzb+CfEskoU7EkkgRWPoWDEge+DXxpJGD2qEwjPIrleFi2fSU+IMUopX/A0PFHiG98YeO9X8V6jFHHdapdyXckcX3ULHO0ewGB+FZ6nFJtA6UjNgV0xhZWPKqTdSTk92OZqiZ6RmqJmrZIIxBmqFm5oZuTUbNxTOiMRGeq0jU9nqCRvepkdMInpjMSKjJ96c5OKiYk1xQkfIRQ1z6VXdj0qRwSO9RFTXRGSN4JIhY5qMtinyAioGJArS6OqKuI71Ez+tDnvULNjvRZHRGIrNUTNxSM9RF6ehvGApbio3ems9RM9O5tGArNUTNxikZ+etQu/NK50RgKzCoXIxSls1C7UmzojE//2Q==";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.70";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.71";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -2029,6 +2031,7 @@ if(!supaClient)return Promise.resolve({err:"hors_ligne"});
 return supaClient.auth.getSession().then(function(s){if(!(s&&s.data&&s.data.session))return{err:"compte"};
 return supaClient.from("resume_matin").select("jour,data").order("jour",{ascending:false}).limit(7).then(function(r){if(r.error)return{err:"lecture"};return{liste:r.data||[]}})}).catch(function(){return{err:"hors_ligne"}})}
 /* v9.61 : bouton "Tache" sur chaque point du resume -> ajoute a la to-do list (une seule fois par mail)
+   v9.71 : heure de la derniere vente affichee a cote de la date des ventes (DERNV).
    v9.70 : import Drive relance tout seul apres 12h00 et 18h30 et au retour dans l'appli ; jeton Drive fourni par le serveur (plus de reconnexion manuelle).
    v9.69 : Actu pharma lit les flux ANSM dans la base (robot toutes les heures) : affichage immediat ; relais publics en secours, en parallele, 8 s max.
    v9.68 : ruptures ANSM lues automatiquement chaque matin (fonction ruptures + veille_tick) ; Sante des donnees : controle de la liste des ruptures, les produits en stock jamais vendus ne sont plus signales comme introuvables.
@@ -2599,7 +2602,7 @@ var etat,col;
 if(dst.busy){etat="Synchronisation...";col="var(--blue)"}
 else if(props.cloudOk===false){etat="Hors ligne";col="var(--red)"}
 else if(dst.ok===false){etat="Drive \u00e0 v\u00e9rifier";col="var(--orange)"}
-else if(props.cloudOk===true){etat="\u00c0 jour"+(dTxt?" \u00b7 ventes du "+dTxt:"");col="var(--accent)"}
+else if(props.cloudOk===true){etat="\u00c0 jour"+(dTxt?" \u00b7 ventes du "+dTxt+heureVentesTxt(props.pd):"");col="var(--accent)"}
 else{etat="V\u00e9rification...";col="var(--text3)"}
 function fini(){setOpen(false);if(props.onDone)props.onDone()}
 var item={display:"flex",alignItems:"center",gap:8,width:"100%",textAlign:"left",padding:"7px 10px",fontSize:12,borderRadius:6,background:"transparent",color:"var(--text2)",border:"none",cursor:"pointer"};
@@ -6396,6 +6399,8 @@ React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:3}}
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:10,lineHeight:1.5}},"Calcul\u00e9 sur "+T.toLocaleString("fr-FR")+" tickets du "+fmtD(A.d1)+" au "+fmtD(A.d2)+". \u00ab Lien fort \u00bb : les deux produits sont achet\u00e9s ensemble au moins 3 fois plus souvent que le hasard."),React.createElement(LienExpert,null))}
 
 /* ===== ECRAN AUJOURD'HUI : ce qu'il y a a faire, en un coup d'oeil ===== */
+/* v9.71 : heure de la derniere vente connue, si elle est du dernier jour de ventes -> " jusqu'a 18h27" */
+function heureVentesTxt(pd){if(!pd||!pd.DERNV)return "";var d=derniereDateVentes(pd);var v=String(pd.DERNV);if(!d||v.slice(0,10)!==d)return "";var h=v.slice(11,16);return h?" jusqu'\u00e0 "+h.replace(":","h"):""}
 function derniereDateVentes(pd){
 if(!pd)return null;var d=null;
 if(pd.HEAT){var hk=Object.keys(pd.HEAT).sort();if(hk.length)d=hk[hk.length-1]}
@@ -6407,7 +6412,8 @@ function FraicheurDonnees(props){
 var d=derniereDateVentes(props.pd);if(!d)return null;
 var n=joursDepuis(d);var col=n<=2?"var(--accent)":(n<=6?"var(--orange)":"var(--red)");
 var bg=n<=2?"var(--accent-bg)":(n<=6?"var(--orange-bg)":"var(--red-bg)");
-var txt=props.court?("Ventes du "+d.split("-").reverse().join("/")+(n<=0?" \u2022 aujourd'hui":n===1?" \u2022 hier":" \u2022 il y a "+n+" j")):("Ventes \u00e0 jour au "+d.split("-").reverse().join("/")+(n<=0?" (aujourd'hui)":n===1?" (hier)":" (il y a "+n+" jours)"));
+var hV=heureVentesTxt(props.pd);
+var txt=props.court?("Ventes du "+d.split("-").reverse().join("/")+(n<=0?" \u2022 aujourd'hui":n===1?" \u2022 hier":" \u2022 il y a "+n+" j")+hV):("Ventes \u00e0 jour au "+d.split("-").reverse().join("/")+(n<=0?" (aujourd'hui)":n===1?" (hier)":" (il y a "+n+" jours)")+hV);
 return React.createElement("button",{onClick:function(){if(props.setPage)props.setPage("import")},title:n>2?"Importez les derni\u00e8res ventes Winpharma (page Import)":"",style:{display:"inline-flex",alignItems:"center",gap:6,padding:"5px 12px",borderRadius:20,fontSize:12,fontWeight:600,background:bg,color:col,border:"1px solid "+col,marginBottom:10}},
 "\ud83d\udcc5 "+txt+(n>2&&!props.court?" \u2014 mettre \u00e0 jour":""))}
 /* ===== BILAN DES TDG A 14 JOURS (v9.42) =====
@@ -14869,8 +14875,8 @@ if(fused!==result){addLog("Fusion avec l historique existant: "+fused.M.length+"
 else{addLog("Pas d historique fusionnable: les donnees importees remplacent tout")}
 fused=consoliderFournisseurs(fused);if(fused.CONSOL)addLog(fused.CONSOL+" produits rattaches a leur fournisseur le plus recent (historique deplace)");
 var merged=Object.assign({},pd||{});
-["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST"].forEach(function(k){if(fused[k])merged[k]=fused[k]});merged.UPD=fused.UPD;
-var payload={L:fused.L,P:fused.P,G:fused.G,F:fused.F,M:fused.M,V:fused.V,TVA:fused.TVA,TVAM:fused.TVAM,FREQ:fused.FREQ,EXC:fused.EXC,REC:fused.REC,RECD:fused.RECD,STKU:fused.STKU,STKL:fused.STKL,VCA:fused.VCA,STKG:fused.STKG,STKV:fused.STKV,HEAT:fused.HEAT,ASSOC:fused.ASSOC,VST:fused.VST,UPD:fused.UPD,ts:fused.ts};
+["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST","DERNV"].forEach(function(k){if(fused[k])merged[k]=fused[k]});merged.UPD=fused.UPD;
+var payload={L:fused.L,P:fused.P,G:fused.G,F:fused.F,M:fused.M,V:fused.V,TVA:fused.TVA,TVAM:fused.TVAM,FREQ:fused.FREQ,EXC:fused.EXC,REC:fused.REC,RECD:fused.RECD,STKU:fused.STKU,STKL:fused.STKL,VCA:fused.VCA,STKG:fused.STKG,STKV:fused.STKV,HEAT:fused.HEAT,ASSOC:fused.ASSOC,VST:fused.VST,DERNV:fused.DERNV,UPD:fused.UPD,ts:fused.ts};
 ecrireVentesLocal(payload).then(function(ok){if(!ok)addLog("Attention : m\u00e9moire de l'appareil pleine, le cloud prend le relais")});
 try{localStorage.setItem("ps_last_import",new Date().toLocaleString("fr-FR"))}catch(e){}
 addLog("Envoi vers le cloud (compresse)...");
@@ -15126,10 +15132,10 @@ if(!res||!res.M||!res.M.length)return;
 var prevSales={M:basisPd.M,G:basisPd.G,F:basisPd.F,FREQ:basisPd.FREQ,TVA:basisPd.TVA,TVAM:basisPd.TVAM,EXC:basisPd.EXC,L:basisPd.L,P:basisPd.P,V:basisPd.V,STKL:basisPd.STKL,VCA:basisPd.VCA,STKG:basisPd.STKG,STKV:basisPd.STKV,HEAT:basisPd.HEAT,ASSOC:basisPd.ASSOC,VST:basisPd.VST};
 var fused=mergeSalesData(prevSales,res);
 var m2=Object.assign({},basisPd);
-["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST"].forEach(function(k){if(fused[k])m2[k]=fused[k]});
+["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST","DERNV"].forEach(function(k){if(fused[k])m2[k]=fused[k]});
 m2.UPD=res.UPD;
 setPd(m2);
-var payload={L:fused.L,P:fused.P,G:fused.G,F:fused.F,M:fused.M,V:fused.V,TVA:fused.TVA,TVAM:fused.TVAM,FREQ:fused.FREQ,EXC:fused.EXC,REC:fused.REC,RECD:fused.RECD,STKU:fused.STKU,STKL:fused.STKL,VCA:fused.VCA,STKG:fused.STKG,STKV:fused.STKV,HEAT:fused.HEAT,ASSOC:fused.ASSOC,VST:fused.VST,UPD:res.UPD,ts:res.ts};
+var payload={L:fused.L,P:fused.P,G:fused.G,F:fused.F,M:fused.M,V:fused.V,TVA:fused.TVA,TVAM:fused.TVAM,FREQ:fused.FREQ,EXC:fused.EXC,REC:fused.REC,RECD:fused.RECD,STKU:fused.STKU,STKL:fused.STKL,VCA:fused.VCA,STKG:fused.STKG,STKV:fused.STKV,HEAT:fused.HEAT,ASSOC:fused.ASSOC,VST:fused.VST,DERNV:fused.DERNV,UPD:res.UPD,ts:res.ts};
 ecrireVentesLocal(payload);
 compressForCloud(payload).then(function(pk){return supaSave("sales_data",pk)}).then(function(){
 return supaSave("auto_import_done",{ts:meta.ts,traite:new Date().toLocaleString("fr-FR")})});
@@ -15185,6 +15191,7 @@ var state=cl||local||{};
 var cur0=pdLive.current||{};
 var sameS=state.sales&&state.sales.id===pick.sales.id&&state.sales.mod===pick.sales.modifiedTime&&(!pick.salesDate||cur0.UPD===driveDateFr(pick.salesDate));
 /* v9.37 : le dernier fichier est relu une fois si la marge jour par jour (HEAT.m) n'a pas encore ete gardee */
+if(sameS&&!cur0.DERNV)sameS=false;
 if(sameS&&cur0.HEAT){var hkM=Object.keys(cur0.HEAT).sort();var hlM=hkM[hkM.length-1];if(hlM&&(!Array.isArray(cur0.HEAT[hlM].m)||cur0.HEAT[hlM].v!==3))sameS=false}
 var sameK=!pick.stock||(state.stock&&state.stock.id===pick.stock.id&&state.stock.mod===pick.stock.modifiedTime&&!!(pdLive.current&&pdLive.current.STKL));
 if(sameS&&sameK){
@@ -15194,7 +15201,7 @@ if(manque){setDriveSt({busy:true,ok:null,msg:"Lecture de l'historique des nouvea
 return driveDownload(token,pick.sales.id).then(function(buf){var txt=new TextDecoder("windows-1252").decode(buf);suiviJourDepuisTexte(txt);driveBusy.current=false;
 setDriveSt({busy:false,ok:true,msg:"Suivi au jour mis \u00e0 jour avec les ventes du "+driveDateFr(pick.salesDate)+"."});return null})}
 driveBusy.current=false;
-setDriveSt({busy:false,ok:true,msg:"D\u00e9j\u00e0 \u00e0 jour : ventes du "+driveDateFr(pick.salesDate)+(pick.stock?", stock du "+driveDateFr(pick.stockDate):"")+"."});
+setDriveSt({busy:false,ok:true,msg:"D\u00e9j\u00e0 \u00e0 jour : ventes du "+driveDateFr(pick.salesDate)+heureVentesTxt(cur0)+(pick.stock?", stock du "+driveDateFr(pick.stockDate):"")+"."});
 return null}
 setDriveSt({busy:true,ok:null,msg:"T\u00e9l\u00e9chargement des fichiers du "+driveDateFr(pick.salesDate)+"..."});
 return Promise.all([driveDownload(token,pick.sales.id),pick.stock?driveDownload(token,pick.stock.id):Promise.resolve(null)]).then(function(bufs){
@@ -15213,10 +15220,10 @@ if(prevSales.P){Object.keys(prevSales.P).some(function(lab){var p0=prevSales.P[l
 if(!prevOk&&pdOrig.current){var po=pdOrig.current;prevSales={M:po.M,G:po.G,F:po.F,FREQ:po.FREQ,TVA:po.TVA,TVAM:po.TVAM,EXC:po.EXC,L:po.L,P:po.P,V:po.V,VCA:basis.VCA,STKG:basis.STKG,STKV:basis.STKV,HEAT:basis.HEAT,ASSOC:basis.ASSOC,VST:basis.VST}}
 var fused=mergeSalesData(prevSales,res);
 var m2=Object.assign({},basis);
-["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST"].forEach(function(k){if(fused[k])m2[k]=fused[k]});
+["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST","DERNV"].forEach(function(k){if(fused[k])m2[k]=fused[k]});
 m2.UPD=(pick.salesDate&&pick.salesDate.length===8)?driveDateFr(pick.salesDate):(fused.UPD||res.UPD);
 setPd(m2);
-var payload={L:fused.L,P:fused.P,G:fused.G,F:fused.F,M:fused.M,V:fused.V,TVA:fused.TVA,TVAM:fused.TVAM,FREQ:fused.FREQ,EXC:fused.EXC,REC:fused.REC,RECD:fused.RECD,STKU:fused.STKU,STKL:fused.STKL,VCA:fused.VCA,STKG:fused.STKG,STKV:fused.STKV,HEAT:fused.HEAT,ASSOC:fused.ASSOC,VST:fused.VST,UPD:m2.UPD,ts:fused.ts};
+var payload={L:fused.L,P:fused.P,G:fused.G,F:fused.F,M:fused.M,V:fused.V,TVA:fused.TVA,TVAM:fused.TVAM,FREQ:fused.FREQ,EXC:fused.EXC,REC:fused.REC,RECD:fused.RECD,STKU:fused.STKU,STKL:fused.STKL,VCA:fused.VCA,STKG:fused.STKG,STKV:fused.STKV,HEAT:fused.HEAT,ASSOC:fused.ASSOC,VST:fused.VST,DERNV:fused.DERNV,UPD:m2.UPD,ts:fused.ts};
 ecrireVentesLocal(payload);lsSet("ps_last_import",new Date().toLocaleString("fr-FR"));
 /* Suivi automatique des produits en TDG (m\u00eames ventes, d\u00e9tail au jour) */
 campagneDepuisTexte(salesText);
@@ -15231,7 +15238,7 @@ try{localStorage.setItem("ps_drive_state",JSON.stringify(newState))}catch(e){}
 return cloudOkV?supaSave("drive_sync_state",newState):null}).then(function(){
 driveBusy.current=false;
 if(!cloudOkV){setDriveSt({busy:false,ok:false,msg:"Ventes du "+driveDateFr(pick.salesDate)+" charg\u00e9es sur cet appareil, mais l'envoi vers votre compte a \u00e9chou\u00e9 : les autres appareils ne les verront pas. R\u00e9essayez plus tard."});return}
-setDriveSt({busy:false,ok:true,msg:"Synchronis\u00e9 : ventes du "+driveDateFr(pick.salesDate)+(pick.stock?", stock du "+driveDateFr(pick.stockDate):"")+" ("+res.stats.lines.toLocaleString("fr-FR")+" lignes)."})})})})})
+setDriveSt({busy:false,ok:true,msg:"Synchronis\u00e9 : ventes du "+driveDateFr(pick.salesDate)+heureVentesTxt(m2)+(pick.stock?", stock du "+driveDateFr(pick.stockDate):"")+" ("+res.stats.lines.toLocaleString("fr-FR")+" lignes)."})})})})})
 }).catch(function(e){fail("\u00c9chec de la synchronisation : "+(e&&e.message?e.message:"erreur inconnue"))})})}
 var driveProps={cfg:driveCfg,st:driveSt,onSync:driveSync,onSaveCfg:saveDriveCfg,cid:(reglG&&reglG.cid)||(function(){try{return localStorage.getItem("ps_gcal_client_id")||""}catch(e){return""}})(),onSaveCid:saveGoogleCid};
 
@@ -15548,7 +15555,7 @@ var etapeLocale=lireVentesLocal().then(function(lo){try{
 if(lo&&lo.M&&lo.M.length&&lo.ts&&lo.FREQ&&lo.M[lo.M.length-1]>=(socle0.M&&socle0.M.length?socle0.M[socle0.M.length-1]:"")){
 var soc={M:socle0.M,G:socle0.G,F:socle0.F,FREQ:socle0.FREQ,TVA:socle0.TVA,TVAM:socle0.TVAM,L:socle0.L,P:socle0.P,V:socle0.V,EXC:socle0.EXC,REC:socle0.REC,RECD:socle0.RECD,STKU:socle0.STKU,STKL:socle0.STKL};
 var fu=mergeSalesData(soc,lo);var m0=Object.assign({},socle0);
-["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST"].forEach(function(k){if(fu[k])m0[k]=fu[k]});
+["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST","DERNV"].forEach(function(k){if(fu[k])m0[k]=fu[k]});
 if(lo.UPD)m0.UPD=lo.UPD;localApplique.current=lo.ts||1;setPd(m0);setVentesPret(true)}}catch(e){console.warn("copie locale:",e)}return lo});
 /* etape 2 : cloud, puis choix de la version la plus recente */
 Promise.all([supaLoad("sales_data").then(function(cloudRaw){return decompressFromCloud(cloudRaw).catch(function(){return null})}).catch(function(){return null}),etapeLocale]).then(function(duo){var cloud=duo[0];var localLu=duo[1];var pd=socle0;try{
@@ -15595,7 +15602,7 @@ setVentesPret(true);autoImportCheck(pd);driveReady.current=true;driveAutoStart()
 return}
 var fusionne=mergeSalesData(socle,best);
 var m=Object.assign({},pd);
-["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST"].forEach(function(k){if(fusionne[k])m[k]=fusionne[k]});
+["L","P","G","F","M","V","TVA","TVAM","FREQ","EXC","REC","RECD","STKU","STKL","VCA","STKG","STKV","HEAT","ASSOC","VST","DERNV"].forEach(function(k){if(fusionne[k])m[k]=fusionne[k]});
 if(best.UPD)m.UPD=best.UPD;
 var dejaAffiche=best===local&&localApplique.current&&(best.ts||1)===localApplique.current;
 setDiag({socle:dstats(socle,"Socle embarque"),cloud:cloudRej?{label:"Cloud",etat:"ABSENT",why:cloudRej}:dstats(cloud,"Cloud"),local:localRej?{label:"Stockage local",etat:"ABSENT",why:localRej}:dstats(local,"Stockage local"),choix:(best===cloud?"CLOUD":"LOCAL")+" fusionne avec le socle",final:dstats(fusionne,"Affiche apres fusion")});
