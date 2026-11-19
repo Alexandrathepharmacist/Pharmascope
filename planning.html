@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta name="ps-version" content="p2.01">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -2817,6 +2818,27 @@ document.getElementById("printBtn").addEventListener("click",function(){S.pview=
 document.getElementById("nlOut").addEventListener("click",logout);
 document.getElementById("addMember").addEventListener("click",function(){openPerson(null);});
 ["pseg","tseg","cseg"].forEach(function(id){document.getElementById(id).querySelectorAll("button").forEach(function(b){b.addEventListener("click",function(){if(id==="pseg")S.pview=b.getAttribute("data-v");else if(id==="cseg")S.congList=b.getAttribute("data-v");else S.tview=b.getAttribute("data-v");renderAll();});});});
+/* 19/11/2026 : nouvelle version de l'appli chargée toute seule (l'iPhone garde sinon l'ancienne page en mémoire).
+   Vérifiée à l'ouverture et à chaque retour sur l'appli ; rechargement automatique si aucune fenêtre n'est ouverte
+   et que tout est enregistré, sinon bandeau « Mettre à jour ». */
+(function(){
+  var V=(document.querySelector('meta[name="ps-version"]')||{}).content||"",dernier=0,t0=Date.now();
+  function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);sessionStorage.setItem(k,v);}catch(e){return null;}}
+  function aller(nv){ss("psp_maj",nv);var u=location.pathname+"?v="+encodeURIComponent(nv)+location.hash;try{fetch(location.pathname,{cache:"reload"}).catch(function(){});}catch(e){}setTimeout(function(){location.replace(u);},300);}
+  function banniere(nv){if(document.getElementById("majBand"))return;
+    var b=el("div",{id:"majBand",style:"position:fixed;left:12px;right:12px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:70;background:#0F7A5C;color:#fff;border-radius:14px;padding:10px 12px;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.2);font-size:.9rem"},"<span style='flex:1'>Une nouvelle version du planning est disponible.</span>");
+    var go=el("button",{class:"btn",style:"background:#fff;color:#0F7A5C;border:0;min-height:36px"},"Mettre à jour");go.addEventListener("click",function(){saving.then(function(){aller(nv);});});
+    b.appendChild(go);document.body.appendChild(b);}
+  function verifier(){if(Date.now()-dernier<60000)return;dernier=Date.now();
+    fetch(location.pathname+"?chk="+Date.now(),{cache:"no-store",headers:{Range:"bytes=0-2047"}}).then(function(r){return (r.ok||r.status===206)?r.text():"";}).then(function(t){
+      var m=String(t).slice(0,4000).match(/name="ps-version" content="([^"]+)"/);if(!m||!V||m[1]===V)return;
+      var tranquille=!layer.innerHTML&&!document.querySelector(".tl-bar.dragging");
+      if(tranquille&&ss("psp_maj")!==m[1])saving.then(function(){aller(m[1]);});else banniere(m[1]);
+    }).catch(function(){});}
+  setTimeout(verifier,1500);
+  document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible")verifier();});
+  window.__verifierMaj=function(){dernier=0;verifier();};
+})();
 /* Mise à jour quand on revient sur l'appli (téléphone sorti de la poche) */
 document.addEventListener("visibilitychange",function(){
   if(document.visibilityState!=="visible"||!S.me||!SAVED)return;
