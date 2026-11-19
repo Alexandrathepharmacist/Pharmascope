@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="ps-version" content="p2.01">
+<meta name="ps-version" content="p2.02">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -756,7 +756,7 @@ var REF=dParse("2026-09-28"),REFW=2;
 function letterOf(d){var k=Math.round((monOf(d)-REF)/(7*864e5));return W[((REFW+k)%6+6)%6];}
 function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(Date.UTC(y,mo-1,da));}
 var FERIES={};
-[2026,2027,2028].forEach(function(y){
+[2025,2026,2027,2028].forEach(function(y){
   ["01-01","05-01","05-08","07-14","08-15","11-01","11-11","12-25"].forEach(function(md){FERIES[y+"-"+md]=1;});
   var e=easter(y);[1,39,50].forEach(function(n){FERIES[dIso(dAdd(e,n))]=1;});
 });
@@ -857,7 +857,7 @@ function latestReport(pid,field){var best=null;S.adjust.forEach(function(a){if(a
    avec exactement le même calcul que le bilan de fin de mois. */
 function hoursBalance(pid,ym){
   var end=monthEnd(ym||today0.slice(0,7)),r=hoursBalanceAt(pid,end);
-  if(!r){var rep=latestReport(pid,"min");r={rep:rep,base:rep.day,start:0,adj:0,plan:0,ec:0,total:null};}
+  if(!r){var rep=latestReport(pid,"min");r={rep:rep,base:rep?rep.day:dIso(dAdd(FIRST,-1)),start:0,adj:0,plan:0,ec:0,total:null};}
   r.end=end;return r;
 }
 /* Jours de congés payés décomptés entre deux dates (après « after », jusqu'à « until » inclus).
@@ -891,7 +891,7 @@ function dFr(ds){var p=ds.split("-");return p[2]+"/"+p[1]+"/"+p[0].slice(2);}
 function soldeBlock(p){
   var ym=S.month||today0.slice(0,7),h=hoursBalance(p.id,ym),c=cpBalance(p.id),mois=MOISL[+ym.slice(5)-1].toLowerCase();
   var prevEnd=dIso(dAdd(dParse(ym+"-01"),-1)),hp=hoursBalanceAt(p.id,prevEnd),moisP=MOISL[+prevEnd.slice(5,7)-1].toLowerCase();
-  var sous=h.total==null?"pas de solde avant le report du "+dFr(h.base):"au "+dFr(h.end)+" au soir"+(h.end>=today0?", d'après le planning prévu":"");
+  var sous=h.total==null?"pas de solde avant "+(h.rep?"le report du ":"le départ du ")+dFr(h.base):"au "+dFr(h.end)+" au soir"+(h.end>=today0?", d'après le planning prévu":"");
   var out="<div class='soldes'>"+
     "<div class='sol'><div class='lbl2'>Solde d'heures fin "+mois+"</div><div class='big num "+(h.total==null?"":(h.total>=0?"pos":"neg"))+"'>"+(h.total==null?"—":sg(h.total))+"</div><div class='lbl2'>"+sous+"</div>"+
       (hp&&h.total!=null?"<div class='lbl2'>Fin "+moisP+" : <b class='"+(hp.total>=0?"pos":"neg")+"'>"+sg(hp.total)+"</b></div>":"")+"</div>"+
@@ -1320,7 +1320,9 @@ function renderAff(){
 }
 
 /* Heures */
-var MONTHS=(function(){var out=[],d=new Date(Date.UTC(2026,0,1)),end=dAdd(t0,95);while(d<=end){out.push(dIso(d).slice(0,7));d=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1));}return out;})();
+/* 19/11/2026 : les mois commencent au premier jour connu (historique MonPlanningPharma repris depuis août 2025) */
+function buildMonths(){var out=[],d=new Date(Date.UTC(HFIRST.getUTCFullYear(),HFIRST.getUTCMonth(),1)),end=dAdd(t0,95);while(d<=end){out.push(dIso(d).slice(0,7));d=new Date(Date.UTC(d.getUTCFullYear(),d.getUTCMonth()+1,1));}return out;}
+var MONTHS=buildMonths();
 /* Sélecteur d'année compact : ‹ 2026 › (13/11/2026 : remplace les longues rangées de boutons) */
 function yearNav(years,cur,onPick,lab){
   years=years.map(String);var i=years.indexOf(String(cur));if(i<0)i=years.length-1;
@@ -1498,7 +1500,7 @@ function renderTit(){
     h+="</tr>";}
   h+="<tr class='tot'><td>Total "+Y+"</td>";T.forEach(function(t){h+="<td class='sep avg'>"+hm(t.w)+"</td><td>"+hm(t.cpH)+" <span class='sm'>("+nJ(t.cp)+")</span></td><td>"+hm(t.g)+"</td>";});if(data.length===2)h+="<td class='sep'></td><td></td>";
   document.getElementById("titTable").innerHTML=h+"</tr></tbody>";
-  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du 01/01/2026 ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé. Entre parenthèses, les jours ouvrables : du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris (une semaine de congé = 6 jours pour chacun, comme pour les salariés). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Équilibre (règle choisie par les titulaires le 13/11/2026) : mêmes heures à l'officine sur l'année civile, congés déjà posés compris ; les gardes sont suivies à part et n'entrent pas dans l'équilibre. L'équivalent en jours utilise la durée moyenne d'une journée dans la trame de la personne. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre après ce congé.";
+  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du "+dFr(dIso(HFIRST))+" ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé. Entre parenthèses, les jours ouvrables : du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris (une semaine de congé = 6 jours pour chacun, comme pour les salariés). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Équilibre (règle choisie par les titulaires le 13/11/2026) : mêmes heures à l'officine sur l'année civile, congés déjà posés compris ; les gardes sont suivies à part et n'entrent pas dans l'équilibre. L'équivalent en jours utilise la durée moyenne d'une journée dans la trame de la personne. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre après ce congé.";
 }
 /* ===== Changements de planning sans motif (« Non catégorisé ») : classement rapide, un par un ou par lot.
    Pas de notification à la personne : seul le motif change, pas les horaires. ===== */
@@ -1550,7 +1552,7 @@ function renderCls(){
     var ch=el("div",{class:"chips"});
     (a?MOTIFS_H:MOTIFS_ABS).forEach(function(k){var b=el("button",{class:"chip"},esc(TYPES[k].l));b.addEventListener("click",function(){c.classList.add("done");[].forEach.call(c.querySelectorAll("button,input"),function(z){z.disabled=true;});classer([x],k);});ch.appendChild(b);});
     c.appendChild(ch);list.appendChild(c);});
-  document.getElementById("clsNote").textContent="Changements du planning marqués « Non catégorisé » (ou sans motif), depuis le 01/01/2026. Un clic sur un motif le classe tout de suite ; pour en classer plusieurs d'un coup, cochez-les puis choisissez le motif en haut. Seul le motif change : les horaires restent les mêmes et la personne n'est pas prévenue. Le motif compte pour les soldes : congés payés, maladie, formation… sont des absences payées ; heures sup, récup et échanges jouent sur le solde d'heures.";
+  document.getElementById("clsNote").textContent="Changements du planning marqués « Non catégorisé » (ou sans motif), depuis le "+dFr(dIso(HFIRST))+". Pour 2025, MonPlanningPharma ne donne pas le motif des absences : classez-les ici (congé payé, récup…) pour qu'elles comptent au bon endroit. Un clic sur un motif le classe tout de suite ; pour en classer plusieurs d'un coup, cochez-les puis choisissez le motif en haut. Seul le motif change : les horaires restent les mêmes et la personne n'est pas prévenue. Le motif compte pour les soldes : congés payés, maladie, formation… sont des absences payées ; heures sup, récup et échanges jouent sur le solde d'heures.";
 }
 /* Fenêtre « Motif du changement » après un glisser au planning : un clic enregistre le motif (sans nouvelle notification) */
 function askMotif(pid,ds){
@@ -2749,7 +2751,7 @@ function loadAll(){
       S.notifs=nt.map(function(x){var p=P(x.staff_id);return {id:x.id,p:x.staff_id,by:x.by_name,at:x.created_at,lines:x.lines||[],read:!!x.read_at,mail:p?p.email:null,mailStatus:x.mail_status,origine:x.origine||"planning"};});
       S.swaps=(res[8].data||[]).map(mapSwap);
       S.histo={};var hmin=null;(res[9].data||[]).forEach(function(x){var ds=String(x.day).slice(0,10);if(!S.histo[ds])S.histo[ds]={};S.histo[ds][x.staff_id]={b:x.blocks||[],e:x.prevu||x.blocks||[],t:x.kind||null,c:x.comment||null};if(!hmin||ds<hmin)hmin=ds;});
-      HFIRST=hmin?dParse(hmin.slice(0,8)+"01"):FIRST;
+      HFIRST=hmin?dParse(hmin.slice(0,8)+"01"):FIRST;MONTHS=buildMonths();
       S.adjust=(res[7].data||[]).map(function(x){return {id:x.id,p:x.staff_id,day:String(x.jour).slice(0,10),kind:x.kind,min:x.minutes,cp:x.cp_jours==null?null:+x.cp_jours,label:x.motif||""};});
       S.cpMode=(set&&set.cp_mode)||"ouvrables";S.zone=(set&&set.vacances_zone)||"A";
       if(set){REF=dParse(String(set.cycle_ref_monday).slice(0,10));REFW=Math.max(0,W.indexOf(set.cycle_ref_week));}
