@@ -2065,7 +2065,7 @@ function loadGardes(){var vg=voitGardes(),ad=isAdmin(),none=Promise.resolve({dat
     vg?soft(sb.from("garde_tel").select("staff_id,tel")):none,
     vg?soft(sb.from("resogardes_suivi").select("*")):none,
     ad?soft(sb.from("resogardes_etat").select("identifiant_masque,maj").eq("id",1).maybeSingle()):none]).then(function(res){
-  S.gardes=(res[0].data||[]).filter(function(x){return vg||x.kind!=="service";}).map(function(x){return {id:x.id,kind:x.kind,p:x.staff_id,debut:new Date(x.debut),fin:new Date(x.fin),titre:x.titre||"",note:x.note||"",source:x.source,tel:x.tel||"",type:x.type_garde||""};});
+  S.gardes=(res[0].data||[]).filter(function(x){return vg||x.kind!=="service";}).map(function(x){return {id:x.id,kind:x.kind,p:x.staff_force||x.staff_id,pAgenda:x.staff_id,telForce:x.tel_force||"",force:!!(x.staff_force||x.tel_force),debut:new Date(x.debut),fin:new Date(x.fin),titre:x.titre||"",note:x.note||"",source:x.source,tel:x.tel||"",type:x.type_garde||""};});
   S.gtel={};(res[1].data||[]).forEach(function(x){S.gtel[x.staff_id]=x.tel;});
   S.rsuivi={};(res[2].data||[]).forEach(function(x){S.rsuivi[x.garde_id]={p:x.staff_id,tel:x.tel||"",at:x.fait_le};});
   S.reso=res[3].data||null;});}
@@ -2075,7 +2075,7 @@ function loadGardes(){var vg=voitGardes(),ad=isAdmin(),none=Promise.resolve({dat
 var RESO_URL="https://www.resogardes.com/",RESO_JOURS=45;
 function telNorm(t){return String(t||"").replace(/\D/g,"").replace(/^33/,"0");}
 function telFr(t){var d=telNorm(t);return d.length===10?d.replace(/(\d\d)(?=\d)/g,"$1 "):String(t||"");}
-function resoEtat(s){var tel=S.gtel[s.p]||"",f=S.rsuivi[s.id];
+function resoEtat(s){var tel=s.telForce||S.gtel[s.p]||"",f=S.rsuivi[s.id];
   if(!s.p)return {k:"qui",tel:""};if(!tel)return {k:"tel",tel:""};
   if(f&&f.p===s.p&&telNorm(f.tel)===telNorm(tel))return {k:"ok",tel:tel,at:f.at};
   return {k:f?"refaire":"faire",tel:tel};}
@@ -2090,15 +2090,16 @@ function renderReso(){
   var afaire=list.filter(function(s){var e=resoEtat(s);return e.k!=="ok";}).length;
   var hd=el("div",{class:"rhead"},"<h3>📞 À reporter sur Résogardes "+(afaire?"<span class='st st-pending'>"+afaire+" à faire</span>":(list.length?"<span class='st st-ok'>À jour</span>":""))+"</h3>");
   hd.appendChild(el("a",{class:"btn",href:RESO_URL,target:"_blank",rel:"noopener"},"Ouvrir Résogardes ↗"));box.appendChild(hd);
-  box.appendChild(el("div",{class:"meta"},"Numéro de garde à indiquer pour chaque créneau des "+RESO_JOURS+" prochains jours, d'après le planning des gardes."));
+  box.appendChild(el("div",{class:"meta"},"Numéro de garde à indiquer pour chaque créneau des "+RESO_JOURS+" prochains jours, d'après le planning des gardes."+(ad?" « Modifier » change le pharmacien ou le numéro d'un créneau ; les numéros habituels se règlent dans Équipe › Résogardes.":"")));
   var rl=el("div",{class:"rlist"});
   list.forEach(function(s){var p=P(s.p),e=resoEtat(s),col=p?p.color:"#C9CED6";
     var st=e.k==="ok"?"<span class='st st-ok'>✓ Reporté le "+dFr(pLoc(new Date(e.at)).ds)+"</span>":
       e.k==="refaire"?"<span class='st st-no'>Changé depuis : à refaire</span>":
       e.k==="tel"?"<span class='st st-no'>Numéro de "+esc(p?p.name:"?")+" à renseigner (onglet Équipe)</span>":
       e.k==="qui"?"<span class='st st-no'>Pharmacien non indiqué</span>":"<span class='st st-pending'>À faire</span>";
-    var d=el("div",{class:"rline"+(e.k==="ok"?"":" todo"),style:"--pc:"+col},"<i></i><span><b>"+esc(gNom(s))+"</b> · "+esc(gTxt(s))+(e.tel?"<br><span class='rtel'>"+esc(telFr(e.tel))+"</span>":"")+"</span>");
+    var d=el("div",{class:"rline"+(e.k==="ok"?"":" todo"),style:"--pc:"+col},"<i></i><span><b>"+esc(gNom(s))+"</b> · "+esc(gTxt(s))+(e.tel?"<br><span class='rtel'>"+esc(telFr(e.tel))+"</span>":"")+forceTxt(s)+"</span>");
     var ac=el("div",{class:"acts"},st);
+    if(ad){var md=el("button",{class:"linkbtn",style:"margin:0"},"Modifier");md.addEventListener("click",function(){openGardeCorr(s);});ac.appendChild(md);}
     if(e.tel){var cp=el("button",{class:"linkbtn",style:"margin:0",title:"Copier le numéro"},"Copier");cp.addEventListener("click",function(){copier(telFr(e.tel),"Numéro copié : "+telFr(e.tel));});ac.appendChild(cp);}
     if(ad&&e.tel&&e.k!=="ok"){var ok=el("button",{class:"btn primary",style:"padding:6px 12px"},"C'est fait");
       ok.addEventListener("click",function(){ok.disabled=true;
@@ -2112,6 +2113,38 @@ function renderReso(){
     rl.appendChild(el("div",{class:"rline todo",style:"--pc:#C9CED6"},"<i></i><span><b>Semaine de garde "+esc(gPeriode(x))+"</b><br><span class='meta'>Répartition entre pharmaciens pas encore saisie : ajoutez les créneaux (bouton « + Ajouter une garde » ou agenda Google) pour savoir quel numéro indiquer.</span></span>"));});
   if(!rl.children.length)rl.appendChild(el("div",{class:"meta",style:"padding:6px 0"},"Aucun créneau de garde dans les "+RESO_JOURS+" prochains jours."));
   box.appendChild(rl);box.hidden=false;
+}
+/* Correction d'un créneau dans l'appli (19/11/2026) : pharmacien et/ou numéro de garde.
+   Gardée à part dans la base : la relecture de l'agenda Google chaque soir ne l'écrase pas. */
+function forceTxt(s){if(!s.force)return "";var pa=P(s.pAgenda),bits=[];
+  if(s.p!==s.pAgenda)bits.push("agenda : "+(pa?pa.name:"non attribué"));if(s.telForce)bits.push("numéro propre à ce créneau");
+  return "<br><span class='sm'>✏️ Modifié dans l'appli"+(bits.length?" ("+esc(bits.join(", "))+")":"")+"</span>";}
+function openGardeCorr(s){
+  var phs=S.people.filter(function(p){return p.ph&&p.access!=="none"&&!isAncien(p);});
+  if(s.p&&!phs.some(function(p){return p.id===s.p;})&&P(s.p))phs.push(P(s.p));
+  var who=[s.p||(phs[0]?phs[0].id:null)],touche=!!s.telForce;
+  var c=el("div","","<h2>Modifier la garde</h2><div class='sub'>"+esc(gTxt(s))+(s.source==="agenda"?" · créneau lu dans l'agenda Google":"")+"</div>");
+  var s1=el("div",{class:"sec"},"<div class='lbl'>Pharmacien de garde</div>");s1.appendChild(radio(phs.map(function(p){return p.id;}),phs.map(function(p){return esc(p.name);}),who,upd));c.appendChild(s1);
+  var f=el("div",{class:"sec field"},"<label class='lbl' for='gc-tel'>Numéro à indiquer sur Résogardes</label>"),ti=el("input",{type:"tel",id:"gc-tel",autocomplete:"off",placeholder:"06 12 34 56 78"});
+  ti.value=telFr(s.telForce||S.gtel[who[0]]||"");f.appendChild(ti);var aide=el("div",{class:"lbl2"});f.appendChild(aide);c.appendChild(f);
+  c.appendChild(el("p",{class:"note"},"La correction vaut pour ce créneau seulement. Elle reste en place même si l'agenda Google n'est pas modifié : PharmaScope la garde à chaque relecture du soir. Pensez à la reporter sur Résogardes."));
+  var er=el("div",{class:"err"});c.appendChild(er);
+  var row=el("div",{class:"row"});row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));
+  if(s.force){var rz=el("button",{class:"btn"},"Revenir à l'agenda");rz.addEventListener("click",function(){rz.disabled=true;envoi(null,null,"Créneau rendu à l'agenda Google");});row.appendChild(rz);}
+  var ok=el("button",{class:"btn primary"},"Enregistrer");row.appendChild(ok);c.appendChild(row);
+  ti.addEventListener("input",function(){touche=true;upd();});
+  function upd(){var def=S.gtel[who[0]]||"",p=P(who[0]);
+    if(!touche)ti.value=telFr(def);
+    aide.textContent=def?"Numéro habituel de "+(p?p.name:"?")+" : "+telFr(def)+(telNorm(ti.value)&&telNorm(ti.value)!==telNorm(def)?" · ce créneau aura un autre numéro":""):"Pas de numéro habituel pour "+(p?p.name:"?")+" (Équipe › Résogardes).";
+    var d=telNorm(ti.value);er.textContent=ti.value.trim()&&!(d.length===10&&d[0]==="0")?"Numéro à 10 chiffres attendu (ex. 06 12 34 56 78).":"";ok.disabled=!!er.textContent||!who[0];}
+  function envoi(staff,tel,msg){sb.rpc("garde_corriger",{p_id:s.id,p_staff:staff,p_tel:tel}).then(check).then(loadGardes).then(function(){closeSheet();renderAll();toast(msg);})
+    .catch(function(e){ok.disabled=false;if(rz)rz.disabled=false;er.textContent="Enregistrement impossible : "+((e&&e.message)||e);});}
+  var rz=rz||null;
+  ok.addEventListener("click",function(){if(ok.disabled)return;ok.disabled=true;
+    var def=S.gtel[who[0]]||"",v=ti.value.trim(),tel=v&&telNorm(v)!==telNorm(def)?telFr(v):null,staff=who[0]===s.pAgenda?null:who[0];
+    if(!v&&!def){ok.disabled=false;er.textContent="Indiquez le numéro à reporter sur Résogardes.";return;}
+    var p=P(who[0]);envoi(staff,tel,"Garde du "+dFr(pLoc(s.debut).ds).slice(0,5)+" : "+(p?p.name:"?")+" · "+telFr(tel||def)+". Pensez à le reporter sur Résogardes.");});
+  upd();sheet(c);
 }
 function renderResoCfg(){
   var c=document.getElementById("resoCfg");c.innerHTML="";if(!isAdmin())return;
@@ -2165,7 +2198,8 @@ function gardeSemaines(){
 function gardesSur(a,b){var A=dParse(a).getTime()-2*36e5,B=dParse(b).getTime()+22*36e5;return gardeSemaines().filter(function(x){return x.b.getTime()>A&&x.a.getTime()<B;});}
 function servLine(s,canDel){
   var p=P(s.p),nm=gNom(s),col=p?p.color:"#C9CED6";
-  var d=el("div",{class:"gline"+(p?"":" unk"),style:"--pc:"+col},"<i></i><span><b>"+esc(nm)+"</b> · "+esc(gTxt(s))+(GTYPE[s.type]?" <span class='sm'>"+GTYPE[s.type]+"</span>":"")+"</span><span class='num'>"+hm(gDur(s))+"</span>");
+  var d=el("div",{class:"gline"+(p?"":" unk"),style:"--pc:"+col},"<i></i><span><b>"+esc(nm)+"</b> · "+esc(gTxt(s))+(GTYPE[s.type]?" <span class='sm'>"+GTYPE[s.type]+"</span>":"")+forceTxt(s)+"</span><span class='num'>"+hm(gDur(s))+"</span>");
+  if(canDel&&isAdmin()&&s.source!=="resogardes"&&s.fin.getTime()>Date.now()){var mo=el("button",{class:"linkbtn",style:"margin:0",title:"Changer le pharmacien ou le numéro"},"Modifier");mo.addEventListener("click",function(){openGardeCorr(s);});d.appendChild(mo);}
   if(canDel&&s.source==="appli"&&isEditor()){var x=el("button",{class:"linkbtn",style:"margin:0",title:"Supprimer ce créneau"},"Supprimer");
     x.addEventListener("click",function(){x.disabled=true;sb.from("gardes").delete().eq("id",s.id).then(check).then(loadGardes).then(function(){renderAll();toast("Créneau de garde supprimé");}).catch(function(e){toast("Suppression impossible : "+(e&&e.message||e));});});d.appendChild(x);}
   return d;
