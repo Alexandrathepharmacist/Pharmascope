@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.74">
+<meta name="ps-version" content="v9.75">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -883,7 +883,7 @@ var ceilMo=nowD.getFullYear()+"-"+("0"+(nowD.getMonth()+1)).slice(-2);
 var floorD=new Date(nowD.getFullYear(),nowD.getMonth()-25,1);
 var floorMo=floorD.getFullYear()+"-"+("0"+(floorD.getMonth()+1)).slice(-2);
 function pnum(x){return parseFloat((x||"").replace(/"/g,"").replace(/\s/g,"").replace(",","."))||0}
-var VST2={};var G2={},TVA2={},TVAM2={},FACT={},JOURS={},L2={},P2={},V2={},VCA2={},CAHO={},FACTHO={},CAEXC={},RECJ={};
+var VST2={};var PASSF={};var G2={},TVA2={},TVAM2={},FACT={},JOURS={},L2={},P2={},V2={},VCA2={},CAHO={},FACTHO={},CAEXC={},RECJ={};
 /* Nombre de jours d historique quotidien conserve pour le module Reassort */
 var REC_JOURS=14;
 /* Affluence : tickets distincts et CA par jour et par heure. Paniers : produits
@@ -919,7 +919,9 @@ if(!G2[mo])G2[mo]=[0,0];
 G2[mo][0]+=ca;G2[mo][1]+=marge;
 if(tva&&tva!=="0.0"){if(!TVA2[tva])TVA2[tva]={};TVA2[tva][mo]=(TVA2[tva][mo]||0)+ca;
 if(!TVAM2[tva])TVAM2[tva]={};TVAM2[tva][mo]=(TVAM2[tva][mo]||0)+marge}
-if(facture){if(!FACT[mo])FACT[mo]={};FACT[mo][facture]=1}
+if(facture){if(!FACT[mo])FACT[mo]={};FACT[mo][facture]=1;
+/* v9.75 : passages au comptoir. Une facture = son jour, sa 1re minute, son vendeur ; regroupees plus bas */
+var hmP=((r0.split(" ")[1])||"").slice(0,5);var mnP=/^\d{1,2}:\d{2}$/.test(hmP)?(parseInt(hmP.split(":")[0],10)*60+parseInt(hmP.split(":")[1],10)):-1;var jP=dp[2]+"-"+dp[1]+"-"+dp[0];var eP=PASSF[facture];if(!eP)PASSF[facture]={mo:mo,j:jP,mn:mnP,v:r2.trim(),n:parseInt(facture,10)||0};else if(jP<eP.j||(jP===eP.j&&mnP>=0&&(eP.mn<0||mnP<eP.mn))){eP.j=jP;eP.mn=mnP;eP.mo=mo}}
 /* Hors ordonnance : on exclut les lignes remboursables (TVA 2,1% et 0%) */
 var tvaF=parseFloat(tva)||0;
 var dispoR=tvaF!==2.1&&tvaF!==0&&estDispoRemb(names[code]);
@@ -991,6 +993,13 @@ if(P2["Divers"]){
 var topDiv=Object.keys(P2["Divers"]).map(function(cd){var caT=0;var dd=P2["Divers"][cd].caD;Object.keys(dd).forEach(function(m){caT+=dd[m]});return{n:P2["Divers"][cd].n,ca:caT}}).sort(function(a,b){return b.ca-a.ca}).slice(0,5);
 topDiv.forEach(function(t){if(t.ca>200)log("  Divers: "+t.n+" ("+Math.round(t.ca)+" EUR)")})}
 var fG=months.map(function(m){var g=G2[m]||[0,0];return[Math.round(g[0]*10)/10,Math.round(g[1]*10)/10]});
+/* v9.75 : un passage = les factures d un meme vendeur qui se suivent a 1 minute au plus (ordonnance + achat conseil = 1 client).
+   Valide sur 10 mois de Fiches Vendeur et la Synthese d activite Winpharma d octobre 2026 (4 932 passages contre 4 945 clients). */
+var PASSM={},PASSJ={};(function(){var arr=Object.keys(PASSF).map(function(k){return PASSF[k]});
+arr.sort(function(a,b){return a.j<b.j?-1:(a.j>b.j?1:((a.mn-b.mn)||(a.n-b.n)))});
+var last={};arr.forEach(function(e){var nomV=e.v.replace(/^\d+\s+/,"").trim();if(nomV&&estHorsEquipe(nomV))return;
+var kk=e.j+"|"+e.v;var pv=last[kk];if(pv!==undefined&&pv>=0&&e.mn>=0&&e.mn-pv<=1){last[kk]=e.mn;return}
+last[kk]=e.mn;PASSM[e.mo]=(PASSM[e.mo]||0)+1;PASSJ[e.j]=(PASSJ[e.j]||0)+1})})();
 var fFREQ=months.map(function(m){return[FACT[m]?Object.keys(FACT[m]).length:0,JOURS[m]?Object.keys(JOURS[m]).length:0]});
 /* EXC[i] = [CA exceptionnel du mois, nb de lignes concernees] */
 var fEXC=months.map(function(m){var e=CAEXC[m]||[0,0];return[Math.round(e[0]*10)/10,e[1]]});
@@ -999,7 +1008,8 @@ months.forEach(function(m,ix){
 var g=G2[m]||[0,0];var nf=fFREQ[ix][0];var nj=fFREQ[ix][1];
 var nfho=FACTHO[m]?Object.keys(FACTHO[m]).length:0;
 var caho=CAHO[m]||0;
-fF[m]={ventes:nf,ca:Math.round(g[0]*10)/10,marge:Math.round(g[1]*10)/10,moy_jour:nj?Math.round(g[0]/nj*10)/10:0,panier:nf?Math.round(g[0]/nf*100)/100:0,jours:nj,ventes_ho:nfho,panier_ho:nfho?Math.round(caho/nfho*100)/100:0}});
+var npa=PASSM[m]||0;var nv=npa>0?npa:nf;
+fF[m]={ventes:nv,factures:nf,ca:Math.round(g[0]*10)/10,marge:Math.round(g[1]*10)/10,moy_jour:nj?Math.round(g[0]/nj*10)/10:0,panier:nv?Math.round(g[0]/nv*100)/100:0,jours:nj,ventes_ho:nfho,panier_ho:nfho?Math.round(caho/nfho*100)/100:0};if(npa>0)fF[m].pass=1});
 var fTVA={};
 Object.keys(TVA2).forEach(function(t){
 var md={};Object.keys(TVA2[t]).forEach(function(m){if(m>=minMo)md[m]=Math.round(TVA2[t][m]*10)/10});
@@ -1066,7 +1076,7 @@ var nC=[0,0,0,0,0],oC=[0,0,0,0,0],uV={};Object.keys(hj.k||{}).forEach(function(f
 if(k.v){if(!uV[k.v])uV[k.v]=[0,0,0];uV[k.v][0]++;if(k.o)uV[k.v][1]++;uV[k.v][2]+=k.m}});
 Object.keys(uV).forEach(function(v){uV[v][2]=Math.round(uV[v][2])});
 /* u = clients servis par vendeur ce jour-la : [clients, dont ordonnance, marge] (v9.74) */
-fHEAT[jk]={t:t,c:c,m:mh,n:nC,o:oC,u:uV,v:5};if(hj.x)fHEAT[jk].x=[hj.x[0],Math.round(hj.x[1]),Math.round(hj.x[2])]});
+fHEAT[jk]={t:t,c:c,m:mh,n:nC,o:oC,u:uV,v:5};if(PASSJ[jk])fHEAT[jk].p=PASSJ[jk];if(hj.x)fHEAT[jk].x=[hj.x[0],Math.round(hj.x[1]),Math.round(hj.x[2])]});
 /* Ventes associees : paires de produits achetes ensemble (tickets de 2 a 15 produits) */
 var fASSOC=null;
 (function(){
@@ -1232,6 +1242,16 @@ else if(mo===12||mo<=2)tips.push({cat:"digital",k:"saison-hiver",saison:null,tip
 else tips.push({cat:"digital",k:"saison-printemps",saison:null,tip:"Printemps : allergies et d\u00e9tox en vitrine - les pollens n attendent pas",action:"Univers"});
 }catch(e){}
 return tips}
+
+/* ===== v9.75 : PASSAGES CLIENTS =====
+   Les mois importes avant la v9.75 comptent des factures. On les convertit en passages estimes
+   avec le rapport passages/factures mesure (median des mois complets, 0,81 par defaut : valeur
+   mesuree sur mars 2025-fevrier 2026). Marque est:1 pour ne jamais convertir deux fois. */
+function ratioPassages(pd){var r=[];if(pd&&pd.F)Object.keys(pd.F).forEach(function(m){var f=pd.F[m];if(f&&f.pass&&f.factures>0&&(f.jours||0)>=15)r.push(f.ventes/f.factures)});
+if(r.length<3)return 0.81;r.sort(function(a,b){return a-b});return r[Math.floor(r.length/2)]}
+function passagesNormaliser(pd){try{if(!pd||!pd.F)return pd;var rt=ratioPassages(pd);pd.RPASS=rt;
+Object.keys(pd.F).forEach(function(m){var f=pd.F[m];if(!f||f.pass||f.est||!(f.ventes>0))return;
+f.factures=f.ventes;f.ventes=Math.max(1,Math.round(f.ventes*rt));f.panier=Math.round((f.ca||0)/f.ventes*100)/100;f.est=1})}catch(e){console.warn("passages:",e)}return pd}
 
 /* ===== FUSION DES DONNEES DE VENTES (import incremental) ===== */
 function mergeSalesData(prev,fresh){
@@ -1818,7 +1838,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.74";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.75";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -2048,7 +2068,8 @@ if(window.MODE_DEMO)return Promise.resolve({liste:window.DEMO_DATA&&window.DEMO_
 if(!supaClient)return Promise.resolve({err:"hors_ligne"});
 return supaClient.auth.getSession().then(function(s){if(!(s&&s.data&&s.data.session))return{err:"compte"};
 return supaClient.from("resume_matin").select("jour,data").order("jour",{ascending:false}).limit(7).then(function(r){if(r.error)return{err:"lecture"};return{liste:r.data||[]}})}).catch(function(){return{err:"hors_ligne"}})}
-/* v9.61 : bouton "Tache" sur chaque point du resume -> ajoute a la to-do list (une seule fois par mail)
+/* v9.75 : panier moyen par client (passage au comptoir) et non plus par facture : une ordonnance + un achat conseil = 1 client, comme Winpharma. Mois anciens estimes (rapport passages/factures).
+   v9.61 : bouton "Tache" sur chaque point du resume -> ajoute a la to-do list (une seule fois par mail)
    v9.74 : Affluence en 3 onglets : Patientele, Clients servis (par vendeur, jour par jour, moyennes semaine et mois, clients / heure de presence) et Effectif au comptoir (planning x affluence). HEAT.u = clients par vendeur et par jour (v:5).
    v9.73 : Affluence -> evolution de la patientele (4, 13, 26 semaines vs N-1) : clients/jour, ordonnance/conseil, creneaux (dont 12h30-14h30), jours de la semaine, marge par client ; HEAT garde 800 jours (n/o par creneau, v:4).
    v9.72 : un fournisseur Winpharma qui ressemble a un labo Ospharm (ex. LOVREN REF / CLINICALFARMA LOVREN) est rattache a sa fiche : plus de fiche vide ni de labo en double.
@@ -3290,7 +3311,7 @@ var vjC=fC.ventes/fC.jours,vjA=fA.ventes/fA.jours;
 var eV=vjA>0?Math.round((vjC-vjA)/vjA*1000)/10:0;
 ev4={txt:pct(eV)+" /jour vs mois prec.",col:evolColor(eV)}}
 else{ev4=fA?evolTxt(fC.ventes,fA.ventes):null}
-return{label:"NOMBRE DE VENTES",value:(fC.ventes||0).toLocaleString("fr-FR"),sub:ev4?ev4.txt:"",subCol:ev4?ev4.col:"var(--text3)"}}
+return{label:"NOMBRE DE CLIENTS",value:(fC.ventes||0).toLocaleString("fr-FR"),sub:ev4?ev4.txt:"",subCol:ev4?ev4.col:"var(--text3)"}}
 if(id==="nb_jours"&&fC){
 return{label:"JOURS D'ACTIVITE",value:(fC.jours||0)+"",sub:"ce mois-ci",subCol:"var(--text3)"}}
 if(id==="marge_jour"){var mj=margeDernierJour(pd);if(!mj||!mj.dj)return null;
@@ -3651,7 +3672,7 @@ var kpis=[
 {lab:"MARGE",val:fmtE(fC.marge),prev:fP?fP.marge:null,cur:fC.marge,plabel:"vs mois pr\u00e9c.",n1:fN1?fN1.marge:null},
 {lab:"TAUX DE MARQUE",val:pct(txMarque),raw:txMarque,color:margeColor(txMarque,baselineMarge(pd))},
 {lab:"PANIER MOYEN",val:(panier||0).toFixed(2)+" \u20ac",prev:panierP,cur:panier,plabel:"vs mois pr\u00e9c."},
-{lab:"NOMBRE DE VENTES",val:(fC.ventes||0).toLocaleString("fr-FR"),prev:fP?fP.ventes:null,cur:fC.ventes,plabel:"vs mois pr\u00e9c."},
+{lab:"NOMBRE DE CLIENTS",val:(fC.ventes||0).toLocaleString("fr-FR"),prev:fP?fP.ventes:null,cur:fC.ventes,plabel:"vs mois pr\u00e9c."},
 {lab:"JOURS D'ACTIVIT\u00c9",val:(fC.jours||0)+"",sub:fmtE(fC.moy_jour||0)+" / jour"+(fN1&&fN1.jours?" (N-1 : "+fN1.jours+" jours)":""),cur:fC.moy_jour||0,n1:fN1&&fN1.moy_jour?fN1.moy_jour:null,n1label:"CA par jour vs N-1"}
 ];
 
@@ -4393,7 +4414,7 @@ viewMode==="annuel"?React.createElement(CourbeN1,{data:dataAff,prev:aUnN1?prevAf
 React.createElement("div",{style:{overflowX:"auto"}},
 React.createElement("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:13}},
 React.createElement("thead",null,React.createElement("tr",{style:{borderBottom:"2px solid var(--border)"}},
-["Mois","CA HT","Marge","Tx marque","Ventes","Ventes/j","Panier"].map(function(h,hi){return React.createElement("th",{key:h,style:{textAlign:hi?"right":"left",padding:"8px",color:"var(--text3)",fontSize:12}},h)}))),
+["Mois","CA HT","Marge","Tx marque","Clients","Clients/j","Panier"].map(function(h,hi){return React.createElement("th",{key:h,style:{textAlign:hi?"right":"left",padding:"8px",color:"var(--text3)",fontSize:12}},h)}))),
 React.createElement("tbody",null,pd.M.map(function(mm,ii){return ii}).slice(-12).reverse().map(function(idx,r){
 var g=pd.G[idx]||[0,0];var tx4=g[0]>0?(g[1]/g[0]*100):0;var fl3=pd.F[pd.M[idx]]||{};var mp2=pd.M[idx].split("-");
 return React.createElement("tr",{key:idx,style:{borderBottom:"1px solid var(--border)",background:r%2===0?"transparent":"var(--bg3)"}},
@@ -5868,7 +5889,7 @@ if(o.lundi&&o.lundi<=fin){var f6=isoAjoute(o.lundi,6);if(f6<fin)fin=f6}
 var dFin=new Date(fin+"T12:00:00");var dow=(dFin.getDay()+6)%7;var lundi=isoAjoute(fin,-dow);var dim=isoAjoute(lundi,6);
 function caJour(j){var h=pd.HEAT[j];if(!h)return null;var s=0;(h.c||[]).forEach(function(x){s+=x||0});return s}
 function mgJour(j){var h=pd.HEAT[j];if(!h||!Array.isArray(h.m))return null;var s=0;h.m.forEach(function(x){s+=x||0});return s}
-function tkJour(j){var h=pd.HEAT[j];if(!h)return 0;var s=0;(h.t||[]).forEach(function(x){s+=x||0});return s}
+function tkJour(j){var h=pd.HEAT[j];if(!h)return 0;if(typeof h.p==="number")return h.p;var s=0;(h.t||[]).forEach(function(x){s+=x||0});return Math.round(s*(pd.RPASS||0.81))}
 var ca=0,tk=0,ca1=0,tk1=0,nJ=0,nJ1=0,parJour=[],mg=0,mg1=0,mgKo=false,mg1Ko=false;
 for(var k=0;k<7;k++){var j=isoAjoute(lundi,k);if(j>fin)break;var c=caJour(j);var j1=isoAjoute(j,-364);var c1=caJour(j1);
 var g=mgJour(j),g1=mgJour(j1);
@@ -15395,7 +15416,7 @@ var openTabsS=useState([]);var openTabs=openTabsS[0];var setOpenTabs=openTabsS[1
 var activeTabS=useState(null);var activeTab=activeTabS[0];var setActiveTab=activeTabS[1];
 var ldS=useState(null);var ld=ldS[0];var setLd=ldS[1];
 var stockS=useState(null);var stock=stockS[0];var setStock=stockS[1];
-var pdS=useState(null);var pd=pdS[0];var setPd=pdS[1];
+var pdS=useState(null);var pd=pdS[0];var setPd=function(x){pdS[1](passagesNormaliser(x))};
 var teamS=useState([{id:1,name:"Alexandra",fn:"Pharmacien titulaire"},{id:2,name:"\u00c9loi",fn:"Pharmacien adjoint"},{id:3,name:"Audrey",fn:"Pr\u00e9paratrice"},{id:4,name:"Tifenn",fn:"Pr\u00e9paratrice"}]);
 var team=teamS[0];var setTeam=teamS[1];
 var decS=useState({"SIGVARIS":{d:"arret",note:"Remplac\u00e9 par Radiante",rempl:"Radiante"},"THUASNE":{d:"arret",note:"Remplac\u00e9 par Donjoy",rempl:"Donjoy"},"MARQUE VERTE":{d:"arret",note:"Remplac\u00e9 par Apothicare + Hartmann",rempl:"Apothicare / Hartmann"},"LOVE AND GREEN":{d:"arret",note:"Remplac\u00e9 par Les Petites Choses",rempl:"Les Petites Choses"},"FILORGA":{d:"arret",note:"Arr\u00eat de gamme, d\u00e9stockage en cours"}});
