@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="ps-version" content="p2.05">
+<meta name="ps-version" content="p2.06">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -566,6 +566,7 @@ table.bil{min-width:980px}
       <button class="btn ghost" id="todayBtn">Cette semaine</button>
       <button class="btn ghost" id="printBtn">Imprimer</button>
       <button class="btn ghost" id="absBtn" hidden>+ Absence</button>
+      <button class="btn ghost" id="xchBtn" hidden>⇄ Échange</button>
     </div>
     <div class="ginfo" id="planInfo" hidden></div>
     <div class="viewbar"><div class="seg" id="pseg"><button data-v="day">Jour</button><button data-v="week">Semaine</button></div></div>
@@ -1082,7 +1083,7 @@ function renderPlan(){
   segSync("pseg",S.pview);document.getElementById("pdayv").hidden=S.pview!=="day";document.getElementById("pweekv").hidden=S.pview!=="week";
   document.getElementById("wkLabel").textContent="Semaine du "+dShort(mon);
   document.getElementById("wkSub").textContent=(mon<FIRST?"Historique MonPlanningPharma":"Trame "+L)+" · semaine "+Math.ceil(((mon-new Date(Date.UTC(mon.getUTCFullYear(),0,1)))/864e5+new Date(Date.UTC(mon.getUTCFullYear(),0,1)).getUTCDay()+1)/7);
-  document.getElementById("absBtn").hidden=!isEditor();renderPlanInfo(mon);
+  document.getElementById("absBtn").hidden=!isEditor();document.getElementById("xchBtn").hidden=!isEditor();renderPlanInfo(mon);
   document.getElementById("prevWk").disabled=dAdd(mon,-7)<monOf(HFIRST);document.getElementById("nextWk").disabled=dAdd(mon,7)>LAST;
   if(S.pview==="day"){renderPlanDay();return;}
   var admin=isEditor(),h="<thead><tr><th>Équipe</th>";
@@ -1741,16 +1742,17 @@ function dLong(ds){var d=dParse(ds);return (wdOf(d)<6?DL[wdOf(d)].toLowerCase():
 function isOff(inf){return !!inf.ferie||(!!inf.changed&&!inf.act.length&&inf.exp.length>0);}
 function mapSwap(x){return {id:x.id,a:x.demandeur,b:x.collegue,dsA:String(x.jour_demandeur).slice(0,10),dsB:String(x.jour_collegue).slice(0,10),ga:x.blocs_demandeur||[],gb:x.blocs_collegue||[],c:x.comment||"",status:x.status,at:dIso(new Date(Date.UTC(new Date(x.cree_le).getFullYear(),new Date(x.cree_le).getMonth(),new Date(x.cree_le).getDate())))};}
 /* a cède sa journée dsA à b, et prend la journée dsB de b */
-function swapPlan(aId,dsA,bId,dsB){
-  var a=P(aId),b=P(bId),errs=[],out={errs:errs,res:[],ga:[],gb:[]};
+function swapPlan(aId,dsA,bId,dsB,force){
+  var a=P(aId),b=P(bId),errs=[],warns=[],out={errs:errs,warns:warns,res:[],ga:[],gb:[]};
   if(!a||!b){errs.push("Collègue introuvable.");return out;}
-  if(grade(a)!==grade(b))errs.push("Il faut le même diplôme.");
+  if(aId===bId){errs.push("Choisissez deux personnes différentes.");return out;}
+  if(grade(a)!==grade(b))(force?warns:errs).push(force?a.name+" et "+b.name+" n'ont pas le même diplôme.":"Il faut le même diplôme.");
   if(!dsA||!dsB){errs.push("Choisissez les deux journées.");return out;}
-  if(dsA<=tIso||dsB<=tIso)errs.push("Les deux journées doivent être à venir.");
+  if(!force&&(dsA<=tIso||dsB<=tIso))errs.push("Les deux journées doivent être à venir.");
   var ia=dayInfo(aId,dsA),ib=dayInfo(bId,dsB),ga=ia.act,gb=ib.act;out.ga=ga;out.gb=gb;
   if(!ga.length)errs.push(a.name+" ne travaille pas le "+dLong(dsA)+".");
   if(!gb.length)errs.push(b.name+" ne travaille pas le "+dLong(dsB)+".");
-  if(ga.length&&gb.length&&dur(ga)!==dur(gb))errs.push("Les deux journées n'ont pas le même nombre d'heures : "+hm(dur(ga))+" contre "+hm(dur(gb))+".");
+  if(ga.length&&gb.length&&dur(ga)!==dur(gb))(force?warns:errs).push("Les deux journées n'ont pas le même nombre d'heures : "+hm(dur(ga))+" contre "+hm(dur(gb))+(force?" (l'écart passe dans leur solde d'heures)":"")+".");
   if(errs.length)return out;
   if(dsA===dsB){
     if(same(ga,gb)){errs.push("Les horaires sont déjà identiques ce jour-là.");return out;}
@@ -1809,6 +1811,51 @@ function decideSwap(x,ok){
     decisionNote=[{p:x.a,txt:"Votre échange avec "+b.name+" a été validé"},{p:x.b,txt:"Votre échange avec "+a.name+" a été validé"}];
     save();renderAll();toast("Échange validé : le planning de "+a.name+" et "+b.name+" est à jour");
   }).catch(swapErr);
+}
+/* 20/11/2026 : échange de jours fait directement par un titulaire (sans demande) : les 4 modifications en une fois,
+   même contrôle que les demandes de l'équipe ; diplôme ou heures différents = simple avertissement. */
+function openSwapDirect(pid,ds){
+  var ppl=S.people.filter(function(p){return !isAncien(p);}),ids=ppl.map(function(p){return p.id;}),nm=ppl.map(function(p){return esc(p.name);});
+  var A=[pid||ids[0]],B=[null],dA=ds||"",dB="";
+  if(!dA){for(var i=1;i<=30;i++){var x=dIso(dAdd(dParse(tIso),i));if(dayInfo(A[0],x).act.length){dA=x;break;}}}
+  var c=el("div","","<h2>Échange de jours</h2><div class='sub'>Les 4 modifications du planning sont faites en une fois et les deux personnes sont prévenues.</div>");
+  var s1=el("div",{class:"sec"},"<div class='lbl'>Qui cède sa journée ?</div>");c.appendChild(s1);
+  var f1=el("div",{class:"sec field"},"<label class='lbl' for='x-a'>Journée cédée</label>"),fi=el("input",{type:"date",id:"x-a"});fi.value=dA;f1.appendChild(fi);var t1=el("div",{class:"lbl2"});f1.appendChild(t1);c.appendChild(f1);
+  var s2=el("div",{class:"sec"},"<div class='lbl'>Qui la prend ?</div>");c.appendChild(s2);
+  var f2=el("div",{class:"sec field"},"<label class='lbl' for='x-b'>Journée rendue en échange</label>"),ti=el("input",{type:"date",id:"x-b"});f2.appendChild(ti);
+  var sug=el("div",{class:"chips",style:"margin-top:6px"});f2.appendChild(sug);c.appendChild(f2);
+  var rec=el("div",{class:"recap"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
+  var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Faire l'échange");row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row.appendChild(ok);c.appendChild(row);
+  function drawA(){s1.innerHTML="<div class='lbl'>Qui cède sa journée ?</div>";s1.appendChild(radio(ids,nm,A,function(){B[0]=null;ti.value="";drawB();upd();}));}
+  function drawB(){var me=P(A[0]),o=ppl.filter(function(p){return p.id!==A[0];});
+    o.sort(function(x,y){return (grade(x)===grade(me)?0:1)-(grade(y)===grade(me)?0:1);});
+    s2.innerHTML="<div class='lbl'>Qui la prend ?</div>";
+    s2.appendChild(radio(o.map(function(p){return p.id;}),o.map(function(p){return esc(p.name)+(grade(p)===grade(me)?"":" <span class='sm' style='font-weight:400'>autre diplôme</span>");}),B,function(){ti.value="";upd();}));}
+  function upd(){
+    var a=P(A[0]),ia=fi.value?dayInfo(A[0],fi.value):null;er.textContent="";rec.innerHTML="";ok.disabled=true;sug.innerHTML="";
+    t1.textContent=ia?(ia.act.length?a.name+" travaille "+blTxt(ia.act)+" ("+hm(dur(ia.act))+")":a.name+" ne travaille pas ce jour-là"):"";
+    if(!B[0]||!fi.value)return;
+    var b=P(B[0]);
+    /* journées possibles en retour : 8 semaines autour de la journée cédée */
+    if(ia&&ia.act.length){var base=dParse(fi.value),n=0;for(var k=-28;k<=56&&n<8;k++){var x=dIso(dAdd(base,k));if(x<=tIso&&fi.value>tIso)continue;
+        var pl0=swapPlan(A[0],fi.value,B[0],x,true);if(pl0.errs.length||pl0.warns.length)continue;n++;
+        (function(x){var bt=el("button",{class:"chip","aria-pressed":String(ti.value===x)},(x===fi.value?"Même jour":dLong(x)));bt.addEventListener("click",function(){ti.value=x;upd();});sug.appendChild(bt);})(x);}
+      if(!n)sug.appendChild(el("span",{class:"sm"},"Aucune journée de "+esc(b.name)+" de même durée trouvée autour de cette date."));
+      else sug.insertAdjacentHTML("afterbegin","<span class='sm' style='width:100%'>Journées de "+esc(b.name)+" possibles (même durée) :</span>");}
+    if(!ti.value)return;
+    var pl=swapPlan(A[0],fi.value,B[0],ti.value,true);
+    if(pl.errs.length){er.textContent=pl.errs.join(" ");return;}
+    var days=fi.value===ti.value?[fi.value]:[fi.value,ti.value],before=days.map(gapMin),keep=S.changes,gap=[];
+    S.changes=cp(S.changes);applySwap(pl);days.forEach(function(d,i){if(gapMin(d)>before[i])gap.push(dLong(d));});S.changes=keep;
+    rec.innerHTML=pl.res.map(function(r){return "<div><b>"+esc(P(r[0]).name)+"</b> · "+dLong(r[1])+" : "+blTxt(r[2])+"</div>";}).join("")+
+      (pl.warns.length?"<div style='color:#9a5b00;margin-top:6px'>⚠ "+esc(pl.warns.join(" "))+"</div>":"")+
+      (gap.length?"<div style='color:var(--bad);margin-top:6px'>⚠ Plus de pharmacien sur une partie de la journée : "+esc(gap.join(", "))+"</div>":"");
+    ok.disabled=false;ok._pl=pl;
+  }
+  fi.addEventListener("input",function(){ti.value="";upd();});ti.addEventListener("input",upd);
+  ok.addEventListener("click",function(){var pl=ok._pl;if(!pl)return;var a=P(A[0]),b=P(B[0]);snap();applySwap(pl);save();closeSheet();renderAll();
+    toast("Échange fait : "+a.name+" ⇄ "+b.name+(fi.value===ti.value?" le "+dLong(fi.value):", "+dLong(fi.value)+" / "+dLong(ti.value)),true);});
+  drawA();drawB();upd();sheet(c);
 }
 function openSwap(){
   var me=ME(),mates=S.people.filter(function(p){return p.id!==me.id&&p.access!=="none"&&grade(p)===grade(me);});
@@ -2466,6 +2513,7 @@ function openDay(pid,ds){
   var vals=blocksToVals(inf.act.length?inf.act:inf.exp);
   var c=el("div");
   c.appendChild(el("div",{class:"who",style:"--pc:"+p.color},av(p)+"<div><h2>"+esc(p.name)+"</h2><div class='sub'>"+DL[wdOf(d)]+" "+dShort(d)+" · trame "+letterOf(d)+" : "+(inf.exp.length?inf.exp.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(", ")+" ("+hm(dur(inf.exp))+")":"repos")+"</div></div>"));
+  if(isEditor()&&inf.act.length){var xb=el("button",{class:"btn",style:"margin-top:10px"},"⇄ Échanger cette journée avec un collègue");xb.addEventListener("click",function(){closeSheet();openSwapDirect(pid,ds);});c.appendChild(xb);}
   var seg=el("div",{class:"seg",style:"margin-top:14px"});
   var bW=el("button",{"aria-pressed":String(mode[0]==="work")},"Travaille"),bA=el("button",{"aria-pressed":String(mode[0]==="abs")},"Absent(e)");
   seg.appendChild(bW);seg.appendChild(bA);c.appendChild(seg);
@@ -2692,6 +2740,7 @@ document.getElementById("nextWk").addEventListener("click",function(){S.wk=dIso(
 document.getElementById("todayBtn").addEventListener("click",function(){S.wk=dIso(monOf(t0));S.pday=Math.min(5,wdOf(t0));renderAll();});
 document.getElementById("newReq").addEventListener("click",function(){openRequest(null);});
 document.getElementById("newSwap").addEventListener("click",function(){openSwap();});
+document.getElementById("xchBtn").addEventListener("click",function(){openSwapDirect(null,null);});
 document.getElementById("absBtn").addEventListener("click",function(){openAbsence(null,dIso(dAdd(dParse(S.wk),S.pview==="day"?S.pday:0)));});
 document.getElementById("newAbs").addEventListener("click",function(){openAbsence(S.congWho||null,null);});
 document.getElementById("congPrint").addEventListener("click",function(){printOnly("cong");});
