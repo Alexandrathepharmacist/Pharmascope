@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.73">
+<meta name="ps-version" content="v9.74">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -935,8 +935,10 @@ if(facture&&!isNaN(hh)&&hh>=0&&hh<24){var jkH=dp[2]+"-"+dp[1]+"-"+dp[0];
 if(!HEATJ[jkH])HEATJ[jkH]={t:{},c:{},m:{},k:{},w:new Date(jkH+"T12:00:00").getDay()};var hj=HEATJ[jkH];
 if(!hj.t[hh])hj.t[hh]={};hj.t[hh][facture]=1;
 /* v9.73 : patientele -> par ticket : creneau horaire, ordonnance (au moins un produit remboursable), vendeur de l equipe, quantite */
-var tkA=hj.k[facture];if(!tkA){var mnA=hh*60+(parseInt(hmV.split(":")[1]||"0",10)||0);tkA=hj.k[facture]={q:creneauAffluence(hj.w,mnA),o:0,e:0,n:0}}
-if(tvaF===2.1||dispoR)tkA.o=1;var vnA=r2.trim().replace(/^\d+\s+/,"");if(!vnA||!estHorsEquipe(vnA))tkA.e=1;tkA.n+=qte;hj.c[hh]=(hj.c[hh]||0)+ca;hj.m[hh]=(hj.m[hh]||0)+marge;if(ca>SEUIL_EXC){if(!hj.x)hj.x=[0,0,0];hj.x[0]++;hj.x[1]+=ca;hj.x[2]+=marge}}
+var tkA=hj.k[facture];if(!tkA){var mnA=hh*60+(parseInt(hmV.split(":")[1]||"0",10)||0);tkA=hj.k[facture]={q:creneauAffluence(hj.w,mnA),o:0,e:0,n:0,m:0,v:""}}
+if(tvaF===2.1||dispoR)tkA.o=1;var vnA=r2.trim().replace(/^\d+\s+/,"").trim();if(!vnA||!estHorsEquipe(vnA))tkA.e=1;tkA.n+=qte;tkA.m+=marge;
+/* v9.74 : vendeur du ticket = premier vendeur de l equipe qui apparait sur le ticket */
+if(vnA&&!tkA.v&&!estHorsEquipe(vnA))tkA.v=vnA.split(" ").map(function(w){return w?w.charAt(0).toUpperCase()+w.slice(1).toLowerCase():w}).join(" ");hj.c[hh]=(hj.c[hh]||0)+ca;hj.m[hh]=(hj.m[hh]||0)+marge;if(ca>SEUIL_EXC){if(!hj.x)hj.x=[0,0,0];hj.x[0]++;hj.x[1]+=ca;hj.x[2]+=marge}}
 if(ca>SEUIL_EXC){if(!CAEXC[mo])CAEXC[mo]=[0,0];CAEXC[mo][0]+=ca;CAEXC[mo][1]+=1}
 if(whNew[code]){delete whNew[code];var whSup=pMap[code];pMap[code]=null;var labNom=inferLab(code);if(!labNom||estGrossisteNom(labNom))pMap[code]=whSup}
 var sup=pMap[code]||inferLab(code)||quarMap[code]||"Divers";
@@ -1060,8 +1062,11 @@ var fHEAT={};
 function okTk(hj,f){var k=hj.k&&hj.k[f];return !k||(k.e&&k.n>0)}
 Object.keys(HEATJ).forEach(function(jk){var hj=HEATJ[jk];var t=[],c=[],mh=[];
 for(var h2=0;h2<24;h2++){t.push(hj.t[h2]?Object.keys(hj.t[h2]).filter(function(f){return okTk(hj,f)}).length:0);c.push(Math.round(hj.c[h2]||0));mh.push(Math.round(hj.m[h2]||0))}
-var nC=[0,0,0,0,0],oC=[0,0,0,0,0];Object.keys(hj.k||{}).forEach(function(f){var k=hj.k[f];if(!(k.e&&k.n>0))return;nC[k.q]++;if(k.o)oC[k.q]++});
-fHEAT[jk]={t:t,c:c,m:mh,n:nC,o:oC,v:4};if(hj.x)fHEAT[jk].x=[hj.x[0],Math.round(hj.x[1]),Math.round(hj.x[2])]});
+var nC=[0,0,0,0,0],oC=[0,0,0,0,0],uV={};Object.keys(hj.k||{}).forEach(function(f){var k=hj.k[f];if(!(k.e&&k.n>0))return;nC[k.q]++;if(k.o)oC[k.q]++;
+if(k.v){if(!uV[k.v])uV[k.v]=[0,0,0];uV[k.v][0]++;if(k.o)uV[k.v][1]++;uV[k.v][2]+=k.m}});
+Object.keys(uV).forEach(function(v){uV[v][2]=Math.round(uV[v][2])});
+/* u = clients servis par vendeur ce jour-la : [clients, dont ordonnance, marge] (v9.74) */
+fHEAT[jk]={t:t,c:c,m:mh,n:nC,o:oC,u:uV,v:5};if(hj.x)fHEAT[jk].x=[hj.x[0],Math.round(hj.x[1]),Math.round(hj.x[2])]});
 /* Ventes associees : paires de produits achetes ensemble (tickets de 2 a 15 produits) */
 var fASSOC=null;
 (function(){
@@ -1813,7 +1818,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.73";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.74";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -1886,7 +1891,10 @@ var NAVG=[
 {id:"palmares",label:"Palmar\u00e8s",icon:"\ud83c\udfc6",tabs:[
 {id:"palmares",label:"Ventes"},
 {id:"conseilvendeurs",label:"Conseil",nom:"Conseil par vendeur",icon:"\ud83c\udfaf"}]},
-{id:"affluence",label:"Affluence",icon:"\u23f1"}]},
+{id:"affluence",label:"Affluence",icon:"\u23f1",tabs:[
+{id:"affluence",label:"Patient\u00e8le",nom:"Affluence"},
+{id:"servis",label:"Clients servis",icon:"\ud83d\ude4b"},
+{id:"comptoir",label:"Effectif au comptoir",icon:"\ud83e\uddd1\u200d\u2695\ufe0f"}]}]},
 {id:"outils",label:"R\u00e9glages",icon:"\u2699",items:[
 {id:"import",label:"Donn\u00e9es",icon:"\ud83d\udcc1",tabs:[
 {id:"import",label:"Import",nom:"Import"},
@@ -1948,7 +1956,7 @@ var P=Storage.prototype;if(!P.__demo){P.__demo=1;var g=P.getItem,st=P.setItem,rm
 var cle=function(x){x=String(x);return /^ps_auth/.test(x)?x:"demo:"+x};
 P.getItem=function(x){return g.call(this,cle(x))};P.setItem=function(x,v){return st.call(this,cle(x),v)};P.removeItem=function(x){return rm.call(this,cle(x))}}}
 function viderDemo(){try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf("demo:")===0)ks.push(k)}ks.forEach(function(k){Storage.prototype.__demo?localStorage.removeItem(k.slice(5)):localStorage.removeItem(k)})}catch(e){}}
-function chargerScriptDemo(){return new Promise(function(ok,ko){if(window.DEMO_DATA){ok();return}var sc=document.createElement("script");sc.src="data/demo.js?v=3";sc.onload=function(){ok()};sc.onerror=function(){ko(new Error("demo"))};document.head.appendChild(sc)})}
+function chargerScriptDemo(){return new Promise(function(ok,ko){if(window.DEMO_DATA){ok();return}var sc=document.createElement("script");sc.src="data/demo.js?v=4";sc.onload=function(){ok()};sc.onerror=function(){ko(new Error("demo"))};document.head.appendChild(sc)})}
 function BandeauDemo(){return React.createElement("div",{style:{position:"fixed",top:54,left:"50%",transform:"translateX(-50%)",zIndex:9999,pointerEvents:"none",background:"rgba(124,58,237,.92)",color:"#fff",fontSize:12,fontWeight:700,padding:"4px 12px",borderRadius:20,boxShadow:"0 2px 10px rgba(0,0,0,.2)",whiteSpace:"nowrap"}},"\ud83c\udfad D\u00e9monstration \u00b7 pharmacie fictive")}
 /* v9.48 : l'appli ne demarre (et ne lit le cloud) qu'une fois la connexion faite */
 function Racine(){
@@ -2041,6 +2049,7 @@ if(!supaClient)return Promise.resolve({err:"hors_ligne"});
 return supaClient.auth.getSession().then(function(s){if(!(s&&s.data&&s.data.session))return{err:"compte"};
 return supaClient.from("resume_matin").select("jour,data").order("jour",{ascending:false}).limit(7).then(function(r){if(r.error)return{err:"lecture"};return{liste:r.data||[]}})}).catch(function(){return{err:"hors_ligne"}})}
 /* v9.61 : bouton "Tache" sur chaque point du resume -> ajoute a la to-do list (une seule fois par mail)
+   v9.74 : Affluence en 3 onglets : Patientele, Clients servis (par vendeur, jour par jour, moyennes semaine et mois, clients / heure de presence) et Effectif au comptoir (planning x affluence). HEAT.u = clients par vendeur et par jour (v:5).
    v9.73 : Affluence -> evolution de la patientele (4, 13, 26 semaines vs N-1) : clients/jour, ordonnance/conseil, creneaux (dont 12h30-14h30), jours de la semaine, marge par client ; HEAT garde 800 jours (n/o par creneau, v:4).
    v9.72 : un fournisseur Winpharma qui ressemble a un labo Ospharm (ex. LOVREN REF / CLINICALFARMA LOVREN) est rattache a sa fiche : plus de fiche vide ni de labo en double.
    v9.71 : heure de la derniere vente affichee a cote de la date des ventes (DERNV).
@@ -2758,7 +2767,7 @@ for(var z=0;z<n;z++)(function(ix){els.push(React.createElement("rect",{key:"hz"+
 /* pourcentages mois par mois */
 function ecart(i){var a=p(i);if(a===null||!(a>0))return null;return Math.round((v(i)-a)/a*100)}
 var pw=Math.min(46,Math.max(26,sx-3));var pf=sx<34?9:11;
-for(var e2=0;e2<n;e2++){var ec=ecart(e2);var yy=pad.t+ch+22;
+for(var e2=0;e2<n&&!(props.moyenne&&!prev);e2++){var ec=ecart(e2);var yy=pad.t+ch+22;
 if(ec===null){els.push(React.createElement("text",{key:"ec"+e2,x:X(e2),y:yy+13,fontSize:pf,textAnchor:"middle",fill:"var(--text3)"},"\u2013"));continue}
 els.push(React.createElement("rect",{key:"er"+e2,x:X(e2)-pw/2,y:yy,width:pw,height:18,rx:4,fill:ec>=0?"var(--accent-bg)":"var(--red-bg)"}));
 els.push(React.createElement("text",{key:"ec"+e2,x:X(e2),y:yy+13,fontSize:pf,fontWeight:700,textAnchor:"middle",fontStyle:proj>1&&e2===dern?"italic":"normal",fill:ec>=0?"var(--accent)":"var(--red)"},(ec>0?"+":"")+ec+"%"))}
@@ -2767,11 +2776,11 @@ var puces=null;
 var tn=0,tp=0,nb=0;for(var r=0;r<n;r++){if(proj>1&&r===dern)continue;if(p(r)!==null){tn+=v(r);tp+=p(r);nb++}}
 var pasL=props.pasLib||"mois";if(props.moyenne&&nb){tn=tn/nb;tp=tp/nb}
 var resume=nb&&tp>0?React.createElement("span",null,"Sur "+nb+" "+pasL+" compar\u00e9"+(props.pasLib?"e":"")+"s"+(props.moyenne?", en moyenne":"")+" : ",React.createElement("b",null,fmtV((tn))),React.createElement("span",{style:{color:tn>=tp?"var(--accent)":"var(--red)",fontWeight:600}}," ("+(tn>=tp?"+":"")+Math.round((tn-tp)/tp*100)+" % vs an dernier)")):
-React.createElement("span",null,"Total : ",React.createElement("b",null,fmtV((data.reduce(function(s,x,i){return s+v(i)},0)))));
+(props.moyenne?React.createElement("span",null,"Moyenne : ",React.createElement("b",null,fmtV((data.reduce(function(s,x,i){return s+v(i)},0)/Math.max(1,data.filter(function(x,i){return v(i)>0}).length))))):React.createElement("span",null,"Total : ",React.createElement("b",null,fmtV((data.reduce(function(s,x,i){return s+v(i)},0))))));
 var detail=hov>=0&&hov<n?React.createElement("div",{style:{fontSize:13,marginTop:6,color:"var(--text2)"}},React.createElement("b",{style:{color:"var(--text)"}},(labels[hov]||"")+" : "+fmtV((v(hov)))),(proj>1&&hov===dern?" (projet\u00e9, mois en cours)":""),p(hov)!==null?" \u00b7 an dernier "+fmtV((p(hov))):"",ecart(hov)!==null?React.createElement("span",{style:{color:ecart(hov)>=0?"var(--accent)":"var(--red)",fontWeight:600}}," \u00b7 "+(ecart(hov)>0?"+":"")+ecart(hov)+" %"):null):null;
 var pill=function(ix){var on=mes===ix;return React.createElement("button",{key:ix,onClick:function(){setMes(ix)},style:{padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:600,border:"1px solid "+(on?"var(--text)":"var(--border)"),background:on?"var(--text)":"transparent",color:on?"var(--bg2)":"var(--text2)"}},libs[ix])};
 return React.createElement("div",{ref:boxRef,style:{width:"100%"}},
-React.createElement("div",{style:{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:6}},pill(0),pill(1),React.createElement("div",{style:{fontSize:13,color:"var(--text2)",marginLeft:4}},resume)),
+React.createElement("div",{style:{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap",marginBottom:6}},pill(0),props.label2===""?null:pill(1),React.createElement("div",{style:{fontSize:13,color:"var(--text2)",marginLeft:4}},resume)),
 React.createElement("svg",{width:w,height:h,viewBox:"0 0 "+w+" "+h,style:{width:"100%",display:"block"},onMouseLeave:function(){setHov(-1)}},els),
 puces,detail,
 React.createElement("div",{style:{display:"flex",gap:14,flexWrap:"wrap",fontSize:11,color:"var(--text3)",marginTop:8}},
@@ -6452,6 +6461,240 @@ tabCreneaux,
 expert?tabJours:null,
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",lineHeight:1.5}},"Un client = un ticket de caisse (les retours seuls et les retraitements de tiers payant ne comptent pas). \u00ab Avec ordonnance \u00bb = le ticket contient au moins un produit remboursable : un m\u00e9dicament remboursable achet\u00e9 sans ordonnance y est donc compt\u00e9. Les jours de garde, dimanches et f\u00e9ri\u00e9s sont mis \u00e0 part pour comparer des journ\u00e9es normales."),
 React.createElement(LienExpert,null))}
+
+/* ===== v9.74 : presence de l'equipe (PharmaScope Planning) croisee avec les ventes =====
+   Presence d'un jour = changements du jour (conges, echanges, modifications) sinon trame A-F en vigueur ;
+   avant la premiere trame : heures realisees de l'historique (import MonPlanningPharma). Memes regles que planning.html (dayInfo). */
+var PRESENCE_CACHE={k:null,p:null};
+function isoUTC(t){return new Date(t).toISOString().slice(0,10)}
+function tUTC(ds){return Date.UTC(+ds.slice(0,4),+ds.slice(5,7)-1,+ds.slice(8,10))}
+function estFerieAff(ds){var f=feriesFR(+ds.slice(0,4));return !!(f&&f[ds])}
+function calculerPresence(staff,trame,set,chg,histo,d1,d2){
+var W=["A","B","C","D","E","F"];var tv={};var first=null;
+trame.forEach(function(x){if(W.indexOf(x.week)<0)return;var f=String(x.valid_from||"2026-08-31").slice(0,10);if(!first||f<first)first=f;
+if(!tv[x.staff_id])tv[x.staff_id]={};if(!tv[x.staff_id][f]){var o={};W.forEach(function(w){o[w]=[[],[],[],[],[],[]]});tv[x.staff_id][f]=o}
+tv[x.staff_id][f][x.week][x.weekday]=x.blocks||[]});
+var vers={};Object.keys(tv).forEach(function(pid){vers[pid]=Object.keys(tv[pid]).sort().map(function(f){return{from:f,t:tv[pid][f]}})});
+first=first||"2026-08-31";
+var ref=set&&set.cycle_ref_monday?String(set.cycle_ref_monday).slice(0,10):"2026-09-28";
+var refw=set&&set.cycle_ref_week?Math.max(0,W.indexOf(set.cycle_ref_week)):2;var refT=tUTC(ref);
+var C={};chg.forEach(function(x){var ds=String(x.day).slice(0,10);(C[ds]=C[ds]||{})[x.staff_id]=x.blocks||[]});
+var Hh={};histo.forEach(function(x){var ds=String(x.day).slice(0,10);(Hh[ds]=Hh[ds]||{})[x.staff_id]=x.blocks||[]});
+var jours={};
+for(var t=tUTC(d1),tEnd=tUTC(d2);t<=tEnd;t+=864e5){var d=new Date(t);var ds=isoUTC(t);var wd=(d.getUTCDay()+6)%7;if(wd>5)continue;
+var k=Math.round((t-wd*864e5-refT)/(7*864e5));var lettre=W[((refw+k)%6+6)%6];var J={};
+staff.forEach(function(p){var b=null;
+if(ds<first){b=Hh[ds]&&Hh[ds][p.id];if(!b)return}
+else{var c=C[ds]&&C[ds][p.id];
+if(c)b=c;else{if(estFerieAff(ds))return;if(p.archived_on&&ds>=String(p.archived_on).slice(0,10))return;
+var L=vers[p.id]||[],v=null;for(var i=0;i<L.length;i++){if(L[i].from<=ds)v=L[i];else break}if(!v)return;b=v.t[lettre][wd]}}
+if(b&&b.length)J[p.id]=b});
+jours[ds]=J}
+return{staff:staff.map(function(p){return{id:p.id,nom:p.name,ph:!!p.is_pharmacist}}),jours:jours,depuis:Object.keys(Hh).sort()[0]||first}}
+function chargerPresence(d1,d2){
+var cle=d1+"|"+d2;if(PRESENCE_CACHE.k===cle&&PRESENCE_CACHE.p)return PRESENCE_CACHE.p;
+var pr;
+if(window.MODE_DEMO){var P=window.DEMO_DATA&&window.DEMO_DATA.presence;
+pr=Promise.resolve(P?{staff:P.staff,jours:(function(){var o={};Object.keys(P.jours).forEach(function(ds){if(ds>=d1&&ds<=d2)o[ds]=P.jours[ds]});return o})(),depuis:Object.keys(P.jours).sort()[0]}:null)}
+else if(!supaClient)pr=Promise.resolve({err:"hors_ligne"});
+else pr=supaClient.auth.getSession().then(function(s){if(!(s&&s.data&&s.data.session))return{err:"compte"};
+return Promise.all([supaClient.from("staff").select("id,name,is_pharmacist,archived_on,sort_order").order("sort_order"),supaClient.from("trame").select("staff_id,week,weekday,blocks,valid_from"),supaClient.from("planning_settings").select("*").maybeSingle(),supaClient.rpc("planning_view",{d1:d1,d2:d2}),supaClient.rpc("planning_histo_view",{d1:d1,d2:d2})]).then(function(r){
+for(var i=0;i<r.length;i++)if(r[i].error)return{err:"lecture"};
+return calculerPresence(r[0].data||[],r[1].data||[],r[2].data,r[3].data||[],r[4].data||[],d1,d2)})}).catch(function(){return{err:"lecture"}});
+PRESENCE_CACHE={k:cle,p:pr};pr.then(function(x){if(!x||x.err)PRESENCE_CACHE={k:null,p:null}});return pr}
+function usePresence(d1,d2){
+var s=useState(null);var pres=s[0];var setPres=s[1];
+useEffect(function(){var vivant=true;setPres(null);chargerPresence(d1,d2).then(function(x){if(vivant)setPres(x||{err:"vide"})});return function(){vivant=false}},[d1,d2]);
+return pres}
+/* rapprochement nom Winpharma (vendeur) <-> prenom du planning : "Magali" = "Magalie", "Eloi" = "\u00c9loi" */
+function cleNomAff(s){return (String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z]/g," ").trim().split(/\s+/)[0])||""}
+function memeNomAff(a,b){a=cleNomAff(a);b=cleNomAff(b);if(!a||!b)return false;return a===b||(a.length>=4&&b.length>=4&&(a.indexOf(b)===0||b.indexOf(a)===0))}
+function minutesDans(blocs,a,b){var m=0;(blocs||[]).forEach(function(x){var d=Math.max(a,x[0]),f=Math.min(b,x[1]);if(f>d)m+=f-d});return m}
+function heuresTxt(mn){var h=Math.floor(mn/60),m=Math.round(mn%60);return h+"h"+(m?(m<10?"0":"")+m:"")}
+function lundiDe(ds){var t=tUTC(ds);var wd=(new Date(t).getUTCDay()+6)%7;return isoUTC(t-wd*864e5)}
+var MOIS_LONG=["janvier","f\u00e9vrier","mars","avril","mai","juin","juillet","ao\u00fbt","septembre","octobre","novembre","d\u00e9cembre"];
+function couleurCharge(a){/* 0 = calme (vert) -> 1 = tendu (rouge) */a=Math.max(0,Math.min(1,a));
+var c0=[16,185,129],c1=[245,158,11],c2=[239,68,68];var x=a<0.5?c0.map(function(v,i){return Math.round(v+(c1[i]-v)*a*2)}):c1.map(function(v,i){return Math.round(v+(c2[i]-v)*(a-0.5)*2)});
+return "rgba("+x[0]+","+x[1]+","+x[2]+","+(0.18+Math.abs(a-0.5)*0.9).toFixed(2)+")"}
+
+/* --- Clients servis par vendeur : jour par jour, moyennes de la semaine et du mois --- */
+function ClientsServisPage(props){
+var pd=props.pd;var H=pd&&pd.HEAT?pd.HEAT:{};
+var dates=Object.keys(H).sort().filter(function(d){return H[d]&&H[d].u});
+var modeS=useState(function(){return lsVal("ps_servis_mode","sem")});var mode=modeS[0];var setMode=modeS[1];
+var refS=useState(null);var refD=refS[0];var setRefD=refS[1];
+var mesS=useState("n");var mes=mesS[0];var setMes=mesS[1];
+useEffect(function(){try{localStorage.setItem("ps_servis_mode",JSON.stringify(mode))}catch(e){}},[mode]);
+var entete=React.createElement(EnTeteOutil,{titre:"\ud83d\ude4b Clients servis",sous:"Nombre de clients (tickets) encaiss\u00e9s par chaque membre de l'\u00e9quipe, jour par jour, avec les moyennes de la semaine et du mois. Crois\u00e9 avec PharmaScope Planning : clients par heure de pr\u00e9sence."});
+var dern=dates.length?dates[dates.length-1]:null;
+var n1=new Date();var ref=refD||dern||(n1.getFullYear()+"-"+("0"+(n1.getMonth()+1)).slice(-2)+"-01");
+var mois=ref?ref.slice(0,7):"";
+var d1=mode==="sem"?lundiDe(ref||"2026-01-05"):mois+"-01";
+var d2=mode==="sem"?isoUTC(tUTC(d1)+5*864e5):isoUTC(Date.UTC(+mois.slice(0,4),+mois.slice(5,7),0));
+var dMois1=mois+"-01",dMois2=isoUTC(Date.UTC(+mois.slice(0,4),+mois.slice(5,7),0));
+var pres=usePresence(mode==="sem"&&d1<dMois1?d1:dMois1,mode==="sem"&&d2>dMois2?d2:dMois2);
+if(!dates.length)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\ud83d\ude4b",titre:"Les clients servis arrivent au prochain import",texte:"PharmaScope doit relire une fois le fichier des ventes pour compter les tickets de chaque vendeur jour par jour. C'est automatique \u00e0 la prochaine synchronisation (l'historique complet arrive avec l'export du samedi soir).",action:props.setPage?function(){props.setPage("import")}:null}));
+function jours(a,b){var o=[];for(var t=tUTC(a);t<=tUTC(b);t+=864e5){var ds=isoUTC(t);if(new Date(t).getUTCDay()!==0)o.push(ds)}return o}
+var colJ=mode==="sem"?jours(d1,d2):null;
+var joursMois=jours(dMois1,dMois2);
+/* staff du planning <-> vendeur */
+function idPlanning(v){if(!pres||pres.err||!pres.staff)return null;for(var i=0;i<pres.staff.length;i++)if(memeNomAff(pres.staff[i].nom,v))return pres.staff[i].id;return null}
+function presMin(id,ds){if(!id||!pres||!pres.jours||!pres.jours[ds])return null;var b=pres.jours[ds][id];return b?minutesDans(b,0,1440):0}
+function agg(v,liste){var r={n:0,o:0,m:0,j:0,min:0,nh:0};var id=idPlanning(v);
+liste.forEach(function(ds){var h=H[ds];var x=h&&h.u&&h.u[v];if(x&&x[0]>0){r.n+=x[0];r.o+=x[1];r.m+=x[2];if(x[0]>=3)r.j++}
+/* clients / heure : seulement les jours ou la personne est au planning */
+var mn=presMin(id,ds);if(mn){r.min+=mn;r.nh+=x?x[0]:0}});
+r.id=id;return r}
+var periode=mode==="sem"?colJ:joursMois;
+var vendeurs={};periode.concat(mode==="sem"?joursMois:[]).forEach(function(ds){var u=H[ds]&&H[ds].u;if(u)Object.keys(u).forEach(function(v){vendeurs[v]=1})});
+var lignes=Object.keys(vendeurs).map(function(v){return{v:v,p:agg(v,periode),mo:agg(v,joursMois)}}).filter(function(l){return l.p.n>0||l.mo.n>0}).sort(function(a,b){return b.p.n-a.p.n||b.mo.n-a.mo.n});
+var totP=0;lignes.forEach(function(l){totP+=l.p.n});
+/* mois precedent pour comparer la moyenne par jour */
+var mp=new Date(Date.UTC(+mois.slice(0,4),+mois.slice(5,7)-2,1));var moisP=isoUTC(mp.getTime()).slice(0,7);
+var joursMoisP=jours(moisP+"-01",isoUTC(Date.UTC(+moisP.slice(0,4),+moisP.slice(5,7),0)));
+function moyJ(r){return r.j?r.n/r.j:null}
+function parH(r){return r.min>0?r.nh/(r.min/60):null}
+function nav(sens){var base=tUTC(mode==="sem"?d1:dMois1);var t2;if(mode==="sem")t2=base+sens*7*864e5;else{var dd=new Date(base);t2=Date.UTC(dd.getUTCFullYear(),dd.getUTCMonth()+sens,1)}
+var x=isoUTC(t2);if(mode==="sem")x=isoUTC(t2+5*864e5);else{var fm=isoUTC(Date.UTC(+x.slice(0,4),+x.slice(5,7),0));x=fm}
+if(x>dern)x=dern;if(x<dates[0])x=dates[0];setRefD(x)}
+var titrePer=mode==="sem"?("Semaine du "+dateCourteAff(d1)+" au "+dateCourteAff(d2)):(MOIS_LONG[+mois.slice(5,7)-1]+" "+mois.slice(0,4));
+var peutAvant=(mode==="sem"?d1:dMois1)>dates[0],peutApres=(mode==="sem"?d2:dMois2)<dern;
+var btn=function(lib,on,f){return React.createElement("button",{onClick:f,disabled:!on,style:{padding:"6px 12px",borderRadius:20,border:"1px solid var(--border)",background:"var(--bg2)",color:on?"var(--text)":"var(--text3)",fontWeight:700,fontSize:14,opacity:on?1:0.4}},lib)};
+var barre=React.createElement("div",{style:{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginBottom:12}},
+React.createElement(Pastilles,{val:mode,set:function(m){setMode(m)},options:[["sem","Semaine"],["mois","Mois"]]}),
+React.createElement("div",{style:{display:"flex",gap:6,alignItems:"center"}},btn("\u2039",peutAvant,function(){nav(-1)}),React.createElement("div",{style:{fontWeight:700,fontSize:14,minWidth:150,textAlign:"center"}},titrePer),btn("\u203a",peutApres,function(){nav(1)})),
+mode==="sem"?React.createElement(Pastilles,{val:mes,set:setMes,options:[["n","Clients"],["h","Clients / heure"]]}):null);
+var etatPl=!pres?"Lecture du planning\u2026":(pres.err==="compte"?"Planning non reli\u00e9 : connectez-vous avec votre compte personnel pour avoir les clients par heure de pr\u00e9sence.":(pres.err?"Planning illisible pour le moment : les clients par heure ne sont pas calcul\u00e9s.":null));
+var cell={padding:"7px 6px",borderBottom:"1px solid var(--border)",textAlign:"center",whiteSpace:"nowrap",fontSize:13};
+var cellG=Object.assign({},cell,{textAlign:"left",fontWeight:600,position:"sticky",left:0,background:"var(--bg2)"});
+var th={padding:"6px 6px",fontSize:11,color:"var(--text3)",fontWeight:600,textAlign:"center",borderBottom:"1px solid var(--border)",whiteSpace:"nowrap"};
+var thG=Object.assign({},th,{textAlign:"left",position:"sticky",left:0,background:"var(--bg2)"});
+var tableau;
+if(mode==="sem"){
+var maxC=0;lignes.forEach(function(l){colJ.forEach(function(ds){var x=H[ds]&&H[ds].u&&H[ds].u[l.v];if(x&&x[0]>maxC)maxC=x[0]})});
+var totJ=colJ.map(function(ds){var s=0;var u=H[ds]&&H[ds].u;if(u)Object.keys(u).forEach(function(v){s+=u[v][0]});return s});
+tableau=React.createElement("table",{style:{borderCollapse:"collapse",width:"100%"}},
+React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",{style:thG},""),
+colJ.map(function(ds,i){return React.createElement("th",{key:ds,style:th},JOURS_SEM[i].slice(0,3)+". "+ds.slice(8,10))}),
+React.createElement("th",{style:Object.assign({},th,{borderLeft:"2px solid var(--border)"})},"Total"),React.createElement("th",{style:th},"Moy. / jour"),React.createElement("th",{style:th},"Moy. / jour du mois"),React.createElement("th",{style:th},"Clients / h"))),
+React.createElement("tbody",null,lignes.filter(function(l){return l.p.n>0}).map(function(l){
+return React.createElement("tr",{key:l.v},React.createElement("td",{style:cellG},l.v),
+colJ.map(function(ds){var x=H[ds]&&H[ds].u&&H[ds].u[l.v];var n=x?x[0]:0;var mn=presMin(l.p.id,ds);
+var val=mes==="h"?(mn&&n?n/(mn/60):null):n;var a=maxC?n/maxC:0;
+var titre=dateCourteAff(ds)+" : "+n+" clients"+(x?" dont "+x[1]+" avec ordonnance":"")+(mn?" \u2022 pr\u00e9sent(e) "+heuresTxt(mn):(mn===0?" \u2022 pas au planning":""));
+return React.createElement("td",{key:ds,title:titre,style:Object.assign({},cell,{background:n>0?"rgba(16,185,129,"+(0.08+a*0.6).toFixed(2)+")":(mn===0?"var(--bg3)":"transparent"),color:n>0?"var(--text)":"var(--text3)",fontWeight:a>0.75?700:500})},
+n>0?(mes==="h"?(val?nbAff(val):"\u00b7"):n):(mn===0?"\u2013":"\u00b7"))}),
+React.createElement("td",{style:Object.assign({},cell,{fontWeight:700,borderLeft:"2px solid var(--border)"})},l.p.n),
+React.createElement("td",{style:Object.assign({},cell,{fontWeight:700})},nbAff(moyJ(l.p))),
+React.createElement("td",{style:Object.assign({},cell,{color:"var(--text2)"})},nbAff(moyJ(l.mo))),
+React.createElement("td",{style:Object.assign({},cell,{color:"var(--text2)"})},parH(l.p)!==null?nbAff(parH(l.p)):"\u2013"))}),
+React.createElement("tr",null,React.createElement("td",{style:Object.assign({},cellG,{color:"var(--text2)"})},"\u00c9quipe"),
+totJ.map(function(n,i){return React.createElement("td",{key:i,style:Object.assign({},cell,{fontWeight:700,color:"var(--text2)"})},n||"\u00b7")}),
+React.createElement("td",{style:Object.assign({},cell,{fontWeight:700,borderLeft:"2px solid var(--border)"})},totP),
+React.createElement("td",{style:cell},nbAff(totJ.filter(function(n){return n>0}).length?totP/totJ.filter(function(n){return n>0}).length:null)),
+React.createElement("td",{style:cell},""),React.createElement("td",{style:cell},""))))}
+else{
+/* mois : une colonne par semaine (moyenne par jour travaille), puis le mois */
+var sems=[];joursMois.forEach(function(ds){var l=lundiDe(ds);if(!sems.length||sems[sems.length-1].l!==l)sems.push({l:l,j:[]});sems[sems.length-1].j.push(ds)});
+var maxM=0;lignes.forEach(function(l){sems.forEach(function(s){var r=agg(l.v,s.j);var m=moyJ(r);if(m&&m>maxM)maxM=m})});
+tableau=React.createElement("table",{style:{borderCollapse:"collapse",width:"100%"}},
+React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",{style:thG},""),
+sems.map(function(s){return React.createElement("th",{key:s.l,style:th},"sem. "+dateCourteAff(s.l).slice(0,5))}),
+React.createElement("th",{style:Object.assign({},th,{borderLeft:"2px solid var(--border)"})},"Total"),React.createElement("th",{style:th},"Jours"),React.createElement("th",{style:th},"Moy. / jour"),React.createElement("th",{style:th},"vs mois pr\u00e9c."),React.createElement("th",{style:th},"Clients / h"),React.createElement("th",{style:th},"Ordonnance"),React.createElement("th",{style:th},"Marge / client"))),
+React.createElement("tbody",null,lignes.filter(function(l){return l.mo.n>0}).map(function(l){var rp=agg(l.v,joursMoisP);var e=ecartAff(moyJ(l.mo),moyJ(rp));
+return React.createElement("tr",{key:l.v},React.createElement("td",{style:cellG},l.v),
+sems.map(function(s){var r=agg(l.v,s.j);var m=moyJ(r);var a=maxM&&m?m/maxM:0;
+return React.createElement("td",{key:s.l,title:r.n+" clients sur "+r.j+" jour"+(r.j>1?"s":""),style:Object.assign({},cell,{background:m?"rgba(16,185,129,"+(0.08+a*0.6).toFixed(2)+")":"transparent",fontWeight:a>0.75?700:500})},m?nbAff(m):"\u00b7")}),
+React.createElement("td",{style:Object.assign({},cell,{fontWeight:700,borderLeft:"2px solid var(--border)"})},l.mo.n.toLocaleString("fr-FR")),
+React.createElement("td",{style:cell},l.mo.j),
+React.createElement("td",{style:Object.assign({},cell,{fontWeight:700})},nbAff(moyJ(l.mo))),
+React.createElement("td",{style:cell},React.createElement(BadgeEcart,{e:e})),
+React.createElement("td",{style:Object.assign({},cell,{color:"var(--text2)"})},parH(l.mo)!==null?nbAff(parH(l.mo)):"\u2013"),
+React.createElement("td",{style:Object.assign({},cell,{color:"var(--text2)"})},l.mo.n?Math.round(l.mo.o/l.mo.n*100)+" %":"\u2013"),
+React.createElement("td",{style:Object.assign({},cell,{color:"var(--text2)"})},l.mo.n?eurAff(l.mo.m/l.mo.n):"\u2013"))}))) }
+/* courbe : moyenne de clients par jour de l'equipe, semaine par semaine (12 semaines) */
+var semCourbe=[];var lFin=lundiDe(mode==="sem"?d1:(dMois2>dern?dern:dMois2));
+for(var w=11;w>=0;w--){var l0=isoUTC(tUTC(lFin)-w*7*864e5);var js=jours(l0,isoUTC(tUTC(l0)+5*864e5));var n=0,pers=0;
+js.forEach(function(ds){var u=H[ds]&&H[ds].u;if(!u)return;Object.keys(u).forEach(function(v){if(u[v][0]>=3){n+=u[v][0];pers++}})});
+semCourbe.push({l:l0,v:pers?n/pers:null})}
+var courbe=semCourbe.filter(function(x){return x.v}).length>=3?React.createElement(CourbeN1,{data:semCourbe.map(function(x){return[x.v||0,0]}),labels:semCourbe.map(function(x,i){return i%2===0?dateCourteAff(x.l).slice(0,5):""}),label1:"Clients / jour / personne",label2:"",unite1:"clients",pasLib:"semaines",moyenne:true,zoom:true,height:150}):null;
+return React.createElement("div",null,entete,barre,
+etatPl?React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},etatPl):null,
+React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:10,overflowX:"auto",marginBottom:14}},
+lignes.length?tableau:React.createElement("div",{style:{padding:16,fontSize:13,color:"var(--text3)"}},"Aucune vente sur cette p\u00e9riode.")),
+courbe?React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:14,marginBottom:14}},
+React.createElement("div",{style:{fontWeight:700,marginBottom:2}},"Rythme moyen de l'\u00e9quipe"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},"Clients servis par personne et par jour travaill\u00e9, sur les 12 derni\u00e8res semaines."),courbe):null,
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",lineHeight:1.5}},"Un client = un ticket, attribu\u00e9 \u00e0 la premi\u00e8re personne de l'\u00e9quipe qui appara\u00eet dessus (session ouverte \u00e0 la caisse). \u00ab Moy. / jour \u00bb = moyenne sur les jours o\u00f9 la personne a encaiss\u00e9 au moins 3 clients. \u00ab Clients / h \u00bb = clients \u00f7 heures de pr\u00e9sence pr\u00e9vues dans PharmaScope Planning (pauses comprises). Les titulaires et pharmaciens font aussi du back-office (commandes, pr\u00e9parations, entretiens) : comparer surtout des personnes au m\u00eame poste."))}
+
+/* --- Effectif au comptoir : clients par personne presente, jour par jour et heure par heure --- */
+function ComptoirPage(props){
+var pd=props.pd;var H=pd&&pd.HEAT?pd.HEAT:{};
+var semS=useState(function(){var v=lsVal("ps_comptoir_sem",8);return [4,8,13].indexOf(v)>=0?v:8});var sem=semS[0];var setSem=semS[1];
+var vueS=useState("r");var vue=vueS[0];var setVue=vueS[1];
+useEffect(function(){try{localStorage.setItem("ps_comptoir_sem",JSON.stringify(sem))}catch(e){}},[sem]);
+var dates=Object.keys(H).sort();
+var n0=new Date();var auj=n0.getFullYear()+"-"+("0"+(n0.getMonth()+1)).slice(-2)+"-"+("0"+n0.getDate()).slice(-2);
+var fin=dates.length?dates[dates.length-1]:auj;if(fin>=auj)fin=isoDecale(auj,-1);
+var debut=isoDecale(fin,-(sem*7-1));
+var pres=usePresence(debut,fin);
+var entete=React.createElement(EnTeteOutil,{titre:"\ud83e\uddd1\u200d\u2695\ufe0f Effectif au comptoir",sous:"Le planning de l'\u00e9quipe crois\u00e9 avec l'affluence : combien de clients chaque personne pr\u00e9sente doit servir, heure par heure. Pour rep\u00e9rer les cr\u00e9neaux en sous-effectif et ceux o\u00f9 l'on pourrait lib\u00e9rer quelqu'un (mise en rayon, commandes, RDV labo)."});
+var barre=React.createElement("div",{style:{display:"flex",gap:12,flexWrap:"wrap",marginBottom:12}},
+React.createElement(Pastilles,{val:sem,set:setSem,options:[[4,"4 sem."],[8,"8 sem."],[13,"3 mois"]]}),
+React.createElement(Pastilles,{val:vue,set:setVue,options:[["r","Clients par personne"],["p","Personnes pr\u00e9sentes"],["c","Clients"]]}));
+if(!dates.length)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\u23f1",titre:"Pas encore de ventes heure par heure",texte:"Importez les ventes d\u00e9taill\u00e9es.",action:props.setPage?function(){props.setPage("import")}:null}));
+if(!pres)return React.createElement("div",null,entete,barre,React.createElement("div",{style:{padding:20,fontSize:13,color:"var(--text3)"}},"Lecture du planning\u2026"));
+if(pres.err||!pres.jours)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\ud83d\udcc6",titre:"Planning non disponible",texte:pres.err==="compte"?"Connectez-vous avec votre compte personnel (celui de PharmaScope Planning) pour croiser le planning avec l'affluence.":"Le planning n'a pas pu \u00eatre lu. V\u00e9rifiez la connexion internet puis rouvrez cet \u00e9cran."}));
+/* jour x heure : clients, minutes de presence */
+var S=[];for(var j=0;j<6;j++){S.push([]);for(var h=0;h<24;h++)S[j].push({c:0,mn:0,ouv:0,ph:0,n:0})}
+var estPh={};pres.staff.forEach(function(p){if(p.ph)estPh[p.id]=1});
+var nbJ=0,joursSansPl=0;
+Object.keys(pres.jours).forEach(function(ds){var hj=H[ds];if(!hj)return;var t=hj.t||[];var tot=0;for(var h1=8;h1<20;h1++)tot+=t[h1]||0;if(tot<15)return;
+var J=pres.jours[ds];var ids=Object.keys(J);if(!ids.length){joursSansPl++;return}
+var wd=(new Date(tUTC(ds)).getUTCDay()+6)%7;if(wd>5)return;nbJ++;
+for(var h2=8;h2<20;h2++){var cel=S[wd][h2];var mn=0;ids.forEach(function(id){mn+=minutesDans(J[id],h2*60,h2*60+60)});
+if(!mn&&!(t[h2]>0))continue;
+/* minutes ou quelqu'un est la, et minutes avec un pharmacien */
+var ouv=0,mph=0;for(var mi=h2*60;mi<h2*60+60;mi++){var qq=false,pp=false;for(var k=0;k<ids.length;k++){var bl=J[ids[k]];for(var b=0;b<bl.length;b++){if(bl[b][0]<=mi&&mi<bl[b][1]){qq=true;if(estPh[ids[k]])pp=true;break}}if(pp)break}if(qq)ouv++;if(pp)mph++}
+cel.c+=t[h2]||0;cel.mn+=mn;cel.ouv+=ouv;cel.ph+=mph;cel.n++}});
+if(!nbJ)return React.createElement("div",null,entete,barre,React.createElement(VideOutil,{icone:"\ud83d\udcc6",titre:"Pas de jour commun entre le planning et les ventes",texte:"Le planning est disponible depuis le "+(pres.depuis?dateCourteAff(pres.depuis):"?")+". Choisissez une autre p\u00e9riode."}));
+var heures=[];for(var h3=8;h3<20;h3++){var a=false;for(var j3=0;j3<6;j3++)if(S[j3][h3].n&&(S[j3][h3].c>0||S[j3][h3].mn>0))a=true;if(a)heures.push(h3)}
+var cr=[];for(var j4=0;j4<6;j4++)heures.forEach(function(h){var c=S[j4][h];if(!c.n)return;var cM=c.c/c.n,pH=c.mn/60/c.n;/* p = nombre moyen de personnes presentes pendant les minutes ouvertes ; r = clients par personne et par heure */cr.push({j:j4,h:h,c:cM,p:c.ouv?c.mn/c.ouv:0,r:pH>0?cM/pH:null,o:c.ouv/c.n,ph:c.ouv?c.ph/c.ouv:1})});
+var rs=cr.filter(function(x){return x.r!==null&&x.c>=2}).map(function(x){return x.r}).sort(function(a,b){return a-b});
+var med=rs.length?rs[Math.floor(rs.length/2)]:1;var rMax=rs.length?rs[rs.length-1]:1,rMin=rs.length?rs[0]:0;
+var maxP=0,maxC=0;cr.forEach(function(x){if(x.p>maxP)maxP=x.p;if(x.c>maxC)maxC=x.c});
+function cellule(j,h){var x=null;for(var i=0;i<cr.length;i++)if(cr[i].j===j&&cr[i].h===h){x=cr[i];break}
+if(!x)return React.createElement("td",{key:h,style:{background:"var(--bg3)",borderRadius:5,minWidth:34}},"");
+var txt,bg,coul="var(--text)";
+if(vue==="r"){if(x.r===null){txt=x.c>0.5?"!":"";bg="rgba(239,68,68,.6)"}else{var a=x.r>=med?0.5+0.5*(x.r-med)/Math.max(0.01,rMax-med):0.5*(x.r-rMin)/Math.max(0.01,med-rMin);txt=nbAff(x.r);bg=couleurCharge(a)}}
+else if(vue==="p"){txt=nbAff(x.p);bg="rgba(37,99,235,"+(0.08+(maxP?x.p/maxP:0)*0.7).toFixed(2)+")";if(maxP&&x.p/maxP>0.6)coul="#fff"}
+else{txt=nbAff(x.c);bg="rgba(16,185,129,"+(0.08+(maxC?x.c/maxC:0)*0.8).toFixed(2)+")";if(maxC&&x.c/maxC>0.6)coul="#fff"}
+var titre=JOURS_SEM[j]+" "+h+"h-"+(h+1)+"h : "+nbAff(x.c)+" clients"+(x.o<55?" en "+Math.round(x.o)+" min":"")+" pour "+nbAff(x.p)+" personne"+(x.p>=2?"s":"")+" en moyenne"+(x.r!==null?" \u2192 "+nbAff(x.r)+" clients par personne et par heure":"")+(x.ph<0.97?" \u2022 pharmacien pr\u00e9sent "+Math.round(x.ph*100)+" % du temps d'ouverture":"");
+return React.createElement("td",{key:h,title:titre,style:{textAlign:"center",padding:"7px 0",borderRadius:5,minWidth:34,background:bg,color:coul,fontWeight:600,fontSize:12,outline:x.ph<0.5?"2px dashed var(--red)":"none",outlineOffset:-2}},txt)}
+var jours6=[0,1,2,3,4,5].filter(function(j){return heures.some(function(h){return S[j][h].n>0})});
+var classes=cr.filter(function(x){return x.r!==null&&x.c>=3});
+var tendus=classes.slice().sort(function(a,b){return b.r-a.r}).slice(0,4);
+var calmes=classes.filter(function(x){return x.p>=1.5}).sort(function(a,b){return a.r-b.r}).slice(0,4);
+function lib(x){return JOURS_SEM[x.j]+" "+x.h+"h-"+(x.h+1)+"h : "+nbAff(x.r)+" clients/pers./h ("+nbAff(x.c)+" clients"+(x.o<55?" en "+Math.round(x.o)+" min":"")+", "+nbAff(x.p)+" pers.)"}
+var conseil=null;
+if(tendus.length&&calmes.length&&tendus[0].r>calmes[0].r*1.8){var t0=tendus[0],c0=calmes[0];
+conseil="Piste : "+JOURS_SEM[c0.j].toLowerCase()+" "+c0.h+"h-"+(c0.h+1)+"h est calme ("+nbAff(c0.r)+" clients par personne) alors que "+JOURS_SEM[t0.j].toLowerCase()+" "+t0.h+"h-"+(t0.h+1)+"h est charg\u00e9 ("+nbAff(t0.r)+"). D\u00e9caler une pr\u00e9sence de l'un vers l'autre \u00e9quilibrerait le comptoir."}
+var sansPh=cr.filter(function(x){return x.ph<0.5&&x.c>=1}).length;
+/* par jour de la semaine : clients par heure de presence */
+var parJ=jours6.map(function(j){var c=0,mn=0;heures.forEach(function(h){c+=S[j][h].c;mn+=S[j][h].mn});return{j:j,r:mn?c/(mn/60):null,n:S[j][heures[0]]?S[j][heures[0]].n:0}});
+return React.createElement("div",null,entete,barre,
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:10}},"Du "+dateCourteAff(debut)+" au "+dateCourteAff(fin)+" \u2022 "+nbJ+" jours d'ouverture crois\u00e9s avec le planning"+(joursSansPl?" ("+joursSansPl+" sans planning ignor\u00e9s)":"")+"."),
+React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:12,overflowX:"auto",marginBottom:10}},
+React.createElement("table",{style:{borderCollapse:"separate",borderSpacing:3,fontSize:12,minWidth:heures.length*38+70}},
+React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",null,""),heures.map(function(h){return React.createElement("th",{key:h,style:{color:"var(--text3)",fontWeight:600}},h+"h")}))),
+React.createElement("tbody",null,jours6.map(function(j){return React.createElement("tr",{key:j},React.createElement("td",{style:{fontWeight:600,paddingRight:6,fontSize:12}},JOURS_SEM[j].slice(0,3)+"."),heures.map(function(h){return cellule(j,h)}))})))),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:14,lineHeight:1.5}},vue==="r"?"Nombre moyen de clients par personne pr\u00e9sente, ramen\u00e9 \u00e0 une heure (8h-9h et 19h-20h ne durent que 30 min). Vert = confortable, rouge = tendu (par rapport \u00e0 la m\u00e9diane de "+nbAff(med)+")."+(sansPh?" Cadre rouge en pointill\u00e9 : en moyenne, pas de pharmacien plus de 30 min sur l'heure.":""):(vue==="p"?"Nombre moyen de personnes pr\u00e9sentes selon le planning (pauses comprises).":"Nombre moyen de clients (tickets) sur l'heure.")),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(250px,1fr))",gap:12,marginBottom:12}},
+React.createElement("div",{style:{background:"var(--red-bg)",borderRadius:12,padding:14}},React.createElement("div",{style:{fontWeight:700,color:"var(--red)",marginBottom:6}},"\ud83d\udd25 Cr\u00e9neaux tendus"),tendus.map(function(x,i){return React.createElement("div",{key:i,style:{fontSize:13,marginBottom:2}},lib(x))})),
+React.createElement("div",{style:{background:"var(--accent-bg)",borderRadius:12,padding:14}},React.createElement("div",{style:{fontWeight:700,color:"var(--accent)",marginBottom:6}},"\ud83e\uddd8 Cr\u00e9neaux confortables"),calmes.length?calmes.map(function(x,i){return React.createElement("div",{key:i,style:{fontSize:13,marginBottom:2}},lib(x))}):React.createElement("div",{style:{fontSize:13}},"Aucun cr\u00e9neau \u00e0 plus d'une personne vraiment calme.")),
+React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:14}},React.createElement("div",{style:{fontWeight:700,marginBottom:6}},"\ud83d\udcc5 Clients par heure de pr\u00e9sence"),parJ.map(function(x){return React.createElement("div",{key:x.j,style:{fontSize:13}},JOURS_SEM[x.j]+" : "+(x.r!==null?nbAff(x.r):"\u2013"))}))),
+conseil?React.createElement("div",{style:{background:"var(--blue-bg)",borderRadius:12,padding:14,fontSize:13.5,lineHeight:1.5,marginBottom:12}},"\ud83d\udca1 "+conseil):null,
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",lineHeight:1.5}},"Pr\u00e9sence = horaires de PharmaScope Planning (trame, \u00e9changes, cong\u00e9s et modifications du jour ; avant la trame actuelle, heures r\u00e9alis\u00e9es import\u00e9es). Toute personne pr\u00e9sente est compt\u00e9e, y compris au back-office : un chiffre \u00e9lev\u00e9 veut dire que le comptoir est charg\u00e9 m\u00eame si tout le monde y \u00e9tait."))}
 
 /* --- Affluence : a quelle heure viennent les clients --- */
 var JOURS_SEM=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
@@ -15346,7 +15589,7 @@ var cur0=pdLive.current||{};
 var sameS=state.sales&&state.sales.id===pick.sales.id&&state.sales.mod===pick.sales.modifiedTime&&(!pick.salesDate||cur0.UPD===driveDateFr(pick.salesDate));
 /* v9.37 : le dernier fichier est relu une fois si la marge jour par jour (HEAT.m) n'a pas encore ete gardee */
 if(sameS&&!cur0.DERNV)sameS=false;
-if(sameS&&cur0.HEAT){var hkM=Object.keys(cur0.HEAT).sort();var hlM=hkM[hkM.length-1];if(hlM&&(!Array.isArray(cur0.HEAT[hlM].m)||(cur0.HEAT[hlM].v||0)<4))sameS=false}
+if(sameS&&cur0.HEAT){var hkM=Object.keys(cur0.HEAT).sort();var hlM=hkM[hkM.length-1];if(hlM&&(!Array.isArray(cur0.HEAT[hlM].m)||(cur0.HEAT[hlM].v||0)<5))sameS=false}
 var sameK=!pick.stock||(state.stock&&state.stock.id===pick.stock.id&&state.stock.mod===pick.stock.modifiedTime&&!!(pdLive.current&&pdLive.current.STKL));
 if(sameS&&sameK){
 var trk0=suiviTracked(tdgsLive.current,challengesLive.current);var vd0=ventesLive.current;
@@ -15912,6 +16155,10 @@ content=React.createElement(RupturesPage,{pd:pdCal,ruptures:ruptures,setRuptures
 content=React.createElement(ControlePrixPage,{pd:pdCal,ld:ldLive,openLab:openLab});
 }else if(page==="conseilvendeurs"){
 content=React.createElement(ConseilVendeursPage,{pd:pdCal,setPage:setPage,ventes:tdgVentes,challenges:challenges});
+}else if(page==="servis"){
+content=React.createElement(ClientsServisPage,{pd:pdCal,setPage:setPage});
+}else if(page==="comptoir"){
+content=React.createElement(ComptoirPage,{pd:pdCal,setPage:setPage});
 }else if(page==="affluence"){
 content=React.createElement(AffluencePage,{pd:pdCal,setPage:setPage});
 }else if(page==="assoc"){

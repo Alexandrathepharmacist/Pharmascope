@@ -86,7 +86,9 @@ Object.keys(TVA).forEach(function(t){M.forEach(function(mm){TVA[t][mm]=r1(TVA[t]
 var FREQ=[],F={};
 M.forEach(function(mm,i){var t=Math.round(G[i][0]/entre(38,46));FREQ.push([t,JOURS[i]]);F[mm]={ventes:t,ca:G[i][0],marge:G[i][1],moy_jour:JOURS[i]?r1(G[i][0]/JOURS[i]):0,panier:t?r2(G[i][0]/t):0,jours:JOURS[i]}});
 /* activite heure par heure des 560 derniers jours (accueil, Aujourd'hui, Ma semaine) */
-var HEAT={};var caJour=G[11][0]/Math.max(1,JOURS[11]);var txJ=G[11][1]/Math.max(1,G[11][0]);
+var HEAT={};
+/* v9.74 : planning fictif de l'equipe (PharmaScope Planning) pour l'ecran Effectif au comptoir */
+var PRES={staff:VENDEURS.map(function(v,i){return{id:"d"+i,nom:v,ph:i<3}}),jours:{}};var caJour=G[11][0]/Math.max(1,JOURS[11]);var txJ=G[11][1]/Math.max(1,G[11][0]);
 var FORME=[0,0,0,0,0,0,0,0,0.04,0.08,0.10,0.10,0.07,0.05,0.07,0.09,0.10,0.10,0.09,0.07,0.04,0,0,0];
 /* v9.73 : 560 jours pour comparer a l'an dernier (patientele) ; ouverture a midi du lundi au jeudi depuis 300 jours */
 for(var dj=560;dj>=1;dj--){var d=new Date(auj);d.setDate(d.getDate()-dj);if(d.getDay()===0)continue;var sam=d.getDay()===6;var coupure=dj>300&&d.getDay()>=1&&d.getDay()<=4;
@@ -95,7 +97,13 @@ var tot=caJour*entre(0.75,1.3)*(sam?0.75:1)*tend*hiv;var c=[],tk=[],mg=[];
 for(var h=0;h<24;h++){var part=FORME[h]*(sam&&h>=18?0.3:1)*(coupure&&h===13?0.05:(coupure&&(h===12||h===14)?0.6:1))*entre(0.7,1.3);var x=tot*part;c.push(r1(x));var nt=Math.round(x/entre(36,48));tk.push(nt);mg.push(r1(x*txJ*entre(0.85,1.15)))}
 var nC=[0,0,0,0,0];for(var h2=0;h2<24;h2++){var v=tk[h2];if(h2<8||h2>19||(sam&&h2>=19))nC[4]+=v;else if(h2<12)nC[0]+=v;else if(h2===12){nC[0]+=Math.round(v/2);nC[1]+=v-Math.round(v/2)}else if(h2===13)nC[1]+=v;else if(h2===14){nC[1]+=Math.round(v/2);nC[2]+=v-Math.round(v/2)}else if(h2<18)nC[2]+=v;else if(h2===18){if(sam)nC[2]+=v;else{nC[2]+=Math.round(v/2);nC[3]+=v-Math.round(v/2)}}else nC[3]+=v}
 var oC=nC.map(function(v){return Math.round(v*entre(0.55,0.68)*(dj>300?1.02:1))});
-HEAT[iso(d)]={c:c,t:tk,m:mg,n:nC,o:oC,v:4}}
+var wd=(d.getDay()+6)%7;var PJ={};var uV={};var sw=0;
+VENDEURS.forEach(function(v,i){if(wd===(i+dj%2)%6&&i!==0)return;if(sam&&i%2===1)return;
+var b=sam?[[510,1110]]:(coupure?(i%2?[[540,750],[870,1170]]:[[510,750],[870,1140]]):(i%2?[[540,780],[840,1170]]:[[510,720],[780,1140]]));PJ["d"+i]=b;sw+=POIDS_V[i]});
+var totT=nC[0]+nC[1]+nC[2]+nC[3]+nC[4],mgJ=mg.reduce(function(x,y){return x+y},0);
+Object.keys(PJ).forEach(function(id){var i=+id.slice(1);var part=POIDS_V[i]/sw*entre(0.85,1.15);var nn=Math.round(totT*part);uV[VENDEURS[i]]=[nn,Math.round(nn*entre(0.5,0.7)),Math.round(mgJ*part)]});
+PRES.jours[iso(d)]=PJ;
+HEAT[iso(d)]={c:c,t:tk,m:mg,n:nC,o:oC,u:uV,v:5}}
 var PROMO=[{start:M[10]+"-01",end:M[11]+"-15",label:"Promo hiver",count:6,products:P["OPELLA HEALTHCARE"].slice(0,3).concat(P["ARKOPHARMA"].slice(0,3)).map(function(p,i){return{p:p.n,l:i<3?"OPELLA HEALTHCARE":"ARKOPHARMA",u:"PROMO",pt:r2(p.ca/Math.max(1,p.q)*1.2),pr:r2(p.ca/Math.max(1,p.q)),r:ent(15,30),ean:p.c}})}];
 var TIPS=[{cat:"marge",tip:"La dermocosm\u00e9tique p\u00e8se 38 % de votre marge parapharmacie : une t\u00eate de gondole Nuxe avant les f\u00eates rapporte en moyenne +25 % de ventes sur la gamme.",action:"Voir Nuxe",saison:null},{cat:"stock",tip:"12 r\u00e9f\u00e9rences de compl\u00e9ments n'ont pas boug\u00e9 depuis 90 jours : un retour labo ou une mise en avant lib\u00e9rerait environ 900 \u20ac de stock.",action:"Stock dormant",saison:null},{cat:"saison",tip:"Pic de rhumes attendu dans 3 semaines : v\u00e9rifiez le stock des sirops et des solutions nasales.",action:"M\u00e9t\u00e9o de la demande",saison:"hiver"}];
 var PD={M:M,G:G,FREQ:FREQ,F:F,TVA:TVA,P:P,L:L,V:V,RX:[],D:[],MAP:MAP,U:U,REF:[],RX_SUP:RX_SUP,TIPS:TIPS,CAL:[],PROMO:PROMO,S:{},SD:{},CMD:{},HEAT:HEAT,STKU:STKU,STKV:STKV};
@@ -116,5 +124,5 @@ moments:[{quand:"Matin",plage:"9h30-11h",texte:"RDV avec la d\u00e9l\u00e9gu\u00
 attend:[{titre:"Ordonnance \u00e0 pr\u00e9parer pour ce soir",texte:"Un patient (ce matin, 7h40) : ordonnance envoy\u00e9e par mail, il passe r\u00e9cup\u00e9rer son traitement en fin de journ\u00e9e.",fil:null,patient:true,arrive:"7h40"},{titre:"Commande Caudalie : franco presque atteint",texte:"La d\u00e9l\u00e9gu\u00e9e Caudalie (hier, 17h) : il manque 45 \u20ac pour le franco de 300 \u20ac ; elle propose d'ajouter deux coffrets.",fil:null},{titre:"Facture grossiste \u00e0 v\u00e9rifier",texte:"Le grossiste (ce matin) : une remise de fin de mois semble manquer sur la facture d'octobre.",fil:null},{titre:"Sans r\u00e9ponse : retour produits Arkopharma",texte:"Demande envoy\u00e9e jeudi au service client pour un retour de 6 bo\u00eetes p\u00e9rim\u00e9es, pas encore de r\u00e9ponse.",fil:null}],
 regle:[{titre:"Livraison Pileje re\u00e7ue",texte:"Le colis attendu est arriv\u00e9 hier apr\u00e8s-midi, complet.",fil:null},{titre:"Planning de d\u00e9cembre valid\u00e9",texte:"Julie a confirm\u00e9 ses gardes du mois.",fil:null}],
 pharmacie:[{ic:"\ud83d\udcb6",t:"Marge d'hier : "+Math.round(sm(jh.m))+" \u20ac",d:"CA "+Math.round(sm(jh.c))+" \u20ac \u00b7 "+sm(jh.t)+" clients",page:"home"},{ic:"\ud83d\udce6",t:"3 labos \u00e0 commander",d:"BIOGARAN, PILEJE, URGO",page:"commandes"},{ic:"\u2705",t:"2 t\u00e2ches \u00e0 faire aujourd'hui",d:"Contr\u00f4le des p\u00e9remptions : rayon solaires \u00b7 Balance des stup\u00e9fiants",page:"tasks"}]};
-window.DEMO_DATA={PD_GZ:PD,LD_GZ:LD,STOCK_GZ:STOCK,cloud:CLOUD,resume:RESUME,nom:"Pharmacie des Tilleuls"};
+window.DEMO_DATA={presence:PRES,PD_GZ:PD,LD_GZ:LD,STOCK_GZ:STOCK,cloud:CLOUD,resume:RESUME,nom:"Pharmacie des Tilleuls"};
 })();
