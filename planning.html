@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="ps-version" content="p2.02">
+<meta name="ps-version" content="p2.03">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -1821,7 +1821,7 @@ function renderCong(){
   var yb=document.getElementById("congYears");yb.innerHTML="";
   var isCp=S.congRange.indexOf("cp")===0,Yc=+S.congRange.replace("cp",""),y0=HFIRST.getUTCFullYear()-(HFIRST.getUTCMonth()<5?1:0),y,ys=[];
   if(isCp){for(y=y0;y<=LAST.getUTCFullYear()-(LAST.getUTCMonth()<5?1:0);y++)ys.push(y);}else{for(y=HFIRST.getUTCFullYear();y<=LAST.getUTCFullYear();y++)ys.push(y);}
-  yb.appendChild(yearNav(ys,Yc,function(v){S.congRange=(isCp?"cp":"")+v;renderCong();},function(v){v=+v;return isCp?((v===y0&&HFIRST>new Date(Date.UTC(v,5,1))?MOIS[HFIRST.getUTCMonth()]:"juin")+" "+v+" – mai "+(v+1)):String(v);}));
+  yb.appendChild(yearNav(ys,Yc,function(v){S.congRange=(isCp?"cp":"")+v;renderCong();},function(v){v=+v;return isCp?((v===y0&&HFIRST>new Date(Date.UTC(v,5,1))?MOIS[HFIRST.getUTCMonth()]+" "+HFIRST.getUTCFullYear():"juin "+v)+" – mai "+(v+1)):String(v);}));
   var sg2=el("div",{class:"seg"});[["cp","Année de congés"],["civ","Année civile"]].forEach(function(o){var b=el("button",{"aria-pressed":String((o[0]==="cp")===isCp)},o[1]);
     b.addEventListener("click",function(){if((o[0]==="cp")===isCp)return;var t=+tIso.slice(0,4),m=+tIso.slice(5,7);S.congRange=o[0]==="cp"?"cp"+Math.max(y0,Yc-(m>=6?0:1)):String(Math.max(HFIRST.getUTCFullYear(),Yc+(m>=6?0:1)));renderCong();});sg2.appendChild(b);});
   yb.appendChild(sg2);
@@ -2039,13 +2039,13 @@ function printOnly(what){document.body.setAttribute("data-print",what);var done=
 
 /* ===================== Vacances scolaires : calendrier officiel (education.gouv.fr, service-public.fr F31952) =====================
    Premier jour de vacances = samedi de fin des cours ; dernier jour = veille de la reprise. Toussaint, Noël, été et ponts : toutes zones. */
-var VAC_COMMUN=[["Toussaint","2025-10-18","2025-11-02"],["Noël","2025-12-20","2026-01-04"],["Pont de l'Ascension","2026-05-15","2026-05-16"],["Été","2026-07-04","2026-08-31"],
+var VAC_COMMUN=[["Pont de l'Ascension","2025-05-30","2025-05-31"],["Été","2025-07-05","2025-08-31"],["Toussaint","2025-10-18","2025-11-02"],["Noël","2025-12-20","2026-01-04"],["Pont de l'Ascension","2026-05-15","2026-05-16"],["Été","2026-07-04","2026-08-31"],
  ["Toussaint","2026-10-17","2026-11-01"],["Noël","2026-12-19","2027-01-03"],["Pont de l'Ascension","2027-05-07","2027-05-08"],["Été","2027-07-03","2027-09-01"],
  ["Toussaint","2027-10-23","2027-11-07"],["Noël","2027-12-18","2028-01-02"],["Pont de l'Ascension","2028-05-26","2028-05-27"],["Été","2028-07-04","2028-08-31"]];
 var VAC_ZONE={
- A:[["Hiver","2026-02-07","2026-02-22"],["Printemps","2026-04-04","2026-04-19"],["Hiver","2027-02-13","2027-02-28"],["Printemps","2027-04-10","2027-04-25"],["Hiver","2028-02-19","2028-03-05"],["Printemps","2028-04-22","2028-05-08"]],
- B:[["Hiver","2026-02-14","2026-03-01"],["Printemps","2026-04-11","2026-04-26"],["Hiver","2027-02-20","2027-03-07"],["Printemps","2027-04-17","2027-05-02"],["Hiver","2028-02-05","2028-02-20"],["Printemps","2028-04-08","2028-04-23"]],
- C:[["Hiver","2026-02-21","2026-03-08"],["Printemps","2026-04-18","2026-05-03"],["Hiver","2027-02-06","2027-02-21"],["Printemps","2027-04-03","2027-04-18"],["Hiver","2028-02-12","2028-02-27"],["Printemps","2028-04-15","2028-05-01"]]};
+ A:[["Hiver","2025-02-22","2025-03-09"],["Printemps","2025-04-19","2025-05-04"],["Hiver","2026-02-07","2026-02-22"],["Printemps","2026-04-04","2026-04-19"],["Hiver","2027-02-13","2027-02-28"],["Printemps","2027-04-10","2027-04-25"],["Hiver","2028-02-19","2028-03-05"],["Printemps","2028-04-22","2028-05-08"]],
+ B:[["Hiver","2025-02-08","2025-02-23"],["Printemps","2025-04-05","2025-04-21"],["Hiver","2026-02-14","2026-03-01"],["Printemps","2026-04-11","2026-04-26"],["Hiver","2027-02-20","2027-03-07"],["Printemps","2027-04-17","2027-05-02"],["Hiver","2028-02-05","2028-02-20"],["Printemps","2028-04-08","2028-04-23"]],
+ C:[["Hiver","2025-02-15","2025-03-02"],["Printemps","2025-04-12","2025-04-27"],["Hiver","2026-02-21","2026-03-08"],["Printemps","2026-04-18","2026-05-03"],["Hiver","2027-02-06","2027-02-21"],["Printemps","2027-04-03","2027-04-18"],["Hiver","2028-02-12","2028-02-27"],["Printemps","2028-04-15","2028-05-01"]]};
 function vacances(){if(!S.zone||S.zone==="aucune")return [];return VAC_COMMUN.concat(VAC_ZONE[S.zone]||[]).map(function(v){return {l:v[0],a:v[1],b:v[2]};}).sort(function(x,y){return x.a<y.a?-1:1;});}
 function vacSur(a,b){return vacances().filter(function(v){return v.b>=a&&v.a<=b;});}
 function vacNom(v){return v.l.indexOf("Pont")===0?v.l:"Vacances "+(v.l==="Été"?"d'été":(v.l==="Hiver"?"d'hiver":(v.l==="Printemps"?"de printemps":(v.l==="Noël"?"de Noël":"de la "+v.l))));}
