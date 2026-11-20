@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="ps-version" content="p2.06">
+<meta name="ps-version" content="p2.07">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -222,7 +222,7 @@ html,body{margin:0}
 .grid th .dt{display:block;font-size:.95rem;font-family:var(--f-display);color:var(--ink);letter-spacing:0;text-transform:none;font-weight:700}
 .grid th.fer{color:var(--ink-3)}
 .tchip{align-self:flex-start;font-size:.62rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;border-radius:5px;padding:1px 5px}
-.t-cp{color:var(--t-cp);background:var(--t-cp-bg)}.t-recup{color:var(--t-rec);background:var(--t-rec-bg)}.t-maladie{color:var(--t-mal);background:var(--t-mal-bg)}.t-hs,.t-extra{color:var(--t-hs);background:var(--t-hs-bg)}.t-autre,.t-ferie{color:var(--t-aut);background:var(--t-aut-bg)}
+.t-cp{color:var(--t-cp);background:var(--t-cp-bg)}.t-recup,.t-echange{color:var(--t-rec);background:var(--t-rec-bg)}.t-maladie{color:var(--t-mal);background:var(--t-mal-bg)}.t-hs,.t-extra{color:var(--t-hs);background:var(--t-hs-bg)}.t-autre,.t-ferie{color:var(--t-aut);background:var(--t-aut-bg)}
 .cell.abs{background:var(--sunk);border:1px dashed var(--line);align-items:flex-start;justify-content:flex-start}
 .cell.abs .was{font-size:.68rem;color:var(--ink-3);text-decoration:line-through}
 .cell.fer{background:var(--sunk);border:0;color:var(--ink-3);font-size:.75rem;align-items:center;justify-content:center;cursor:default}
@@ -718,6 +718,7 @@ var ACCESS={admin:"Administrateur",manager:"Gestionnaire du planning",user:"Util
 var TYPES={
  cp:{l:"Congés payés",s:"CP",paid:true},
  recup:{l:"Récup / échange",s:"Récup"},
+ echange:{l:"Échange de jour",s:"Échange"},
  rc:{l:"Repos compensatoire",s:"Repos comp."},
  maladie:{l:"Arrêt maladie",s:"Maladie",paid:true},
  at:{l:"Accident de travail",s:"Acc. travail",paid:true},
@@ -980,7 +981,7 @@ function allIssues(){
 function infoWith(st,pid,ds){var t=S.tv,c=S.changes;S.tv=st.tv;S.changes=st.changes;var r=dayInfo(pid,ds);S.tv=t;S.changes=c;return r;}
 function descr(inf){
   if(inf.ferie&&!inf.act.length)return "férié";
-  if(!inf.act.length)return inf.t?TYPES[inf.t].l.toLowerCase():"repos";
+  if(!inf.act.length){if(inf.t==="echange"){var en=echangeAvec(inf.c);return "échange"+(en?" avec "+en:"");}return inf.t?TYPES[inf.t].l.toLowerCase():"repos";}
   return inf.act.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(" · ");
 }
 var decisionNote=null;
@@ -1100,10 +1101,10 @@ function renderPlan(){
       var attrs=" data-p='"+p.id+"' data-ds='"+ds+"'"+(can?"":" disabled");
       if(inf.ferie&&!inf.act.length){var cf2=admin&&ds>=FIRSTI;h+="<td><button class='cell fer"+(cf2?"":" ro")+"'"+(cf2?" data-p='"+p.id+"' data-ds='"+ds+"' title='Jour férié : touchez pour poser une garde ou une ouverture'":" disabled")+">"+(inf.exp.length?"férié":"")+"</button></td>";continue;}
       if(!inf.act.length&&inf.t){
-        h+="<td><button class='cell abs"+(can?"":" ro")+"'"+attrs+"><span class='tchip t-"+inf.t+"'>"+TYPES[inf.t].s+"</span><span class='was num'>"+hm(dur(inf.exp))+"</span>"+(inf.c?"<span class='rng' style='font-style:italic'>"+esc(inf.c.length>22?inf.c.slice(0,21)+"…":inf.c)+"</span>":"")+"</button></td>";continue;}
+        h+="<td><button class='cell abs"+(can?"":" ro")+"'"+attrs+"><span class='tchip t-"+inf.t+"'>"+tLab(inf)+"</span><span class='was num'>"+hm(dur(inf.exp))+"</span>"+(cLab(inf)?"<span class='rng' style='font-style:italic'>"+esc(cLab(inf).length>22?cLab(inf).slice(0,21)+"…":cLab(inf))+"</span>":"")+"</button></td>";continue;}
       if(!inf.act.length){h+="<td><button class='cell off"+(can?"":" ro")+"'"+attrs+" aria-label='"+esc(p.name)+" "+DL[i]+"'>"+(can?"+":"")+"</button></td>";continue;}
       var iss=dayIssues(p,inf.act);
-      h+="<td><button class='cell on"+(can?"":" ro")+"'"+attrs+">"+(inf.changed?"<span class='tchip t-"+inf.t+"'>"+TYPES[inf.t].s+"</span>":"")+(iss.length?"<span class='dot' title='"+esc(iss.join(" ; "))+"'></span>":"")+"<span class='tot num'>"+hm(dur(inf.act))+"</span>"+miniBar(inf.act)+(inf.c?"<span class='rng' style='font-style:italic'>"+esc(inf.c.length>22?inf.c.slice(0,21)+"…":inf.c)+"</span>":"")+"<span class='rng num'>"+inf.act.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join("<br>")+"</span></button></td>";
+      h+="<td><button class='cell on"+(can?"":" ro")+"'"+attrs+">"+(inf.changed?"<span class='tchip t-"+inf.t+"'>"+tLab(inf)+"</span>":"")+(iss.length?"<span class='dot' title='"+esc(iss.join(" ; "))+"'></span>":"")+"<span class='tot num'>"+hm(dur(inf.act))+"</span>"+miniBar(inf.act)+(cLab(inf)?"<span class='rng' style='font-style:italic'>"+esc(cLab(inf).length>22?cLab(inf).slice(0,21)+"…":cLab(inf))+"</span>":"")+"<span class='rng num'>"+inf.act.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join("<br>")+"</span></button></td>";
     }
     h+="</tr>";
   });
@@ -1253,7 +1254,7 @@ function renderPlanDay(){
   renderTimeline(document.getElementById("ptl"),{
     d:d,closed:!!FERIES[ds]&&!(admin&&ds>=FIRSTI),ferie:!!FERIES[ds],people:S.people.filter(function(p){return shownWeek(p,mon);}),
     getBlocks:function(pid){return dayInfo(pid,ds).act;},
-    rowInfo:function(pid){var inf=dayInfo(pid,ds);return (!inf.act.length&&inf.t)?{abs:TYPES[inf.t].s,absT:inf.t,comment:inf.c}:{comment:inf.c};},
+    rowInfo:function(pid){var inf=dayInfo(pid,ds);return (!inf.act.length&&inf.t)?{abs:tLab(inf),absT:inf.t,comment:cLab(inf)}:{comment:inf.c};},
     editable:function(){return admin&&ds>=FIRSTI;},
     showAll:admin,
     onTap:function(pid){if(ds<FIRSTI){toast("Journée reprise de MonPlanningPharma : consultation seule");return;}if(admin)openDay(pid,ds);else if(pid===S.me)openRequest(ds);},
@@ -1581,7 +1582,7 @@ function renderTit(){
 /* ===== Changements de planning sans motif (« Non catégorisé ») : classement rapide, un par un ou par lot.
    Pas de notification à la personne : seul le motif change, pas les horaires. ===== */
 var SANS_MOTIF={autre:1,modif:1,absent:1};
-var MOTIFS_ABS=["cp","recup","rc","maladie","at","formation","ss","other"],MOTIFS_H=["hs","recup","formation","maladie","extra","other"];
+var MOTIFS_ABS=["cp","echange","recup","rc","maladie","at","formation","ss","other"],MOTIFS_H=["hs","echange","recup","formation","maladie","extra","other"];
 function blTxt(bl){return bl.length?bl.map(function(b){return hm(b[0])+"–"+hm(b[1]);}).join(" · "):"repos";}
 function aClasser(){
   var out=[];
@@ -1768,7 +1769,7 @@ function swapPlan(aId,dsA,bId,dsB,force){
   return out;
 }
 function applySwap(pl){pl.res.forEach(function(r){var inf=dayInfo(r[0],r[1]);
-  if(same(r[2],inf.exp))setChange(r[0],r[1],null);else setChange(r[0],r[1],{b:r[2],t:r[2].length?"hs":"recup",c:"Échange avec "+r[3]});});}
+  if(same(r[2],inf.exp))setChange(r[0],r[1],null);else setChange(r[0],r[1],{b:r[2],t:"echange",c:"Échange avec "+r[3]});});}
 function gapMin(ds){var n=0;phGapsDate(ds).forEach(function(g){n+=g[1]-g[0];});return n;}
 /* Contrôle au moment de valider : block = échange devenu impossible, warn = à regarder avant de valider */
 function swapCheck(x){
@@ -1914,7 +1915,17 @@ function renderMy(){
 
 /* ===================== Congés et absences de l'équipe ===================== */
 var GT={cp:"cp",recup:"rec",rc:"rec",maladie:"mal",at:"mal"};
-function tGroup(t){return t==="cp"?"cp":((t==="recup"||t==="rc")?"recup":((t==="maladie"||t==="at")?"maladie":"autre"));}
+/* 20/11/2026 : motif « Échange » affiché avec le prénom du collègue, retrouvé dans le commentaire */
+function sansAccent(x){return String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();}
+function echangeAvec(c){if(!c)return null;var STOP={echange:1,echanges:1,avec:1,le:1,la:1,de:1,du:1,des:1,pour:1,jour:1,vacances:1,samedi:1};
+  var toks=sansAccent(c).split(/[^a-z]+/).filter(function(t){return t.length>=3&&!STOP[t];});
+  for(var i=0;i<toks.length;i++){for(var j=0;j<S.people.length;j++){var n=sansAccent(S.people[j].name);if(n.indexOf(toks[i])===0||toks[i].indexOf(n)===0)return S.people[j].name;}}
+  /* faute de frappe (« TIFF ») : mêmes 3 premières lettres, si une seule personne correspond */
+  for(var k=0;k<toks.length;k++){var hit=S.people.filter(function(q){return sansAccent(q.name).slice(0,3)===toks[k].slice(0,3);});if(hit.length===1)return hit[0].name;}
+  return null;}
+function tLab(inf){if(inf.t==="echange"){var n=echangeAvec(inf.c);return "Échange"+(n?" "+esc(n):"");}return TYPES[inf.t].s;}
+function cLab(inf){if(!inf.c)return "";if(inf.t==="echange"&&echangeAvec(inf.c)&&/^\s*[eé]changes?\s+(avec\s+)?(le\s+de\s+)?[a-zà-ÿ]+\s*$/i.test(inf.c))return "";return inf.c;}
+function tGroup(t){return t==="cp"?"cp":((t==="recup"||t==="rc"||t==="echange")?"recup":((t==="maladie"||t==="at")?"maladie":"autre"));}
 function isAbsDay(inf){return !!inf.changed&&!inf.act.length&&!inf.ferie&&!!inf.t;}
 /* Périodes d'absence d'une personne : jours d'absence du même motif qui se suivent (les repos, dimanches et fériés ne coupent pas la période) */
 function absPeriods(pid,from,to){
@@ -2507,7 +2518,7 @@ function openDay(pid,ds){
   var p=P(pid),inf=dayInfo(pid,ds),d=dParse(ds);
   var mode=[(!inf.act.length&&inf.exp.length&&!inf.ferie)?"abs":"work"];
   /* 13/11/2026 : le motif doit être choisi (plus de motif présélectionné, plus de « Non catégorisé ») */
-  var WORKK=["hs","extra","formation","other"],ABSK=["cp","recup","rc","maladie","at","mat","parental","formation","ss","other"];
+  var WORKK=["hs","echange","extra","formation","other"],ABSK=["cp","echange","recup","rc","maladie","at","mat","parental","formation","ss","other"];
   var wt=[inf.changed&&inf.act.length&&WORKK.indexOf(inf.t)>=0?inf.t:(p.status==="extra"?"extra":null)];
   var at=[inf.changed&&!inf.act.length&&ABSK.indexOf(inf.t)>=0?inf.t:null];
   var vals=blocksToVals(inf.act.length?inf.act:inf.exp);
