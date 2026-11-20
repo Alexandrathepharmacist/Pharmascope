@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="ps-version" content="p2.03">
+<meta name="ps-version" content="p2.04">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -1422,6 +1422,7 @@ function titStats(p,a,b){
      du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris.
      Une semaine de congé vaut ainsi 6 jours pour chacun, qu'il travaille sur 3 ou 4 jours. Les heures ne changent pas (un jour de repos = 0 h). */
   var k=S.cpMode;S.cpMode="ouvrables";r.cp=cpDays(p.id,dIso(dAdd(dParse(a),-1)),b);S.cpMode=k;
+  r.tot=r.w+r.g;
   return r;
 }
 function nJ(n){return n+" j";}
@@ -1438,20 +1439,20 @@ function equilibre(pid,from,to){
   var after=ts.map(function(t){return titStats(t,a,b);});S.changes=keep;
   return {Y:Y,ts:ts,before:before,after:after};
 }
-/* Règle d'équité retenue par les titulaires le 13/11/2026 (option 2) : mêmes heures à l'officine sur l'année civile,
-   congés posés compris ; les gardes sont suivies à part et n'entrent pas dans l'équilibre. */
+/* Règle d'équité retenue par les titulaires le 13/11/2026 (option 2) : mêmes heures sur l'année civile, congés posés compris.
+   20/11/2026 (demande d'Alexandra) : l'équilibre additionne heures à l'officine ET heures de garde (r.tot = r.w + r.g). */
 function hParJour(p){var t=0,n=0;W.forEach(function(w){((S.trame[w]||{})[p.id]||[]).forEach(function(bl){var d=dur(bl);if(d){t+=d;n++;}});});return n?t/n:480;}
 function deNom(n){return (/^[AEIOUYÉÈÊÀÂÎÔ]/i.test(n)?"d'":"de ")+esc(n);}
 function eqPhrase(ts,an,Y,passe){
-  if(ts.length!==2)return null;var d=an[0].w-an[1].w,i=d>=0?0:1,p=ts[i],o=ts[1-i],v=Math.abs(d);
-  if(v<60)return {t:"À égalité",s:"Moins d'une heure d'écart à l'officine sur "+Y+"."};
-  if(passe)return {t:esc(p.name)+" a travaillé "+hm(v)+" de plus",s:"à l'officine en "+Y+" (congés compris)."};
+  if(ts.length!==2)return null;var d=an[0].tot-an[1].tot,i=d>=0?0:1,p=ts[i],o=ts[1-i],v=Math.abs(d);
+  if(v<60)return {t:"À égalité",s:"Moins d'une heure d'écart sur "+Y+" (officine + gardes)."};
+  if(passe)return {t:esc(p.name)+" a travaillé "+hm(v)+" de plus",s:"en "+Y+", officine et gardes additionnées (congés compris)."};
   var j=Math.round(v/hParJour(p)*2)/2;
-  return {t:esc(p.name)+" peut encore poser "+hm(v)+" de congé",s:"≈ "+String(j).replace(".",",")+" jour"+(j>1?"s":"")+" de travail "+deNom(p.name)+", pour être à égalité avec "+esc(o.name)+" sur "+Y+" (heures à l'officine prévues sur l'année, congés déjà posés compris)."};
+  return {t:esc(p.name)+" peut encore poser "+hm(v)+" de congé",s:"≈ "+String(j).replace(".",",")+" jour"+(j>1?"s":"")+" de travail "+deNom(p.name)+", pour être à égalité avec "+esc(o.name)+" sur "+Y+" (heures à l'officine + heures de garde prévues sur l'année, congés déjà posés compris)."};
 }
 function equilibreHtml(q){
-  var ap=q.ts.map(function(t,i){return {p:t,v:q.after[i].w};}),e1=eqPhrase(q.ts,q.after,q.Y,false),e0=eqPhrase(q.ts,q.before,q.Y,false);
-  return "<div class='eq'><div class='k'>Équilibre "+q.Y+" après ce congé · heures à l'officine sur l'année</div>"+
+  var ap=q.ts.map(function(t,i){return {p:t,v:q.after[i].tot};}),e1=eqPhrase(q.ts,q.after,q.Y,false),e0=eqPhrase(q.ts,q.before,q.Y,false);
+  return "<div class='eq'><div class='k'>Équilibre "+q.Y+" après ce congé · officine + gardes sur l'année</div>"+
     bars(ap,function(x){return hm(x.v);})+
     (e1?"<div class='v'><b>"+e1.t+"</b> pour être à égalité.<br><span class='sm'>Avant ce congé : "+e0.t.replace(/<\/?b>/g,"")+".</span></div>":"")+"</div>";
 }
@@ -1468,10 +1469,11 @@ function renderTit(){
   var data=ts.map(function(p){return {p:p,re:avenir?titStats(p,a,b):titStats(p,a,cut),an:titStats(p,a,b)};});
   /* comparaison : officine, congés, gardes, chacun à part */
   var eqb=document.getElementById("titEq"),ep=eqPhrase(ts,data.map(function(x){return x.an;}),Y,passe);
-  if(ep){eqb.innerHTML="<div class='k'>Équilibre "+Y+" · heures à l'officine sur l'année</div><div class='t'>"+ep.t+"</div><div class='s'>"+ep.s+"</div>"+
-    "<div class='srv'>"+data.map(function(x){return "<div><b>"+esc(x.p.name)+"</b> · "+hm(x.an.w)+(passe?"":" prévues sur l'année")+(passe||avenir?"":" (dont "+hm(x.re.w)+" faites au "+dFr(tIso)+")")+"</div>";}).join("")+"</div>";eqb.hidden=false;}else eqb.hidden=true;
+  if(ep){eqb.innerHTML="<div class='k'>Équilibre "+Y+" · officine + gardes sur l'année</div><div class='t'>"+ep.t+"</div><div class='s'>"+ep.s+"</div>"+
+    "<div class='srv'>"+data.map(function(x){return "<div><b>"+esc(x.p.name)+"</b> · "+hm(x.an.tot)+(passe?"":" prévues sur l'année")+" <span style='opacity:.8'>= officine "+hm(x.an.w)+" + gardes "+hm(x.an.g)+"</span>"+(passe||avenir?"":" (dont "+hm(x.re.tot)+" faites au "+dFr(tIso)+")")+"</div>";}).join("")+"</div>";eqb.hidden=false;}else eqb.hidden=true;
   var cmp=document.getElementById("titCmp");cmp.innerHTML="";
   function carte(titre,items,quoi,fmt){var c=el("div",{class:"tc"},"<div class='k'>"+titre+"</div><div class='v'>"+ecartTxt(items,quoi)+"</div>");c.insertAdjacentHTML("beforeend",bars(items,fmt));cmp.appendChild(c);}
+  carte("Total officine + gardes "+quand,data.map(function(x){return {p:x.p,v:x.re.tot};}),"au total (officine + gardes)",function(x){return hm(x.v);});
   carte("Heures à l'officine "+quand,data.map(function(x){return {p:x.p,v:x.re.w};}),"à l'officine",function(x){return hm(x.v);});
   carte("Congés "+Y+" en heures (posés à venir compris)",data.map(function(x){return {p:x.p,v:x.an.cpH,s:x.an};}),"de congé",function(x){return hm(x.v)+" <span class='sm' style='font-weight:400'>("+nJ(x.s.cp)+")</span>";});
   carte("Gardes "+quand,data.map(function(x){return {p:x.p,v:x.re.g};}),"de garde",function(x){return hm(x.v);});
@@ -1479,28 +1481,28 @@ function renderTit(){
   var cards=document.getElementById("titCards");cards.innerHTML="";
   data.forEach(function(x){var re=x.re,an=x.an,c=el("div",{class:"pcard",style:"--pc:"+x.p.color});
     c.innerHTML="<div class='top'><div class='who' style='--pc:"+x.p.color+"'>"+av(x.p)+"<div><div class='n' style='font-weight:700'>"+esc(x.p.name)+"</div><div class='lbl2'>travaille sur "+joursSem(x.p)+" j/sem. (trame)</div></div></div></div>"+
-      "<div><div class='big num'>"+hm(re.w)+"</div><div class='lbl2'>heures à l'officine "+quand+"</div></div>"+
-      "<div class='rows'>"+(passe||avenir?"":"<span>Officine, prévu sur l'année</span><span>"+hm(an.w)+"</span>")+
+      "<div><div class='big num'>"+hm(re.tot)+"</div><div class='lbl2'>heures "+quand+", officine + gardes</div></div>"+
+      "<div class='rows'><span>dont officine</span><span>"+hm(re.w)+"</span><span>dont gardes</span><span>"+hm(re.g)+"</span>"+(passe||avenir?"":"<span>Officine + gardes, prévu sur l'année</span><span>"+hm(an.tot)+"</span>")+
       "<span>Jours travaillés"+(passe||avenir?"":" à ce jour")+"</span><span>"+re.d+"</span>"+
       "<span><b>Congés "+Y+"</b></span><span>"+hm(an.cpH)+" ("+nJ(an.cp)+")</span>"+
       (passe||avenir?"":"<span>dont déjà pris</span><span>"+hm(re.cpH)+" ("+nJ(re.cp)+")</span><span>dont posés à venir</span><span>"+hm(an.cpH-re.cpH)+" ("+nJ(an.cp-re.cp)+")</span>")+
       "<span>Autres absences (récup, maladie…)</span><span>"+hm(an.othH)+" ("+nJ(an.oth)+")</span>"+
-      "<span><b>Gardes</b> "+(passe?"en "+Y:(avenir?"prévues":"à ce jour"))+"</span><span>"+hm(re.g)+"</span>"+(passe||avenir||an.g===re.g?"":"<span>Gardes prévues sur l'année</span><span>"+hm(an.g)+"</span>")+"</div>";
+      (passe||avenir||an.g===re.g?"":"<span>Gardes prévues sur l'année</span><span>"+hm(an.g)+"</span>")+"</div>";
     cards.appendChild(c);});
   /* tableau mois par mois */
   var h="<thead><tr><th>Mois</th>";data.forEach(function(x){h+="<th class='sep'>"+esc(x.p.name)+" · officine</th><th>Congés</th><th>Gardes</th>";});
-  if(data.length===2)h+="<th class='sep'>Écart officine cumulé</th><th>Écart congés cumulé</th>";h+="</tr></thead><tbody>";
+  if(data.length===2)h+="<th class='sep'>Écart cumulé officine + gardes</th><th>Écart congés cumulé</th>";h+="</tr></thead><tbody>";
   var cw=0,cc=0,T=data.map(function(){return {w:0,g:0,cp:0,cpH:0};});
   var who=function(v){return Math.abs(v)<60?"=":esc((v>0?data[0]:data[1]).p.name)+" +"+hm(Math.abs(v));};
   for(var mo=1;mo<=12;mo++){var ym=Y+"-"+(mo<10?"0":"")+mo,ma=ym+"-01",mb=monthEnd(ym);if(mb<dIso(HFIRST))continue;if(ma<dIso(HFIRST))ma=dIso(HFIRST);
     var fut=ma>tIso,row=data.map(function(x){return titStats(x.p,ma,mb);});
     h+="<tr class='"+(fut?"fut":"")+"'><td>"+MOISL[mo-1]+(fut?" <span class='sm'>prévu</span>":(mb>=tIso?" <span class='sm'>en cours</span>":""))+"</td>";
     row.forEach(function(r,i){T[i].w+=r.w;T[i].g+=r.g;T[i].cp+=r.cp;T[i].cpH+=r.cpH;h+="<td class='sep avg'>"+hm(r.w)+"</td><td>"+(r.cp?hm(r.cpH)+" <span class='sm'>("+nJ(r.cp)+")</span>":"–")+"</td><td>"+(r.g?hm(r.g):"–")+"</td>";});
-    if(data.length===2){cw+=row[0].w-row[1].w;cc+=row[0].cpH-row[1].cpH;h+="<td class='sep'>"+who(cw)+"</td><td>"+who(cc)+"</td>";}
+    if(data.length===2){cw+=row[0].tot-row[1].tot;cc+=row[0].cpH-row[1].cpH;h+="<td class='sep'>"+who(cw)+"</td><td>"+who(cc)+"</td>";}
     h+="</tr>";}
   h+="<tr class='tot'><td>Total "+Y+"</td>";T.forEach(function(t){h+="<td class='sep avg'>"+hm(t.w)+"</td><td>"+hm(t.cpH)+" <span class='sm'>("+nJ(t.cp)+")</span></td><td>"+hm(t.g)+"</td>";});if(data.length===2)h+="<td class='sep'></td><td></td>";
   document.getElementById("titTable").innerHTML=h+"</tr></tbody>";
-  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du "+dFr(dIso(HFIRST))+" ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé. Entre parenthèses, les jours ouvrables : du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris (une semaine de congé = 6 jours pour chacun, comme pour les salariés). Gardes : comptées à part (nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30), jamais mêlées aux congés ni à l'officine. Autres absences (récupération, maladie…) : à part. Équilibre (règle choisie par les titulaires le 13/11/2026) : mêmes heures à l'officine sur l'année civile, congés déjà posés compris ; les gardes sont suivies à part et n'entrent pas dans l'équilibre. L'équivalent en jours utilise la durée moyenne d'une journée dans la trame de la personne. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre après ce congé.";
+  document.getElementById("titNote").textContent="Visible seulement des titulaires. Officine : heures au planning (trame + changements, repris de MonPlanningPharma avant septembre 2026), connues à partir du "+dFr(dIso(HFIRST))+" ; les mois à venir sont prévisionnels. Congés en heures : heures qui étaient prévues à la trame les jours posés en congé payé. Entre parenthèses, les jours ouvrables : du lundi au samedi hors fériés, du premier jour d'absence à la veille de la reprise, jours de repos compris (une semaine de congé = 6 jours pour chacun, comme pour les salariés). Gardes : nuits de 19h30 à 8h30, journée du dimanche et des fériés à partir de 8h30 ; comptées dans la colonne Gardes, jamais mêlées aux congés. Autres absences (récupération, maladie…) : à part. Équilibre (règle des titulaires du 13/11/2026, gardes ajoutées le 20/11/2026) : mêmes heures sur l'année civile en additionnant heures à l'officine et heures de garde, congés déjà posés compris. L'équivalent en jours utilise la durée moyenne d'une journée dans la trame de la personne. Quand un titulaire pose un congé, la fenêtre « Poser un congé » montre l'équilibre après ce congé.";
 }
 /* ===== Changements de planning sans motif (« Non catégorisé ») : classement rapide, un par un ou par lot.
    Pas de notification à la personne : seul le motif change, pas les horaires. ===== */
