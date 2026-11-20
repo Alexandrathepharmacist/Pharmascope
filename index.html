@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.72">
+<meta name="ps-version" content="v9.73">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -811,6 +811,9 @@ return Object.keys(pd.L).filter(function(k){
 var ku=k.toUpperCase();
 return ku.indexOf(target)>=0||target.indexOf(ku)>=0})}
 
+/* v9.73 : creneau d un ticket selon le jour (0 = dimanche) et l heure en minutes.
+   Horaires : 8h30-19h30, samedi 8h30-18h30. Avant 2026 : coupure 12h30-14h30 du lundi au jeudi. */
+function creneauAffluence(jourSem,mn){if(jourSem===0||mn<510)return 4;if(mn<750)return 0;if(mn<870)return 1;if(mn<1110)return 2;if(jourSem===6||mn>=1170)return 4;return 3}
 function parseSalesCore(text,stockData,basePdRef,curPd,log,prog){
 log("Analyse des ventes CSV...");
 /* Dictionnaire EAN: catalogue embarque + stock importe (optionnel) */
@@ -929,8 +932,11 @@ if(!JOURS[mo])JOURS[mo]={};JOURS[mo][jour]=1;
 var hh=parseInt(((r0.split(" ")[1])||"").split(":")[0],10);
 var hmV=((r0.split(" ")[1])||"").slice(0,5);if(/^\d{1,2}:\d{2}$/.test(hmV)){var kV=dp[2]+"-"+dp[1]+"-"+dp[0]+" "+(hmV.length===4?"0"+hmV:hmV);if(kV>DERNV)DERNV=kV}
 if(facture&&!isNaN(hh)&&hh>=0&&hh<24){var jkH=dp[2]+"-"+dp[1]+"-"+dp[0];
-if(!HEATJ[jkH])HEATJ[jkH]={t:{},c:{},m:{}};var hj=HEATJ[jkH];
-if(!hj.t[hh])hj.t[hh]={};hj.t[hh][facture]=1;hj.c[hh]=(hj.c[hh]||0)+ca;hj.m[hh]=(hj.m[hh]||0)+marge;if(ca>SEUIL_EXC){if(!hj.x)hj.x=[0,0,0];hj.x[0]++;hj.x[1]+=ca;hj.x[2]+=marge}}
+if(!HEATJ[jkH])HEATJ[jkH]={t:{},c:{},m:{},k:{},w:new Date(jkH+"T12:00:00").getDay()};var hj=HEATJ[jkH];
+if(!hj.t[hh])hj.t[hh]={};hj.t[hh][facture]=1;
+/* v9.73 : patientele -> par ticket : creneau horaire, ordonnance (au moins un produit remboursable), vendeur de l equipe, quantite */
+var tkA=hj.k[facture];if(!tkA){var mnA=hh*60+(parseInt(hmV.split(":")[1]||"0",10)||0);tkA=hj.k[facture]={q:creneauAffluence(hj.w,mnA),o:0,e:0,n:0}}
+if(tvaF===2.1||dispoR)tkA.o=1;var vnA=r2.trim().replace(/^\d+\s+/,"");if(!vnA||!estHorsEquipe(vnA))tkA.e=1;tkA.n+=qte;hj.c[hh]=(hj.c[hh]||0)+ca;hj.m[hh]=(hj.m[hh]||0)+marge;if(ca>SEUIL_EXC){if(!hj.x)hj.x=[0,0,0];hj.x[0]++;hj.x[1]+=ca;hj.x[2]+=marge}}
 if(ca>SEUIL_EXC){if(!CAEXC[mo])CAEXC[mo]=[0,0];CAEXC[mo][0]+=ca;CAEXC[mo][1]+=1}
 if(whNew[code]){delete whNew[code];var whSup=pMap[code];pMap[code]=null;var labNom=inferLab(code);if(!labNom||estGrossisteNom(labNom))pMap[code]=whSup}
 var sup=pMap[code]||inferLab(code)||quarMap[code]||"Divers";
@@ -1049,9 +1055,13 @@ if(tot>0)fREC[cd]={n:RECJ[cd].n,d:gard}});
 if(fenetre.length)log("Reassort: "+Object.keys(fREC).length+" references sur "+fenetre.length+" jours ("+fenetre[0]+" -> "+fenetre[fenetre.length-1]+")");
 /* Affluence : on garde, par jour, le nombre de tickets et le CA de chaque heure */
 var fHEAT={};
+/* v9.73 : un ticket = un client, sauf les retours seuls (quantite totale <= 0) et les retraitements de tiers payant (hors equipe).
+   n[i] = clients du creneau i, o[i] = dont avec un produit rembourse (0 matin, 1 midi 12h30-14h30, 2 apres-midi, 3 soir, 4 hors horaires / garde) */
+function okTk(hj,f){var k=hj.k&&hj.k[f];return !k||(k.e&&k.n>0)}
 Object.keys(HEATJ).forEach(function(jk){var hj=HEATJ[jk];var t=[],c=[],mh=[];
-for(var h2=0;h2<24;h2++){t.push(hj.t[h2]?Object.keys(hj.t[h2]).length:0);c.push(Math.round(hj.c[h2]||0));mh.push(Math.round(hj.m[h2]||0))}
-fHEAT[jk]={t:t,c:c,m:mh,v:3};if(hj.x)fHEAT[jk].x=[hj.x[0],Math.round(hj.x[1]),Math.round(hj.x[2])]});
+for(var h2=0;h2<24;h2++){t.push(hj.t[h2]?Object.keys(hj.t[h2]).filter(function(f){return okTk(hj,f)}).length:0);c.push(Math.round(hj.c[h2]||0));mh.push(Math.round(hj.m[h2]||0))}
+var nC=[0,0,0,0,0],oC=[0,0,0,0,0];Object.keys(hj.k||{}).forEach(function(f){var k=hj.k[f];if(!(k.e&&k.n>0))return;nC[k.q]++;if(k.o)oC[k.q]++});
+fHEAT[jk]={t:t,c:c,m:mh,n:nC,o:oC,v:4};if(hj.x)fHEAT[jk].x=[hj.x[0],Math.round(hj.x[1]),Math.round(hj.x[2])]});
 /* Ventes associees : paires de produits achetes ensemble (tickets de 2 a 15 produits) */
 var fASSOC=null;
 (function(){
@@ -1270,7 +1280,7 @@ out.STKL=(fresh.STKL&&Object.keys(fresh.STKL).length)?fresh.STKL:(prev.STKL||nul
 out.STKG=(fresh.STKG&&Object.keys(fresh.STKG).length)?fresh.STKG:(prev.STKG||null);
 out.STKV=(fresh.STKV&&Object.keys(fresh.STKV).length)?fresh.STKV:(prev.STKV||null);
 out.HEAT={};[prev.HEAT||{},fresh.HEAT||{}].forEach(function(src){Object.keys(src).forEach(function(d){out.HEAT[d]=src[d]})});
-(function(){var hk=Object.keys(out.HEAT).sort();if(hk.length>400)hk.slice(0,hk.length-400).forEach(function(d){delete out.HEAT[d]})})();
+(function(){var hk=Object.keys(out.HEAT).sort();if(hk.length>800)hk.slice(0,hk.length-800).forEach(function(d){delete out.HEAT[d]})})();
 (function(){var aF=fresh.ASSOC,aP=prev.ASSOC;
 if(!aF||!aF.tickets){out.ASSOC=aP||null;return}
 if(aP&&aP.tickets&&aF.tickets<aP.tickets*0.5){var ecart=(new Date(aF.d2)-new Date(aP.d2))/864e5;if(!(ecart>90)){out.ASSOC=aP;return}}
@@ -1803,7 +1813,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.72";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.73";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -1938,7 +1948,7 @@ var P=Storage.prototype;if(!P.__demo){P.__demo=1;var g=P.getItem,st=P.setItem,rm
 var cle=function(x){x=String(x);return /^ps_auth/.test(x)?x:"demo:"+x};
 P.getItem=function(x){return g.call(this,cle(x))};P.setItem=function(x,v){return st.call(this,cle(x),v)};P.removeItem=function(x){return rm.call(this,cle(x))}}}
 function viderDemo(){try{var ks=[];for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.indexOf("demo:")===0)ks.push(k)}ks.forEach(function(k){Storage.prototype.__demo?localStorage.removeItem(k.slice(5)):localStorage.removeItem(k)})}catch(e){}}
-function chargerScriptDemo(){return new Promise(function(ok,ko){if(window.DEMO_DATA){ok();return}var sc=document.createElement("script");sc.src="data/demo.js?v=2";sc.onload=function(){ok()};sc.onerror=function(){ko(new Error("demo"))};document.head.appendChild(sc)})}
+function chargerScriptDemo(){return new Promise(function(ok,ko){if(window.DEMO_DATA){ok();return}var sc=document.createElement("script");sc.src="data/demo.js?v=3";sc.onload=function(){ok()};sc.onerror=function(){ko(new Error("demo"))};document.head.appendChild(sc)})}
 function BandeauDemo(){return React.createElement("div",{style:{position:"fixed",top:54,left:"50%",transform:"translateX(-50%)",zIndex:9999,pointerEvents:"none",background:"rgba(124,58,237,.92)",color:"#fff",fontSize:12,fontWeight:700,padding:"4px 12px",borderRadius:20,boxShadow:"0 2px 10px rgba(0,0,0,.2)",whiteSpace:"nowrap"}},"\ud83c\udfad D\u00e9monstration \u00b7 pharmacie fictive")}
 /* v9.48 : l'appli ne demarre (et ne lit le cloud) qu'une fois la connexion faite */
 function Racine(){
@@ -2031,6 +2041,7 @@ if(!supaClient)return Promise.resolve({err:"hors_ligne"});
 return supaClient.auth.getSession().then(function(s){if(!(s&&s.data&&s.data.session))return{err:"compte"};
 return supaClient.from("resume_matin").select("jour,data").order("jour",{ascending:false}).limit(7).then(function(r){if(r.error)return{err:"lecture"};return{liste:r.data||[]}})}).catch(function(){return{err:"hors_ligne"}})}
 /* v9.61 : bouton "Tache" sur chaque point du resume -> ajoute a la to-do list (une seule fois par mail)
+   v9.73 : Affluence -> evolution de la patientele (4, 13, 26 semaines vs N-1) : clients/jour, ordonnance/conseil, creneaux (dont 12h30-14h30), jours de la semaine, marge par client ; HEAT garde 800 jours (n/o par creneau, v:4).
    v9.72 : un fournisseur Winpharma qui ressemble a un labo Ospharm (ex. LOVREN REF / CLINICALFARMA LOVREN) est rattache a sa fiche : plus de fiche vide ni de labo en double.
    v9.71 : heure de la derniere vente affichee a cote de la date des ventes (DERNV).
    v9.70 : import Drive relance tout seul apres 12h00 et 18h30 et au retour dans l'appli ; jeton Drive fourni par le serveur (plus de reconnexion manuelle).
@@ -2709,7 +2720,7 @@ var ML=["Mar","Avr","Mai","Jun","Jul","Ao\u00fb","Sep","Oct","Nov","D\u00e9c","J
 var MOIS_COURT=["Jan","F\u00e9v","Mar","Avr","Mai","Jun","Jul","Ao\u00fb","Sep","Oct","Nov","D\u00e9c"];
 /* ===== COURBE N / N-1 (une mesure a la fois, ecart colore, % par mois) ===== */
 function CourbeN1(props){
-var fmtV=function(x){return (props.unites&&mesG===0)?Math.round(x).toLocaleString("fr-FR")+" u.":fmtE(Math.round(x))};var mesG=0;
+var fmtV=function(x){return (props.unite1&&mesG===0)?Math.round(x).toLocaleString("fr-FR")+" "+props.unite1:(props.unites&&mesG===0)?Math.round(x).toLocaleString("fr-FR")+" u.":(props.decimales&&mesG===1)?(Math.round(x*10)/10).toLocaleString("fr-FR")+" \u20ac":fmtE(Math.round(x))};var mesG=0;
 var data=props.data||[];var labels=props.labels||[];var prev=props.prev||null;
 var mS=useState(0);var mes=mS[0];var setMes=mS[1];mesG=mes;
 var hS=useState(-1);var hov=hS[0];var setHov=hS[1];
@@ -2723,8 +2734,10 @@ var libs=[props.label1||"CA HT",props.label2||"Marge HT"];
 function v(i){var x=data[i]&&data[i][mes];x=x||0;if(proj>1&&i===dern)x=x*proj;return x}
 function p(i){return prev&&prev[i]&&prev[i][mes]!=null?prev[i][mes]:null}
 var pad={t:14,r:22,b:46,l:22};var cw=w-pad.l-pad.r;var ch=h-pad.t-pad.b;
-var mx=0;for(var i=0;i<n;i++){mx=Math.max(mx,v(i),p(i)||0)}if(!mx)mx=1;mx*=1.12;
-var sx=n>1?cw/(n-1):cw;function X(i){return pad.l+i*sx}function Y(x){return pad.t+ch*(1-x/mx)}
+var mx=0;for(var i=0;i<n;i++){mx=Math.max(mx,v(i),p(i)||0)}if(!mx)mx=1;var lo=0;
+/* v9.73 : zoom -> l'axe ne part pas de 0, pour voir les variations de quelques % */
+if(props.zoom){var mn=mx;for(var i2=0;i2<n;i2++){if(v(i2)>0)mn=Math.min(mn,v(i2));if(p(i2)!==null&&p(i2)>0)mn=Math.min(mn,p(i2))}var sp=Math.max(mx-mn,mx*0.04);lo=Math.max(0,mn-sp*0.5);mx=mx+sp*0.25}else mx*=1.12;
+var sx=n>1?cw/(n-1):cw;function X(i){return pad.l+i*sx}function Y(x){return pad.t+ch*(1-Math.max(0,x-lo)/(mx-lo))}
 var els=[];
 els.push(React.createElement("line",{key:"ax",x1:pad.l,y1:pad.t+ch,x2:w-pad.r,y2:pad.t+ch,stroke:"var(--border)",strokeWidth:1}));
 /* ecart entre les deux annees, segment par segment */
@@ -2752,7 +2765,8 @@ els.push(React.createElement("text",{key:"ec"+e2,x:X(e2),y:yy+13,fontSize:pf,fon
 var puces=null;
 /* resume sur les mois comparables (mois en cours exclu) */
 var tn=0,tp=0,nb=0;for(var r=0;r<n;r++){if(proj>1&&r===dern)continue;if(p(r)!==null){tn+=v(r);tp+=p(r);nb++}}
-var resume=nb&&tp>0?React.createElement("span",null,"Sur "+nb+" mois compar\u00e9s : ",React.createElement("b",null,fmtV((tn))),React.createElement("span",{style:{color:tn>=tp?"var(--accent)":"var(--red)",fontWeight:600}}," ("+(tn>=tp?"+":"")+Math.round((tn-tp)/tp*100)+" % vs an dernier)")):
+var pasL=props.pasLib||"mois";if(props.moyenne&&nb){tn=tn/nb;tp=tp/nb}
+var resume=nb&&tp>0?React.createElement("span",null,"Sur "+nb+" "+pasL+" compar\u00e9"+(props.pasLib?"e":"")+"s"+(props.moyenne?", en moyenne":"")+" : ",React.createElement("b",null,fmtV((tn))),React.createElement("span",{style:{color:tn>=tp?"var(--accent)":"var(--red)",fontWeight:600}}," ("+(tn>=tp?"+":"")+Math.round((tn-tp)/tp*100)+" % vs an dernier)")):
 React.createElement("span",null,"Total : ",React.createElement("b",null,fmtV((data.reduce(function(s,x,i){return s+v(i)},0)))));
 var detail=hov>=0&&hov<n?React.createElement("div",{style:{fontSize:13,marginTop:6,color:"var(--text2)"}},React.createElement("b",{style:{color:"var(--text)"}},(labels[hov]||"")+" : "+fmtV((v(hov)))),(proj>1&&hov===dern?" (projet\u00e9, mois en cours)":""),p(hov)!==null?" \u00b7 an dernier "+fmtV((p(hov))):"",ecart(hov)!==null?React.createElement("span",{style:{color:ecart(hov)>=0?"var(--accent)":"var(--red)",fontWeight:600}}," \u00b7 "+(ecart(hov)>0?"+":"")+ecart(hov)+" %"):null):null;
 var pill=function(ix){var on=mes===ix;return React.createElement("button",{key:ix,onClick:function(){setMes(ix)},style:{padding:"5px 14px",borderRadius:20,fontSize:12,fontWeight:600,border:"1px solid "+(on?"var(--text)":"var(--border)"),background:on?"var(--text)":"transparent",color:on?"var(--bg2)":"var(--text2)"}},libs[ix])};
@@ -6311,13 +6325,141 @@ React.createElement("div",{style:{textAlign:"right",whiteSpace:"nowrap"}},React.
 cur[2].length>80&&(expert||voirP[ong])?React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:8}},"Les 80 plus importants sont affich\u00e9s."):null,
 React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:12,lineHeight:1.5}},"Les prix sont des moyennes HT calcul\u00e9es \u00e0 partir de vos ventes (CA \u00f7 quantit\u00e9s) : une remise ponctuelle ou une promo peut aussi expliquer un \u00e9cart."),React.createElement(LienExpert,null))}
 
+/* --- v9.73 : evolution de la patientele (dernier mois, 3 mois, 6 mois, compares a l'an dernier) ---
+   Un client = un ticket (retours seuls et retraitements de tiers payant exclus).
+   Comparaison au meme nombre de semaines l'an dernier, decale de 52 semaines (memes jours de la semaine). */
+var CRENEAUX_AFF=[["Matin","8h30-12h30"],["Midi","12h30-14h30"],["Apr\u00e8s-midi","14h30-18h30"],["Soir","18h30-19h30"]];
+function isoDecale(iso,j){var d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+j);return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2)}
+function dateCourteAff(iso){var p=iso.split("-");return p[2]+"/"+p[1]+"/"+p[0].slice(2)}
+function clientsJourAff(h){
+if(Array.isArray(h.n)&&Array.isArray(h.o))return{ouv:h.n[0]+h.n[1]+h.n[2]+h.n[3],hors:h.n[4],n:h.n,o:h.o,det:true};
+var t=h.t||[];var ouv=0,hors=0;for(var i=0;i<24;i++){if(i>=8&&i<=19)ouv+=t[i]||0;else hors+=t[i]||0}
+return{ouv:ouv,hors:hors,det:false}}
+function statsPatientele(H,debut,L){
+var jours=[];
+for(var i=0;i<L;i++){var d=isoDecale(debut,i);var h=H[d];var w=new Date(d+"T12:00:00").getDay();
+if(!h){jours.push({d:d,w:w,vide:true});continue}
+var cj=clientsJourAff(h);if(w===0){cj={ouv:0,hors:cj.ouv+cj.hors,det:cj.det,n:cj.n,o:cj.o}}
+var c=0,m=0;(h.c||[]).forEach(function(x){c+=x||0});(h.m||[]).forEach(function(x){m+=x||0});
+jours.push({d:d,w:w,cj:cj,c:c,m:m,xc:h.x?h.x[1]:0})}
+var vals=jours.filter(function(j){return !j.vide&&j.w!==0&&j.cj.ouv>0}).map(function(j){return j.cj.ouv}).sort(function(a,b){return a-b});
+var med=vals.length?vals[Math.floor(vals.length/2)]:0;
+var S={L:L,debut:debut,fin:isoDecale(debut,L-1),avecDonnees:0,jOuv:0,cli:0,ordo:0,cr:[0,0,0,0],crO:[0,0,0,0],garde:0,ca:0,mg:0,xc:0,tk:0,det:true,js:[[0,0],[0,0],[0,0],[0,0],[0,0],[0,0],[0,0]],sem:[]};
+jours.forEach(function(j,ix){var si=Math.floor(ix/7);if(!S.sem[si])S.sem[si]={d:j.d,cli:0,j:0,mg:0,tk:0};
+if(j.vide)return;S.avecDonnees++;
+var tkJ=j.cj.ouv+j.cj.hors;S.ca+=j.c;S.mg+=j.m;S.xc+=j.xc;S.tk+=tkJ;S.sem[si].mg+=j.m;S.sem[si].tk+=tkJ;
+var ouvert=j.w!==0&&j.cj.ouv>=10&&j.cj.ouv>=med*0.35;
+if(!ouvert){S.garde+=tkJ;return}
+S.garde+=j.cj.hors;S.jOuv++;S.cli+=j.cj.ouv;var js=(j.w+6)%7;S.js[js][0]+=j.cj.ouv;S.js[js][1]++;
+S.sem[si].cli+=j.cj.ouv;S.sem[si].j++;
+if(j.cj.det){for(var q=0;q<4;q++){S.cr[q]+=j.cj.n[q];S.crO[q]+=j.cj.o[q];S.ordo+=j.cj.o[q]}}else S.det=false});
+S.couv=S.avecDonnees/L;return S}
+function nbAff(x){if(x===null||x===undefined||isNaN(x))return "\u2013";return x>=20?Math.round(x).toLocaleString("fr-FR"):(Math.round(x*10)/10).toString().replace(".",",")}
+function eurAff(x){if(x===null||x===undefined||isNaN(x))return "\u2013";return (Math.round(x*10)/10).toFixed(1).replace(".",",")+" \u20ac"}
+function ecartAff(a,b){if(a===null||b===null||!(b>0))return null;return (a-b)/b*100}
+function BadgeEcart(props){var e=props.e;if(e===null||e===undefined)return null;var bon=props.inverse?e<0:e>=0;
+return React.createElement("span",{style:{display:"inline-block",fontSize:12,fontWeight:700,padding:"2px 8px",borderRadius:10,background:bon?"var(--accent-bg)":"var(--red-bg)",color:bon?"var(--accent)":"var(--red)",whiteSpace:"nowrap"}},fmtPct1(e))}
+function TuilePat(props){
+return React.createElement("div",{style:{background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:"12px 14px"}},
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:4}},props.icone+" "+props.titre),
+React.createElement("div",{style:{display:"flex",alignItems:"baseline",gap:8,flexWrap:"wrap"}},
+React.createElement("div",{style:{fontSize:props.grand?28:22,fontWeight:700}},props.val),
+React.createElement(BadgeEcart,{e:props.e})),
+props.val1!==null&&props.val1!==undefined?React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:3}},"an dernier : "+props.val1):null,
+props.sous?React.createElement("div",{style:{fontSize:12,color:"var(--text2)",marginTop:3}},props.sous):null)}
+function PatienteleEvolution(props){
+var H=props.H;var dates=props.dates;
+var perS=useState(function(){var v=lsVal("ps_aff_periode",91);return [28,91,182].indexOf(v)>=0?v:91});var per=perS[0];var setPer=perS[1];
+useEffect(function(){try{localStorage.setItem("ps_aff_periode",JSON.stringify(per))}catch(e){}},[per]);
+var expert=useTheme().expert!==false;
+var n0=new Date();var auj=n0.getFullYear()+"-"+("0"+(n0.getMonth()+1)).slice(-2)+"-"+("0"+n0.getDate()).slice(-2);
+var fin=dates[dates.length-1];if(fin>=auj)fin=isoDecale(auj,-1);
+var debut=isoDecale(fin,-(per-1));
+var S=statsPatientele(H,debut,per);var S1=statsPatientele(H,isoDecale(debut,-364),per);
+if(!S.jOuv)return null;
+var cmp=S1.couv>=0.85&&S1.jOuv>0;var det=S.det&&(!cmp||S1.det);
+function parJ(T,x){return T.jOuv?x/T.jOuv:null}
+var cj=parJ(S,S.cli),cj1=cmp?parJ(S1,S1.cli):null;
+var oj=det?parJ(S,S.ordo):null,oj1=det&&cmp?parJ(S1,S1.ordo):null;
+var kj=det?parJ(S,S.cli-S.ordo):null,kj1=det&&cmp?parJ(S1,S1.cli-S1.ordo):null;
+var mc=S.tk?S.mg/S.tk:null,mc1=cmp&&S1.tk?S1.mg/S1.tk:null;
+var pa=S.tk?(S.ca-S.xc)/S.tk:null,pa1=cmp&&S1.tk?(S1.ca-S1.xc)/S1.tk:null;
+var libPer=per===28?"4 derni\u00e8res semaines":(per===91?"13 derni\u00e8res semaines":"26 derni\u00e8res semaines");
+var periodeTxt="Du "+dateCourteAff(S.debut)+" au "+dateCourteAff(S.fin)+(cmp?", compar\u00e9 au "+dateCourteAff(S1.debut)+" \u2013 "+dateCourteAff(S1.fin)+" (m\u00eames jours de la semaine)":"");
+/* lecture en francais */
+var lec=[];
+var eCli=ecartAff(cj,cj1);
+lec.push(React.createElement("span",null,"Sur les "+libPer+" : ",React.createElement("b",null,nbAff(cj)+" clients par jour d'ouverture"),cmp?" contre "+nbAff(cj1)+" l'an dernier ":".",cmp?React.createElement(BadgeEcart,{e:eCli}):null,cmp?" (soit "+(S.cli-Math.round(cj1*S.jOuv)>=0?"+":"")+(S.cli-Math.round(cj1*S.jOuv)).toLocaleString("fr-FR")+" clients sur la p\u00e9riode, \u00e0 jours d'ouverture \u00e9gaux).":""));
+if(!cmp)lec.push(React.createElement("span",null,"Pas encore de comparaison avec l'an dernier sur cette p\u00e9riode : l'historique jour par jour se compl\u00e8te avec l'export complet du samedi soir."));
+if(det&&cmp){var eO=ecartAff(oj,oj1),eK=ecartAff(kj,kj1);
+lec.push(React.createElement("span",null,"Avec ordonnance : "+nbAff(oj)+" par jour ",React.createElement(BadgeEcart,{e:eO})," ; conseil seul : "+nbAff(kj)+" par jour ",React.createElement(BadgeEcart,{e:eK}),". "+(function(){var dO=oj-oj1,dK=kj-kj1,tot=dO+dK;if(Math.abs(tot)<0.5)return "";var sens=tot>0?"La hausse":"La baisse";var fO=Math.abs(dO),fK=Math.abs(dK);if((dO>0)!==(dK>0))return sens+" vient "+(fO>fK?"des ordonnances":"du conseil")+", l'autre partie \u00e9voluant en sens inverse.";if(Math.min(fO,fK)>=Math.max(fO,fK)*0.75)return sens+" se partage entre ordonnances et conseil.";return sens+" vient surtout "+(fO>fK?"des ordonnances":"du conseil")+" (en nombre de clients)."})()))}
+if(det&&cmp){
+var midi=S.cr[1]/S.jOuv,midi1=S1.cr[1]/S1.jOuv;var gain=midi-midi1;if(gain<midi*0.25)gain=0;
+var aut=(S.cr[0]+S.cr[2]+S.cr[3])/S.jOuv-(S1.cr[0]+S1.cr[2]+S1.cr[3])/S1.jOuv;
+if(gain>0.5){var txt;
+if(aut>=0)txt="sans perte sur les autres cr\u00e9neaux ("+(aut>0?"+":"")+nbAff(aut)+" par jour) : l'ouverture en continu apporte de vrais passages en plus.";
+else{var dep=Math.min(gain,-aut);var nouv=gain-dep;var pc=Math.round(dep/gain*100);
+txt="pendant que les autres cr\u00e9neaux en perdent "+nbAff(-aut)+". Environ "+pc+" % des clients de midi semblent venir d'autres heures (patient\u00e8le \u00ab dilu\u00e9e \u00bb)"+(nouv>=0.5?", le reste ("+nbAff(nouv)+" par jour) sont des passages en plus.":" : pas de gain net de clients.")+" (\u00c0 nuancer : la baisse des autres cr\u00e9neaux peut avoir d'autres causes.)"}
+lec.push(React.createElement("span",null,"\ud83d\udd50 Ouverture \u00e0 midi : le cr\u00e9neau 12h30-14h30 compte ",React.createElement("b",null,"+"+nbAff(gain)+" clients par jour")," par rapport \u00e0 l'an dernier, "+txt))}}
+if(mc!==null)lec.push(React.createElement("span",null,"Marge par client : ",React.createElement("b",null,eurAff(mc))," ",cmp?React.createElement(BadgeEcart,{e:ecartAff(mc,mc1)}):null,cmp?" (an dernier "+eurAff(mc1)+")":""," ; panier moyen "+eurAff(pa)+" HT hors m\u00e9dicaments chers."));
+if(S.garde>0)lec.push(React.createElement("span",{style:{color:"var(--text3)"}},"Hors horaires d'ouverture (gardes, dimanches, f\u00e9ri\u00e9s) : "+S.garde.toLocaleString("fr-FR")+" clients"+(cmp?" (an dernier "+S1.garde.toLocaleString("fr-FR")+")":"")+", non compt\u00e9s dans les moyennes."));
+/* courbe semaine par semaine */
+var data=S.sem.map(function(s){return[s.j?s.cli/s.j:0,s.tk?s.mg/s.tk:0]});
+var prev=cmp?S1.sem.map(function(s){return s&&s.j?[s.cli/s.j,s.tk?s.mg/s.tk:null]:null}):null;
+var pasLb=data.length>14?3:(data.length>8?2:1);
+var labels=S.sem.map(function(s,i){return i%pasLb===0?dateCourteAff(s.d).slice(0,5):""});
+/* tableaux */
+var cell={padding:"7px 8px",borderBottom:"1px solid var(--border)",textAlign:"right",whiteSpace:"nowrap"};
+var cellG=Object.assign({},cell,{textAlign:"left"});
+var th={padding:"6px 8px",fontSize:11,color:"var(--text3)",fontWeight:600,textAlign:"right",borderBottom:"1px solid var(--border)"};
+var thG=Object.assign({},th,{textAlign:"left"});
+function ligne(k,lib,sous,a,b,extra){var e=ecartAff(a,b);
+return React.createElement("tr",{key:k},React.createElement("td",{style:cellG},React.createElement("div",{style:{fontWeight:600}},lib),sous?React.createElement("div",{style:{fontSize:11,color:"var(--text3)"}},sous):null),
+React.createElement("td",{style:Object.assign({},cell,{fontWeight:700})},nbAff(a)),
+cmp?React.createElement("td",{style:Object.assign({},cell,{color:"var(--text3)"})},nbAff(b)):null,
+cmp?React.createElement("td",{style:cell},b>0?React.createElement("span",null,React.createElement("span",{style:{fontSize:12,color:"var(--text2)",marginRight:6}},(a-b>=0?"+":"")+nbAff(a-b)),React.createElement(BadgeEcart,{e:e})):(a>0?React.createElement("span",{style:{fontSize:12,fontWeight:700,color:"var(--accent)"}},"nouveau"):"\u2013")):null,
+extra!==undefined?React.createElement("td",{style:Object.assign({},cell,{color:"var(--text2)"})},extra):null)}
+function tete(c1,avecExtra){return React.createElement("thead",null,React.createElement("tr",null,React.createElement("th",{style:thG},c1),React.createElement("th",{style:th},"Clients / jour"),cmp?React.createElement("th",{style:th},"An dernier"):null,cmp?React.createElement("th",{style:th},"\u00c9cart"):null,avecExtra?React.createElement("th",{style:th},"Ordonnance"):null))}
+var carte={background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:14,marginBottom:14};
+var tabCreneaux=det?React.createElement("div",{style:Object.assign({},carte,{overflowX:"auto"})},
+React.createElement("div",{style:{fontWeight:700,marginBottom:4}},"\ud83d\udd50 Par cr\u00e9neau horaire"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},"Moyenne par jour d'ouverture, avec la part des clients venus avec une ordonnance."),
+React.createElement("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:13}},tete("Cr\u00e9neau",true),
+React.createElement("tbody",null,CRENEAUX_AFF.map(function(c,q){return ligne(q,c[0],c[1],S.cr[q]/S.jOuv,cmp?S1.cr[q]/S1.jOuv:null,S.cr[q]?Math.round(S.crO[q]/S.cr[q]*100)+" %":"\u2013")})))):
+React.createElement("div",{style:Object.assign({},carte,{fontSize:13,color:"var(--text2)"})},"\ud83d\udd50 Le d\u00e9tail par cr\u00e9neau (dont 12h30-14h30) et ordonnance / conseil appara\u00eet apr\u00e8s le prochain export complet des ventes (samedi soir) : il faut relire tout l'historique une fois.");
+var tabJours=React.createElement("div",{style:Object.assign({},carte,{overflowX:"auto"})},
+React.createElement("div",{style:{fontWeight:700,marginBottom:8}},"\ud83d\udcc5 Par jour de la semaine"),
+React.createElement("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:13}},tete("Jour",false),
+React.createElement("tbody",null,[0,1,2,3,4,5].filter(function(j){return S.js[j][1]>0}).map(function(j){return ligne(j,JOURS_SEM[j],null,S.js[j][0]/S.js[j][1],cmp&&S1.js[j][1]?S1.js[j][0]/S1.js[j][1]:null)}))));
+return React.createElement("div",{style:{marginBottom:22}},
+React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:6}},
+React.createElement("div",{style:{fontWeight:700,fontSize:17}},"\ud83d\udcc8 \u00c9volution de la patient\u00e8le"),
+React.createElement(Pastilles,{val:per,set:setPer,options:[[28,"Dernier mois"],[91,"3 mois"],[182,"6 mois"]]})),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:12}},periodeTxt),
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:10,marginBottom:14}},
+React.createElement(TuilePat,{icone:"\ud83d\udc65",titre:"Clients par jour",grand:true,val:nbAff(cj),val1:cmp?nbAff(cj1):null,e:eCli,sous:S.cli.toLocaleString("fr-FR")+" clients sur "+S.jOuv+" jours"+(cmp?" (an dernier "+S1.jOuv+" j)":"")}),
+React.createElement(TuilePat,{icone:"\ud83d\udcc4",titre:"Avec ordonnance / jour",val:det?nbAff(oj):"\u2026",val1:det&&cmp?nbAff(oj1):null,e:det&&cmp?ecartAff(oj,oj1):null,sous:det?Math.round(S.ordo/S.cli*100)+" % des clients":"apr\u00e8s l'export du samedi"}),
+React.createElement(TuilePat,{icone:"\ud83d\udcac",titre:"Conseil seul / jour",val:det?nbAff(kj):"\u2026",val1:det&&cmp?nbAff(kj1):null,e:det&&cmp?ecartAff(kj,kj1):null,sous:det?"sans produit rembours\u00e9":"apr\u00e8s l'export du samedi"}),
+React.createElement(TuilePat,{icone:"\ud83d\udcb6",titre:"Marge par client",val:eurAff(mc),val1:cmp?eurAff(mc1):null,e:cmp?ecartAff(mc,mc1):null,sous:"panier "+eurAff(pa)+" HT"})),
+React.createElement("div",{style:Object.assign({},carte,{background:"var(--blue-bg)",border:"none",lineHeight:1.6,fontSize:13.5})},
+React.createElement("div",{style:{fontWeight:700,marginBottom:4}},"\ud83d\udca1 En bref"),
+lec.map(function(x,i){return React.createElement("div",{key:i,style:{marginBottom:4}},x)})),
+React.createElement("div",{style:carte},
+React.createElement("div",{style:{fontWeight:700,marginBottom:2}},"Semaine par semaine"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},"Clients par jour d'ouverture (ou marge par client), chaque semaine compar\u00e9e \u00e0 la m\u00eame semaine l'an dernier."),
+React.createElement(CourbeN1,{key:"aff"+per,data:data,prev:prev,labels:labels,label1:"Clients / jour",label2:"Marge / client",unite1:"clients",decimales:true,pasLib:"semaines",moyenne:true,zoom:true,height:190})),
+tabCreneaux,
+expert?tabJours:null,
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",lineHeight:1.5}},"Un client = un ticket de caisse (les retours seuls et les retraitements de tiers payant ne comptent pas). \u00ab Avec ordonnance \u00bb = le ticket contient au moins un produit remboursable : un m\u00e9dicament remboursable achet\u00e9 sans ordonnance y est donc compt\u00e9. Les jours de garde, dimanches et f\u00e9ri\u00e9s sont mis \u00e0 part pour comparer des journ\u00e9es normales."),
+React.createElement(LienExpert,null))}
+
 /* --- Affluence : a quelle heure viennent les clients --- */
 var JOURS_SEM=["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
 function AffluencePage(props){
 var pd=props.pd;
 var semS=useState(8);var sem=semS[0];var setSem=semS[1];
 var metS=useState("t");var met=metS[0];var setMet=metS[1];
-var entete=React.createElement(EnTeteOutil,{titre:"\u23f1 Affluence",sous:"Nombre moyen de clients (tickets) par jour et par heure. Utile pour placer les renforts au comptoir, et les rendez-vous d\u00e9l\u00e9gu\u00e9s ou la mise en rayon sur les cr\u00e9neaux calmes."});
+var entete=React.createElement(EnTeteOutil,{titre:"\u23f1 Affluence",sous:"Combien de clients viennent, comment la patient\u00e8le \u00e9volue par rapport \u00e0 l'an dernier, et \u00e0 quelles heures : pour placer les renforts au comptoir, les rendez-vous d\u00e9l\u00e9gu\u00e9s ou la mise en rayon sur les cr\u00e9neaux calmes."});
 var H=pd&&pd.HEAT?pd.HEAT:null;var dates=H?Object.keys(H).sort():[];
 if(!dates.length)return React.createElement("div",null,entete,React.createElement(VideOutil,{icone:"\u23f1",titre:"Pas encore de donn\u00e9es horaires",texte:"L'affluence se remplit au prochain import des ventes d\u00e9taill\u00e9es (l'heure de chaque vente est lue dans le fichier Winpharma).",action:props.setPage?function(){props.setPage("import")}:null}));
 var fin=new Date(dates[dates.length-1]+"T12:00:00");var debut=new Date(fin.getTime()-sem*7*864e5);
@@ -6343,6 +6485,8 @@ var parJour=jours.map(function(j){var t=0;moy[j].forEach(function(v){t+=v});retu
 function lib(c){return JOURS_SEM[c.j]+" "+c.h+"h-"+(c.h+1)+"h ("+(met==="t"?Math.round(c.v)+" clients":fmtE(c.v))+")"}
 function fmtV(v){return met==="t"?(v>=10?Math.round(v):v.toFixed(1)):(v>=1000?Math.round(v/100)/10+"k":Math.round(v))}
 return React.createElement("div",null,entete,
+React.createElement(PatienteleEvolution,{H:H,dates:dates}),
+React.createElement("div",{style:{fontWeight:700,fontSize:17,marginBottom:8}},"\u23f1 Quand viennent les clients"),
 React.createElement("div",{style:{display:"flex",gap:16,flexWrap:"wrap",marginBottom:14,alignItems:"center"}},
 React.createElement(Pastilles,{val:sem,set:setSem,options:[[4,"4 sem."],[8,"8 sem."],[13,"3 mois"],[52,"1 an"]]}),
 React.createElement(Pastilles,{val:met,set:setMet,options:[["t","Clients"],["c","CA HT"]]})),
@@ -15202,7 +15346,7 @@ var cur0=pdLive.current||{};
 var sameS=state.sales&&state.sales.id===pick.sales.id&&state.sales.mod===pick.sales.modifiedTime&&(!pick.salesDate||cur0.UPD===driveDateFr(pick.salesDate));
 /* v9.37 : le dernier fichier est relu une fois si la marge jour par jour (HEAT.m) n'a pas encore ete gardee */
 if(sameS&&!cur0.DERNV)sameS=false;
-if(sameS&&cur0.HEAT){var hkM=Object.keys(cur0.HEAT).sort();var hlM=hkM[hkM.length-1];if(hlM&&(!Array.isArray(cur0.HEAT[hlM].m)||cur0.HEAT[hlM].v!==3))sameS=false}
+if(sameS&&cur0.HEAT){var hkM=Object.keys(cur0.HEAT).sort();var hlM=hkM[hkM.length-1];if(hlM&&(!Array.isArray(cur0.HEAT[hlM].m)||(cur0.HEAT[hlM].v||0)<4))sameS=false}
 var sameK=!pick.stock||(state.stock&&state.stock.id===pick.stock.id&&state.stock.mod===pick.stock.modifiedTime&&!!(pdLive.current&&pdLive.current.STKL));
 if(sameS&&sameK){
 var trk0=suiviTracked(tdgsLive.current,challengesLive.current);var vd0=ventesLive.current;
