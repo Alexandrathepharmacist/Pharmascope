@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="ps-version" content="p2.07">
+<meta name="ps-version" content="p2.08">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -58,6 +58,7 @@ input,select{font:inherit;font-size:16px;color:var(--ink);background:var(--surfa
 .tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 
 /* Semaines du cycle */
+.anc{margin-top:10px}.anc>summary{cursor:pointer;font-weight:600;color:var(--ink-3);padding:8px 2px}.anc>.pp{margin-top:8px}
 .tver{padding:12px 14px;margin-bottom:12px;display:flex;flex-direction:column;gap:8px}
 .tver .top{display:flex;flex-wrap:wrap;align-items:center;gap:8px}.tver .top b{font-size:.95rem}
 .tver input[type=date]{font:inherit;font-size:16px;padding:7px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
@@ -842,11 +843,14 @@ function dayInfo(pid,ds){
 /* Qui afficher sur une semaine : avant la trame actuelle, seulement les personnes présentes dans l'historique ;
    ensuite, tout le monde sauf les anciens renforts sans accès (présents seulement dans l'historique). */
 function inHisto(pid,mon){for(var i=0;i<6;i++){var x=S.histo[dIso(dAdd(mon,i))];if(x&&x[pid])return true;}return false;}
-function isAncien(p){if(!p.hors||p.access!=="none")return false;if(p._anc==null){var h=false,c=false;for(var k in S.histo)if(S.histo[k][p.id]){h=true;break;}for(var k2 in S.changes)if(S.changes[k2][p.id]){c=true;break;}p._anc=h&&!c;}return p._anc;}
-function shownWeek(p,mon){if(mon<FIRST)return inHisto(p.id,mon);return !isAncien(p);}
+function isAncien(p){if(p.arch)return true;if(!p.hors||p.access!=="none")return false;if(p._anc==null){var h=false,c=false;for(var k in S.histo)if(S.histo[k][p.id]){h=true;break;}for(var k2 in S.changes)if(S.changes[k2][p.id]){c=true;break;}p._anc=h&&!c;}return p._anc;}
+/* 20/11/2026 : collaborateur archivé (p.arch = premier jour après son départ) : visible jusqu'à son départ, ensuite seulement les semaines où il a encore une journée saisie */
+function shownWeek(p,mon){if(mon<FIRST)return inHisto(p.id,mon);
+  if(p.arch){if(dIso(mon)<p.arch)return true;for(var i=0;i<6;i++){var x=S.changes[dIso(dAdd(mon,i))];if(x&&x[p.id])return true;}return false;}
+  return !isAncien(p);}
 function setChange(pid,ds,obj){if(!S.changes[ds])S.changes[ds]={};if(obj)S.changes[ds][pid]=obj;else{delete S.changes[ds][pid];if(!Object.keys(S.changes[ds]).length)delete S.changes[ds];}}
 function weekTotal(w,pid){var t=0;(S.trame[w][pid]||[]).forEach(function(bl){t+=dur(bl);});return t;}
-function teamTotal(w){var t=0;S.people.forEach(function(p){t+=weekTotal(w,p.id);});return t;}
+function teamTotal(w){var t=0;S.people.forEach(function(p){if(!p.arch)t+=weekTotal(w,p.id);});return t;}
 
 /* Compteurs */
 function weekStats(pid,mon){
@@ -970,7 +974,7 @@ function phGapsDate(ds){var d=wdOf(dParse(ds));if(d>5||FERIES[ds])return [];retu
 function allIssues(){
   var out=[];
   W.forEach(function(w){for(var d=0;d<6;d++)phGaps(w,d).forEach(function(g){out.push({w:w,p:null,d:d,g:g});});});
-  W.forEach(function(w){S.people.forEach(function(p){
+  W.forEach(function(w){S.people.forEach(function(p){if(p.arch)return;
     (S.trame[w][p.id]||[]).forEach(function(bl,d){dayIssues(p,bl).forEach(function(msg){out.push({w:w,p:p,d:d,msg:msg});});});
     var wt=weekTotal(w,p.id);if(legal(p)&&wt>2760)out.push({w:w,p:p,d:null,msg:hm(wt)+" sur la semaine (maximum 46 h)"});
   });});
@@ -1275,7 +1279,7 @@ function renderTrameDay(){
   var d=S.tday;
   dayChips(document.getElementById("tdays"),d,function(i){return "<span>Sem. "+S.w+"</span><b>"+D[i]+"</b>";},function(i){return dayIssueKind(function(pid){return (S.trame[S.w][pid]||[])[i]||[];},i);},function(i){S.tday=i;renderAll();});
   renderTimeline(document.getElementById("ttl"),{
-    d:d,showAll:true,
+    d:d,showAll:true,people:S.people.filter(function(p){return !p.arch;}),
     getBlocks:function(pid){return (S.trame[S.w][pid]||[])[d]||[];},
     editable:function(){return true;},
     onTap:function(pid){openTrameEditor(pid,d);},
@@ -1318,7 +1322,7 @@ function notifyDiffVersion(old,pid,d){var p=P(pid);if(!p||pid===S.me)return;
   S.notifs.unshift({id:uuid(),p:pid,by:ME().name,at:new Date().toISOString(),lines:["Le changement de votre trame prévu à partir du "+dFr(d)+" est annulé : vous gardez la trame précédente."],read:false,mail:p.email||null});
   lastNotified=[p.name+(p.email?"":" (pas d'adresse)")];}
 function openSortie(){
-  var who=[S.people.filter(function(p){return !p.hors;})[0].id],ids=S.people.map(function(p){return p.id;}),names=S.people.map(function(p){return esc(p.name);});
+  var act=S.people.filter(function(p){return !p.arch;}),who=[act.filter(function(p){return !p.hors;})[0].id],ids=act.map(function(p){return p.id;}),names=act.map(function(p){return esc(p.name);});
   var c=el("div","","<h2>Sortie d'un collaborateur</h2><div class='sub'>Plus aucun horaire dans la trame à partir du "+dFr(S.tFrom)+" (date choisie en haut de l'onglet Trame). Les semaines d'avant ne changent pas.</div>");
   var a=el("div",{class:"sec"},"<div class='lbl'>Qui quitte l'équipe ?</div>");a.appendChild(radio(ids,names,who,function(){}));c.appendChild(a);
   var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Vider sa trame à partir du "+dFr(S.tFrom));row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row.appendChild(ok);c.appendChild(row);
@@ -1335,7 +1339,7 @@ function renderGrid(){
   var g=document.getElementById("grid");var h="<thead><tr><th>Équipe</th>";
   D.forEach(function(d,i){h+="<th>"+d+covStrip(function(pid){return (S.trame[S.w][pid]||[])[i]||[];},i)+"</th>";});
   h+="</tr></thead><tbody>";
-  S.people.forEach(function(p){
+  S.people.forEach(function(p){if(p.arch)return;
     var wt=weekTotal(S.w,p.id);
     h+=sepRow(p,7)+"<tr class='"+(p.hors?"extra":"")+"' style='--pc:"+p.color+"'><td>"+whoCell(p,esc(p.role)+" · "+hm(wt))+"</td>";
     (S.trame[S.w][p.id]||[[],[],[],[],[],[]]).forEach(function(bl,d){
@@ -1651,10 +1655,10 @@ function renderHrs(){
   renderCls();monthChips("months");renderBilan();
   var box=document.getElementById("pcards");box.innerHTML="";
   var order=["salarie","facture","extra","titulaire"];
-  order.forEach(function(st){S.people.forEach(function(p){if(p.status!==st)return;if(p.hors&&!monthDaysWorked(p.id,S.month).t)return;box.appendChild(cardFor(p,false));});});
+  order.forEach(function(st){S.people.forEach(function(p){if(p.status!==st)return;if((p.hors||p.arch)&&!monthDaysWorked(p.id,S.month).t)return;box.appendChild(cardFor(p,false));});});
   document.getElementById("hrsNote").textContent="Semaines comptées : celles dont le jeudi tombe dans le mois. Absences payées : comptées pour la durée prévue dans la trame. "+"Changements repris de l'historique MonPlanningPharma, avec leur catégorie : congé payé, heures sup / récup / échange, sans solde, maladie.";
   var h="<thead><tr><th>Équipe</th>";W.forEach(function(w){h+="<th>"+w+"</th>";});h+="<th>Moyenne</th><th>Contrat</th></tr></thead><tbody>";
-  S.people.forEach(function(p){if(p.hors)return;var tot=0;W.forEach(function(w){tot+=weekTotal(w,p.id);});var avg=Math.round(tot/6);
+  S.people.forEach(function(p){if(p.hors||p.arch)return;var tot=0;W.forEach(function(w){tot+=weekTotal(w,p.id);});var avg=Math.round(tot/6);
     h+="<tr><td><div class='who' style='--pc:"+p.color+"'>"+av(p)+"<span class='n'>"+esc(p.name)+"</span></div></td>";
     W.forEach(function(w){var t=weekTotal(w,p.id);h+="<td class='"+(legal(p)&&t>2760?"over":"")+"'>"+(t?hm(t):"–")+"</td>";});
     h+="<td class='avg "+(p.contract&&avg<p.contract?"over":"")+"'>"+hm(avg)+"</td><td>"+(p.contract?hm(p.contract):"–")+"</td></tr>";});
@@ -1662,7 +1666,7 @@ function renderHrs(){
   var iss=allIssues(),box2=document.getElementById("alerts");
   var groups={},order2=[];
   iss.forEach(function(i){var k=i.p?i.p.id+"|"+i.msg:"ph|"+i.d;if(!groups[k]){groups[k]={p:i.p,d:i.d,msg:i.msg,where:[]};order2.push(k);}groups[k].where.push(i.p?i.w+(i.d!=null?" "+D[i.d].toLowerCase():""):i.w+" ("+hm(i.g[0])+"–"+hm(i.g[1])+")");});
-  S.people.forEach(function(p){if(p.contract){var tot=0;W.forEach(function(w){tot+=weekTotal(w,p.id);});var avg=Math.round(tot/6);if(avg<p.contract){groups["c|"+p.id]={p:p,msg:"trame à "+hm(avg)+" en moyenne pour un contrat de "+hm(p.contract)+", soit "+hm((p.contract-avg)*6)+" de moins par cycle",where:["A à F"]};order2.unshift("c|"+p.id);}}});
+  S.people.forEach(function(p){if(p.contract&&!p.arch){var tot=0;W.forEach(function(w){tot+=weekTotal(w,p.id);});var avg=Math.round(tot/6);if(avg<p.contract){groups["c|"+p.id]={p:p,msg:"trame à "+hm(avg)+" en moyenne pour un contrat de "+hm(p.contract)+", soit "+hm((p.contract-avg)*6)+" de moins par cycle",where:["A à F"]};order2.unshift("c|"+p.id);}}});
   if(!order2.length){box2.innerHTML="<div class='ok'>Aucun point de vigilance.</div>";return;}
   box2.innerHTML=order2.map(function(k){var g=groups[k];
     if(!g.p)return "<div class='al' style='background:var(--bad-soft)'><span class='tag' style='color:var(--bad)'>"+g.where.length+" fois</span><div><b>"+DL[g.d]+"</b> : aucun pharmacien prévu<div class='sub num'>Semaine "+g.where.join(", ")+"</div></div></div>";
@@ -1728,11 +1732,39 @@ function renderTeam(){
       gc.appendChild(b);});
     ga.appendChild(gc);}
   renderResoCfg();
-  if(isAdmin())S.people.forEach(function(p){
+  var anc=[];
+  if(isAdmin())S.people.forEach(function(p){if(p.arch){anc.push(p);return;}
     var b=el("button",{class:"pp",style:"--pc:"+p.color,onclick:function(){openPerson(p.id);}},av(p)+"<div style='min-width:0'><div class='n' style='font-weight:600'>"+esc(p.name)+"</div><div class='meta'>"+esc(p.role)+" · "+(p.status==="salarie"?"contrat "+hm(p.contract):STATUS[p.status])+"</div><div class='meta'>Accès : "+ACCESS[p.access]+"</div><div class='meta'>"+(p.email?esc(p.email):"Pas d'adresse mail")+"</div>"+acctBadge(p)+"</div>");
     pb.appendChild(b);
   });
+  if(anc.length){var det=el("details",{class:"anc"},"<summary>Anciens collaborateurs ("+anc.length+")</summary>");
+    anc.forEach(function(p){det.appendChild(el("button",{class:"pp",style:"--pc:"+p.color+";opacity:.75",onclick:function(){openPerson(p.id);}},av(p)+"<div style='min-width:0'><div class='n' style='font-weight:600'>"+esc(p.name)+"</div><div class='meta'>"+esc(p.role)+" · parti(e) le "+dFr(dIso(dAdd(dParse(p.arch),-1)))+"</div><div class='meta'>Archivé(e) : n'apparaît plus dans la trame ni dans le planning à venir</div></div>"));});
+    pb.appendChild(det);}
 }
+/* ===== Archiver un ancien collaborateur : départ à une date, trame vide ensuite, journées saisies après retirées, accès retiré ===== */
+function dernierJour(pid){for(var i=0;i<400;i++){var x=dIso(dAdd(dParse(tIso),-i));if(dayInfo(pid,x).act.length)return x;}return tIso;}
+function openArchive(pid){
+  var p=P(pid),last=dernierJour(pid),cut=["oui"];
+  var c=el("div","","<h2>Archiver "+esc(p.name)+"</h2><div class='sub'>Son historique reste intact (planning passé, heures, congés). Après son départ, "+esc(p.name)+" n'apparaît plus dans la trame, le planning à venir ni les listes de choix. Vous pourrez la réactiver.</div>");
+  var f=el("div",{class:"sec field"},"<label class='lbl' for='ar-d'>Dernier jour de travail</label>"),di=el("input",{type:"date",id:"ar-d"});di.value=last;f.appendChild(di);c.appendChild(f);
+  var sA=el("div",{class:"sec"},"<div class='lbl'>Accès au planning</div>");sA.appendChild(radio(["oui","non"],["Retirer son accès","Garder son accès"],cut,upd));c.appendChild(sA);
+  var rec=el("div",{class:"recap"});c.appendChild(rec);var er=el("div",{class:"err"});c.appendChild(er);
+  var row=el("div",{class:"row"}),ok=el("button",{class:"btn primary"},"Archiver");row.appendChild(el("button",{class:"btn",onclick:closeSheet},"Fermer"));row.appendChild(ok);c.appendChild(row);
+  function futurs(dep){return Object.keys(S.changes).filter(function(ds){return ds>=dep&&S.changes[ds][pid];}).sort();}
+  function upd(){er.textContent="";if(!di.value){ok.disabled=true;return;}ok.disabled=false;var dep=dIso(dAdd(dParse(di.value),1)),fu=futurs(dep),tt=trameAt(pid,dep);
+    rec.innerHTML="Départ après le <b>"+dFr(di.value)+"</b>."+(tt&&W.some(function(w){return tt[w].some(function(bl){return bl.length;});})?"<br>Sa trame sera vide à partir du "+dFr(dep)+" (les semaines d'avant ne changent pas).":"")+
+      (fu.length?"<br>"+fu.length+" journée"+(fu.length>1?"s":"")+" déjà saisie"+(fu.length>1?"s":"")+" après cette date (à partir du "+dFr(fu[0])+") "+(fu.length>1?"seront retirées":"sera retirée")+".":"")+
+      (cut[0]==="oui"&&p.access!=="none"?"<br>Son accès au planning sera retiré.":"");}
+  di.addEventListener("input",upd);
+  ok.addEventListener("click",function(){var dep=dIso(dAdd(dParse(di.value),1));snap();
+    futurs(dep).forEach(function(ds){setChange(pid,ds,null);});
+    var keep=S.tFrom;S.tFrom=dep;buildView();W.forEach(function(w){S.trame[w][pid]=[[],[],[],[],[],[]];});syncView();S.tFrom=keep;buildView();
+    p.arch=dep;if(cut[0]==="oui")p.access="none";p._anc=null;pending=null;
+    persist();closeSheet();renderAll();toast(p.name+" archivé(e) : n'apparaît plus après le "+dFr(di.value),true);});
+  upd();sheet(c);
+}
+function reactiver(pid){var p=P(pid);snap();pending=null;p.arch=null;p._anc=null;persist();closeSheet();renderAll();
+  toast(p.name+" réactivé(e). Remplissez sa trame (onglet Trame) à partir de son retour, et vérifiez son accès.",true);}
 /* ===== Échanges de jours entre collègues : même diplôme, même nombre d'heures.
    1) le demandeur propose  2) le collègue accepte  3) un titulaire valide : le planning des deux est alors mis à jour. ===== */
 function grade(p){return (p.ph?"ph:":"np:")+String(p.role||"").toLowerCase().slice(0,8);}
@@ -1979,7 +2011,7 @@ function renderCong(){
   if(vrow)h+="<div class='gt-row gt-info'><div class='gt-name'><span>Vacances "+esc(zoneTxt())+"</span></div><div class='gt-track'>"+marks+todayMark+vrow+"</div></div>";
   if(grow)h+="<div class='gt-row gt-info'><div class='gt-name'><span>🌙 Gardes</span></div><div class='gt-track'>"+marks+todayMark+grow+"</div></div>";
   S.people.forEach(function(p){
-    var ps=byP[p.id];if(p.hors&&!ps.length)return;
+    var ps=byP[p.id];if((p.hors||p.arch)&&!ps.length)return;
     h+="<div class='gt-row' style='--pc:"+p.color+"'><div class='gt-name'>"+av(p)+"<span>"+esc(p.name)+"</span></div><div class='gt-track'>"+vb+marks+todayMark;
     ps.forEach(function(q){var w=(Math.round((dParse(q.to)-dParse(q.from))/864e5)+1)/tot*100;
       h+="<button class='gt-bar g-"+tGroup(q.t)+"' data-i='"+idx+"' style='left:"+x(q.from)+";width:"+w.toFixed(3)+"%' title='"+esc(p.name+" · "+TYPES[q.t].l+" "+dRange(q)+" · "+q.n+" jour"+(q.n>1?"s":"")+" prévu"+(q.n>1?"s":""))+"'>"+(w>7?esc(TYPES[q.t].s):"")+"</button>";refs[idx++]=q;});
@@ -1994,7 +2026,7 @@ function renderCong(){
   if(ed){
     var adm=isAdmin(),th="<thead><tr><th>Équipe</th><th>Congés payés</th><th>Récup / échanges</th><th>Maladie, accident</th><th>Autres absences</th>"+(adm?"<th>Congés restants à ce jour</th><th>Solde d'heures fin du mois</th>":"")+"</tr></thead><tbody>";
     S.people.forEach(function(p){
-      var ps=byP[p.id];if(p.hors&&!ps.length)return;
+      var ps=byP[p.id];if((p.hors||p.arch)&&!ps.length)return;
       var gsum={cp:[0,0,0,0],recup:[0,0,0,0],maladie:[0,0,0,0],autre:[0,0,0,0]};
       ps.forEach(function(q){var k=tGroup(q.t);q.days.forEach(function(ds,i){var f=ds>tIso?2:0;gsum[k][f]++;gsum[k][f+1]+=q.dh[i];});});
       var c=function(k){var g=gsum[k];if(!g[0]&&!g[2])return "<td class='empty'>–</td>";
@@ -2009,7 +2041,7 @@ function renderCong(){
   /* détail */
   segSync("cseg",S.congList);
   var wb=document.getElementById("congWho");wb.innerHTML="";
-  [["","Toute l'équipe"]].concat(S.people.filter(function(p){return !p.hors||byP[p.id].length;}).map(function(p){return [p.id,esc(p.name)];})).forEach(function(o){wb.appendChild(el("button",{class:"chip","aria-pressed":String((S.congWho||"")===o[0]),onclick:function(){S.congWho=o[0];renderCong();}},o[1]));});
+  [["","Toute l'équipe"]].concat(S.people.filter(function(p){return (!p.hors&&!p.arch)||byP[p.id].length;}).map(function(p){return [p.id,esc(p.name)];})).forEach(function(o){wb.appendChild(el("button",{class:"chip","aria-pressed":String((S.congWho||"")===o[0]),onclick:function(){S.congWho=o[0];renderCong();}},o[1]));});
   var tb=document.getElementById("congType");tb.innerHTML="";tb.hidden=!ed||S.congList!=="abs";
   [["","Tous les motifs"],["cp","Congés payés"],["recup","Récup / échange"],["maladie","Maladie, accident"],["autre","Autres"]].forEach(function(o){tb.appendChild(el("button",{class:"chip","aria-pressed":String((S.congType||"")===o[0]),onclick:function(){S.congType=o[0];renderCong();}},o[1]));});
   var box=document.getElementById("congList");box.innerHTML="";
@@ -2058,7 +2090,7 @@ function openPeriod(q){
 var condense=null;
 function openAbsence(pid,from,motif){
   var ABSK=["cp","recup","rc","maladie","at","mat","parental","formation","ss","other"];
-  var people=S.people.filter(function(p){return !p.hors;});
+  var people=S.people.filter(function(p){return !p.hors&&!p.arch;});
   var who=[pid||people[0].id],at=[motif||null];
   var c=el("div","","<h2>"+(motif==="cp"?"Poser un congé":"Absence prolongée")+"</h2><div class='sub'>Posée directement au planning, sans demande de congé. La personne est prévenue.</div>");
   var s1=el("div",{class:"sec"},"<div class='lbl'>Qui ?</div>");s1.appendChild(radio(people.map(function(p){return p.id;}),people.map(function(p){return esc(p.name);}),who,upd));c.appendChild(s1);
@@ -2136,7 +2168,7 @@ function monthBilan(p,ym){
 }
 function bilanRows(ym){
   var out=[];
-  ["salarie","facture","extra","titulaire"].forEach(function(st){S.people.forEach(function(p){if(p.status!==st)return;var r=monthBilan(p,ym);if(p.hors&&!r.worked)return;out.push({p:p,r:r});});});
+  ["salarie","facture","extra","titulaire"].forEach(function(st){S.people.forEach(function(p){if(p.status!==st)return;var r=monthBilan(p,ym);if((p.hors||(p.arch&&p.arch<=ym+"-01"))&&!r.worked)return;out.push({p:p,r:r});});});
   return out;
 }
 function renderBilan(){
@@ -2624,6 +2656,10 @@ function openPerson(pid){
   var row=el("div",{class:"row"});
   var ok=el("button",{class:"btn"},"Enregistrer"),inv=el("button",{class:"btn primary"},"");
   row.appendChild(el("button",{class:"btn ghost",onclick:closeSheet},"Fermer"));row.appendChild(ok);row.appendChild(inv);c.appendChild(row);
+  if(!isNew&&isAdmin()&&p.id!==S.me){var arow=el("div",{class:"row",style:"margin-top:8px"});
+    if(p.arch)arow.appendChild(el("button",{class:"btn",onclick:function(){reactiver(p.id);}},"Réactiver (parti(e) le "+dFr(dIso(dAdd(dParse(p.arch),-1)))+")"));
+    else arow.appendChild(el("button",{class:"btn ghost",onclick:function(){closeSheet();openArchive(p.id);}},"Archiver (ancien collaborateur)"));
+    c.appendChild(arow);}
   var AC={admin:"Créer et modifier la trame et le planning, voir les soldes et les fins de mois de tout le monde, accepter ou refuser les demandes, inviter l'équipe.",manager:"Comme un utilisateur, et en plus : modifier le planning et la trame, accepter ou refuser les demandes de congés. Ne voit pas les contrats, les soldes des autres ni les comptes.",user:"Voir le planning de l'équipe (sans pouvoir le modifier), ses soldes d'heures et de congés, faire ses demandes de congé. Prévenu(e) à chaque changement de ses horaires.",none:"Aucun accès à l'application."};
   function parseH(v){var mm=/^(\d{1,2})(?:[:h,.](\d{1,2}))?$/.exec(v.trim());if(!mm)return null;var mi=mm[2]?(mm[2].length===1&&/[,.]/.test(v)?(+mm[2])*6:+mm[2]):0;return (+mm[1])*60+mi;}
   var ai=acctInfo(p);
@@ -2721,7 +2757,7 @@ function openRot(){
   var bySlug=function(sl){var x=S.people.filter(function(p){return p.slug===sl;})[0];return x?x.id:S.people[0].id;};
   var src=[bySlug("tifenn")],tgt=[bySlug("camille")],off=[1];
   var c=el("div","","<h2>Roulement décalé</h2><div class='sub'>Une personne reprend le cycle d'une autre avec quelques semaines de décalage.</div>");
-  var ids=S.people.map(function(p){return p.id;}),names=S.people.map(function(p){return esc(p.name);});
+  var act=S.people.filter(function(p){return !p.arch;}),ids=act.map(function(p){return p.id;}),names=act.map(function(p){return esc(p.name);});
   var a=el("div",{class:"sec"},"<div class='lbl'>Copier le cycle de</div>");a.appendChild(radio(ids,names,src,upd));c.appendChild(a);
   var b=el("div",{class:"sec"},"<div class='lbl'>Pour</div>");b.appendChild(radio(ids,names,tgt,upd));c.appendChild(b);
   var s=el("div",{class:"sec"},"<div class='lbl'>Décalage</div>");s.appendChild(radio([1,2,3,4,5],["1 sem.","2 sem.","3 sem.","4 sem.","5 sem."],off,upd));c.appendChild(s);
@@ -2805,7 +2841,7 @@ function tvRows(tv){var m={};Object.keys(tv||{}).forEach(function(pid){(tv[pid]|
 function pushDiff(base,t){
   var jobs=[];
   /* 1. fiches */
-  var staffRow=function(p){return {id:p.id,slug:p.slug,name:p.name,color:p.color,role_label:p.role||"",access:p.access,is_pharmacist:!!p.ph,hors_trame:!!p.hors,sort_order:p.sort||100};};
+  var staffRow=function(p){return {id:p.id,slug:p.slug,name:p.name,color:p.color,role_label:p.role||"",access:p.access,is_pharmacist:!!p.ph,hors_trame:!!p.hors,sort_order:p.sort||100,archived_on:p.arch||null};};
   var privRow=function(p){return {staff_id:p.id,email:p.email||null,status:p.status||"salarie",contract_minutes:p.status==="salarie"?(p.contract||null):null};};
   var newP=[],updS=[],updP=[];
   t.people.forEach(function(p){
@@ -2877,7 +2913,7 @@ function loadAll(){
       res.forEach(check);
       var st=res[0].data||[],pv=res[1].data||[],tr=res[2].data||[],ch=res[3].data||[],rq=res[4].data||[],nt=res[5].data||[],set=res[6].data;
       var priv={};pv.forEach(function(x){priv[x.staff_id]=x;});
-      S.people=st.filter(function(x){return x.access!=="none"||true;}).map(function(x){var q=priv[x.id]||{};return {id:x.id,slug:x.slug,name:x.name,color:x.color,role:x.role_label,ph:x.is_pharmacist,hors:x.hors_trame,access:x.access,voitGardes:!!x.voit_gardes,sort:x.sort_order,status:q.status,contract:q.contract_minutes||undefined,email:q.email||null};});
+      S.people=st.filter(function(x){return x.access!=="none"||true;}).map(function(x){var q=priv[x.id]||{};return {id:x.id,slug:x.slug,name:x.name,color:x.color,role:x.role_label,ph:x.is_pharmacist,hors:x.hors_trame,access:x.access,voitGardes:!!x.voit_gardes,sort:x.sort_order,arch:x.archived_on?String(x.archived_on).slice(0,10):null,status:q.status,contract:q.contract_minutes||undefined,email:q.email||null};});
       S.tv={};var byV={};
       tr.forEach(function(x){if(W.indexOf(x.week)<0)return;var f=String(x.valid_from||TRAME0).slice(0,10),k=x.staff_id+"|"+f;
         if(!byV[k]){byV[k]={from:f,t:emptyT()};(S.tv[x.staff_id]=S.tv[x.staff_id]||[]).push(byV[k]);}byV[k].t[x.week][x.weekday]=x.blocks||[];});
