@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="e1.32">
+<meta name="ps-version" content="e1.33">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope Équipe</title>
 <meta name="theme-color" content="#059669">
@@ -1407,7 +1407,7 @@ var couleur=gagne?"var(--accent)":reste!==null&&reste<=3?"var(--orange)":"var(--
 return h("div",{key:c.id,style:{padding:12,borderRadius:12,background:"var(--bg)",border:"1px solid var(--border)"}},
 h("div",{style:{display:"flex",gap:10,alignItems:"flex-start"}},
 h("div",{style:{flex:1,minWidth:0}},
-h("div",{style:{fontWeight:800,fontSize:16}},c.lab),
+h("div",{style:{fontWeight:800,fontSize:16}},String(c.lab||"").replace(/\s+REF$/i,"")),
 c.produit?h("div",{style:{fontSize:13,color:"var(--text2)",marginTop:1}},c.produit):null),
 h("div",{style:{textAlign:"right",flexShrink:0}},
 h("div",{style:{fontSize:20,fontWeight:800,color:couleur,lineHeight:1}},gagne?"\ud83c\udf89 "+Math.round(pr/obj*100)+"%":pct+"%"),
@@ -1540,7 +1540,7 @@ function maj(k,v){var n=Object.assign({},f);n[k]=v;setF(n)}
 var ok=f.lab.trim()&&Number(f.objectif)>0&&!(f.fin&&f.debut&&f.fin<f.debut);
 function enreg(){if(!ok)return;
 var prod=f.produit.trim();if(!prod&&f.produits.length)prod=f.produits.length+" produit(s) cible(s)";
-p.onEnregistrer(Object.assign({active:true},c0,{lab:f.lab.trim(),produit:prod,eans:f.produits.map(function(x){return x.c}).filter(function(x){return !!x}),objectif:Number(f.objectif),progres:Math.max(0,Number(f.progres)||0),assignee:f.assignee,debut:f.debut,fin:f.fin}))}
+p.onEnregistrer(Object.assign({active:true},c0,{lab:f.lab.trim().replace(/\s+REF$/i,"").trim(),produit:prod,eans:f.produits.map(function(x){return x.c}).filter(function(x){return !!x}),objectif:Number(f.objectif),progres:Math.max(0,Number(f.progres)||0),assignee:f.assignee,debut:f.debut,fin:f.fin}))}
 return h(Fenetre,{titre:p.ch?"Modifier le challenge":"Nouveau challenge",onFermer:p.onFermer,
 pied:[h(Bouton,{key:"ok",type:"primaire",disabled:!ok,onClick:enreg},"Enregistrer"),h(Bouton,{key:"an",onClick:p.onFermer},"Annuler"),
 p.ch?h(Bouton,{key:"su",type:"danger",style:{marginLeft:"auto"},onClick:p.onSupprimer},"Supprimer"):null]},
@@ -1688,7 +1688,7 @@ var couleur=gagne?"var(--accent)":ong==="fini"?"var(--text3)":reste!==null&&rest
 return h("div",{key:c.id,style:{background:"var(--bg2)",borderRadius:14,border:"1px solid var(--border)",padding:14}},
 h("div",{style:{display:"flex",gap:10,alignItems:"flex-start"}},
 h("div",{style:{flex:1,minWidth:0}},
-h("div",{style:{fontWeight:800,fontSize:17}},c.lab),
+h("div",{style:{fontWeight:800,fontSize:17}},String(c.lab||"").replace(/\s+REF$/i,"")),
 c.produit?h("div",{style:{fontSize:13,color:"var(--text2)"}},c.produit):null,
 h("div",{style:{display:"flex",gap:6,marginTop:6,flexWrap:"wrap"}},
 h(Pastille,{bg:"var(--bg3)",c:"var(--text2)"},"\ud83d\udcc5 "+(c.debut?dateFr(c.debut):"?")+(c.fin?" \u2192 "+dateFr(c.fin):"")),
