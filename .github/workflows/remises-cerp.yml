@@ -21,7 +21,7 @@ jobs:
       - run: pip install --quiet requests pdfplumber
       - name: Recuperer les remises CERP
         env:
-          CERP_LOGIN: ${{ secrets.CERP_LOGIN }}
+          CERP_LOGIN: ${{ secrets.CERP_LOGIN || secrets.CERP }}
           CERP_PASSWORD: ${{ secrets.CERP_PASSWORD }}
           CERP_RECAP_RUBRIQUE: ${{ vars.CERP_RECAP_RUBRIQUE }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
