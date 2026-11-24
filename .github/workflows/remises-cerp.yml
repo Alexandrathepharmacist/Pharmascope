@@ -1,0 +1,28 @@
+name: Remises CERP (fin de mois)
+on:
+  schedule:
+    # tous les soirs du 28 au 31 a 19 h 10 (heure de Paris en hiver) ; le script ne travaille que le dernier jour du mois
+    - cron: "10 18 28-31 * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: remises-cerp
+  cancel-in-progress: false
+jobs:
+  remises:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install --quiet requests pdfplumber
+      - name: Recuperer les remises CERP
+        env:
+          CERP_LOGIN: ${{ secrets.CERP_LOGIN }}
+          CERP_PASSWORD: ${{ secrets.CERP_PASSWORD }}
+          CERP_RECAP_RUBRIQUE: ${{ vars.CERP_RECAP_RUBRIQUE }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: python scripts/remises_cerp.py

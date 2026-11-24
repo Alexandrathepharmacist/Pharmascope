@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.87">
+<meta name="ps-version" content="v9.88">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -443,7 +443,7 @@ return new Response(stream).text().then(function(t){return JSON.parse(t)})
 
 /* Etat de la derniere sauvegarde cloud, diffuse a l'ecran */
 var CLOUD_ETAT={ok:null,msg:""};
-var NOMS_DONNEES={rdv_prep:"pr\u00e9paration des RDV",challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",tresorerie_reglages:"r\u00e9glages de tr\u00e9sorerie",bilans_comptables:"bilans comptables",tdg_emplacements:"emplacements de TDG",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",rfa_versements:"versements des RFA",locations:"locations de mat\u00e9riel",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
+var NOMS_DONNEES={remises_generiques:"remises g\u00e9n\u00e9riqueurs",rdv_prep:"pr\u00e9paration des RDV",challenges:"challenges",tasks:"t\u00e2ches",tdgs:"t\u00eates de gondole",team:"\u00e9quipe",decisions:"d\u00e9cisions labos",events:"rendez-vous",cmd_hidden:"produits masqu\u00e9s",favs:"favoris",tips_state:"conseils",widgets_config:"tuiles de l'accueil",cmd_passed:"commandes pass\u00e9es",cmd_retires:"propositions de commande retir\u00e9es",tresorerie_reglages:"r\u00e9glages de tr\u00e9sorerie",bilans_comptables:"bilans comptables",tdg_emplacements:"emplacements de TDG",voice_notes:"notes vocales",ca_objectif:"objectif de CA",crm_delegues:"carnet des d\u00e9l\u00e9gu\u00e9s",palmares:"palmar\u00e8s",fiche_vendeur_exp:"r\u00e9glage Fiche vendeur",conditions_labos:"conditions commerciales",rfa_versements:"versements des RFA",locations:"locations de mat\u00e9riel",promos_ajoutees:"flyers ajout\u00e9s",ruptures_ansm:"liste des ruptures ANSM",univers_metres:"m\u00e8tres de rayon",univers_labos:"classement des labos par univers",alertes_ignorees:"alertes ignor\u00e9es",projets_gammes:"\u00e9tudes de nouvelles gammes",duels_categories:"cat\u00e9gories leader & challenger",regroupements_labos:"produits rattach\u00e9s \u00e0 un labo",univers_regles:"r\u00e8gles de rangement des gammes",campagne_sante:"suivi vaccins et TROD",campagne_reglages:"r\u00e9glages vaccins et TROD",potentiel_culottes:"potentiel culottes menstruelles",reglages_google:"r\u00e9glages Google (Drive, agenda)",univers_codes:"produits rang\u00e9s \u00e0 la main",sales_data:"ventes",drive_sync_state:"synchro Drive",tdg_photos:"photos des TDG",tdg_ventes:"ventes des TDG",ospharm_data:"chiffres Ospharm"};
 function avertir(msg){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg}}))}catch(e){}}
 function proposerAnnulation(msg,annuler){try{window.dispatchEvent(new CustomEvent("ps-toast",{detail:{msg:msg,undo:annuler}}))}catch(e){}}
 function notifierCloud(ok,msg){CLOUD_ETAT={ok:ok,msg:msg||""};try{window.dispatchEvent(new CustomEvent("ps-cloud",{detail:CLOUD_ETAT}))}catch(e){}}
@@ -1848,7 +1848,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.87";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.88";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -1889,7 +1889,8 @@ var NAVG=[
 {id:"prix",label:"Prix & remises",icon:"\ud83c\udff7",tabs:[
 {id:"prix",label:"Contr\u00f4le des prix",nom:"Contr\u00f4le des prix"},
 {id:"remises",label:"Remises & paliers",icon:"\ud83d\udcb6"},
-{id:"rfa",label:"Versements RFA",nom:"Versements des RFA",icon:"\ud83d\udcb8"}]}]},
+{id:"rfa",label:"Versements RFA",nom:"Versements des RFA",icon:"\ud83d\udcb8"},
+{id:"generiques",label:"G\u00e9n\u00e9riqueurs",nom:"Remises g\u00e9n\u00e9riqueurs",icon:"\ud83d\udc8a"}]}]},
 {id:"labos",label:"Labos",icon:"\ud83e\udd1d",items:[
 {id:"toplabos",label:"Fiche labo",icon:"\ud83c\udfc6",tabs:[
 {id:"toplabos",label:"Top 10",nom:"Top 10 des labos"},
@@ -2085,6 +2086,10 @@ return supaClient.from("resume_matin").select("jour,data").order("jour",{ascendi
    v9.77 : libelles "hors ordo" PharmaScope -> "conseil / non rembourse" (les chiffres Winpharma du Palmares gardent "hors ordonnance") ; Mois precedent : la tuile Panier moyen affiche le panier par client (avec N-1), le panier conseil passe en sous-titre.
    v9.75 : panier moyen par client (passage au comptoir) et non plus par facture : une ordonnance + un achat conseil = 1 client, comme Winpharma. Mois anciens estimes (rapport passages/factures).
    v9.61 : bouton "Tache" sur chaque point du resume -> ajoute a la to-do list (une seule fois par mail)
+   v9.88 : Remises generiqueurs (Prix & remises > Generiqueurs) : par labo (Biogaran, Arrow, Teva...) remise CERP sur facture
+   (recap des achats sous contrats), avoirs du labo et cooperation commerciale (exports SY by Cegedim), versements retrouves
+   sur le releve bancaire, controle remise CERP annoncee / appliquee. Robot GitHub de fin de mois (scripts/remises_cerp.py,
+   cle remises_cerp) ; depots faits dans l'appli : cle remises_generiques.
    v9.81 : fiche labo : bouton Preparer le RDV (points a aborder, ventes, achats et RFA, conditions, produits, notes prep_rdv dans la fiche delegue, impression).
    v9.80 : fiche labo : bandeau RFA recues (annee precedente + annee du contrat, attendu, autres ristournes), clic = Versements RFA.
    v9.79 : Versements RFA : import direct du ZIP Digipharmacie (tableau + PDF), lecture du texte de chaque nouvel avoir
@@ -5652,6 +5657,263 @@ React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:12,
 /* alerte telephone : RFA non arrivee a sa date limite (une fois par labo et par annee) */
 /* Fiche labo : bandeau "RFA recues" (annee precedente et annee du contrat), visible sur tous les onglets */
 var RFA_CHARGE=null;
+/* ===== REMISES GENERIQUEURS : lecture des fichiers et calculs (v9.88) ===== */
+var GEN_LABS=[{k:"BIOGARAN",re:/ BIOGARAN /},{k:"ARROW",re:/ ARROW /},{k:"TEVA",re:/ TEVA /},{k:"VIATRIS",re:/ (VIATRIS|MYLAN) /},{k:"SANDOZ",re:/ SANDOZ /},{k:"EG LABO",re:/ (EG LABO|EG|EUROGENERICS) /},{k:"ZENTIVA",re:/ ZENTIVA /},{k:"ZYDUS",re:/ ZYDUS /},{k:"CRISTERS",re:/ CRISTERS /},{k:"KRKA",re:/ KRKA /}];
+var GEN_VIDE={v:1,docs:[],banque:[],imports:[]};
+function genLab(s){var t=nomNorm(s||"");for(var i=0;i<GEN_LABS.length;i++){if(GEN_LABS[i].re.test(t))return GEN_LABS[i].k}return null}
+function genMoisPrec(iso){var y=parseInt(iso.slice(0,4),10),m=parseInt(iso.slice(5,7),10)-1;if(m<1){m=12;y--}return y+"-"+("0"+m).slice(-2)}
+function genMoisAjoute(ym,n){var y=parseInt(ym.slice(0,4),10),m=parseInt(ym.slice(5,7),10)-1+n;y+=Math.floor(m/12);m=((m%12)+12)%12;return y+"-"+("0"+(m+1)).slice(-2)}
+function genJours(a,b){return Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5)}
+var GEN_MOIS=["JANVIER","FEVRIER","MARS","AVRIL","MAI","JUIN","JUILLET","AOUT","SEPTEMBRE","OCTOBRE","NOVEMBRE","DECEMBRE"];
+var GEN_MOIS_FR=["janv.","f\u00e9vr.","mars","avr.","mai","juin","juil.","ao\u00fbt","sept.","oct.","nov.","d\u00e9c."];
+function genMoisNom(ym){var m=parseInt(String(ym).slice(5,7),10);return (GEN_MOIS_FR[m-1]||"?")+" "+String(ym).slice(2,4)}
+function genMoisDeTexte(nom,an){var i=GEN_MOIS.indexOf(String(nom||"").toUpperCase());return i<0?null:an+"-"+("0"+(i+1)).slice(-2)}
+/* texte sans accents, espaces simplifies : la meme lecture marche pour pdf.js (navigateur) et pdfplumber (robot) */
+function genTexte(t){return String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[\u00a0\u202f]/g," ").replace(/[\u2019\u2018]/g,"'").replace(/\s+/g," ")}
+function genNbFr(s,signe){var n=parseFloat(String(s).replace(/[ .]/g,"").replace(",","."));if(isNaN(n))return null;return signe==="-"?-n:n}
+function genNbPt(s){var n=parseFloat(s);return isNaN(n)?null:n}
+
+/* --- exports SY by Cegedim (CSV) : factures recues (avoirs labo) et envoyees (autofactures de cooperation) --- */
+function genLireSy(rows){
+var h=-1,col={},envoyees=false;
+for(var i=0;i<Math.min(rows.length,10)&&h<0;i++){var r=rows[i]||[];var c={};r.forEach(function(x,j){var t=nomNorm(x);
+if(/ N DE FACTURE /.test(t))c.num=j;else if(/ FOURNISSEUR /.test(t))c.part=j;else if(/ CLIENT /.test(t)&&!/ DEMAT /.test(t))c.part=j;
+else if(/^ TYPE $/.test(t))c.type=j;else if(/ DATE DE FACTURE /.test(t))c.date=j;else if(/ MONTANT TTC /.test(t))c.ttc=j;else if(/ MONTANT TVA /.test(t))c.tva=j;
+if(/^ CLIENT $/.test(t))envoyees=true});
+if(c.num!==undefined&&c.part!==undefined&&c.date!==undefined&&c.ttc!==undefined){h=i;col=c}}
+if(h<0)return null;
+var docs=[];
+for(var k=h+1;k<rows.length;k++){var r2=rows[k]||[];var num=String(r2[col.num]||"").trim();if(!num)continue;
+var lab=genLab(r2[col.part]);if(!lab)continue;var dt=rfaDate(r2[col.date]);if(!dt)continue;
+var ttc=rfaMontant(r2[col.ttc])||0;var tva=col.tva!==undefined?(rfaMontant(r2[col.tva])||0):0;var type=nomNorm(col.type!==undefined?r2[col.type]:"");
+if(envoyees){if(!/AUTOFACTUR/.test(type))continue;
+docs.push({id:"sy|"+num,num:num,lab:lab,kind:"coop",date:dt,mois:dt.slice(0,7),ht:Math.round((Math.abs(ttc)-Math.abs(tva))*100)/100,ttc:Math.abs(ttc),src:"sy"})}
+else{if(!/AVOIR/.test(type))continue;if(Math.abs(tva)>0.004)continue;
+docs.push({id:"sy|"+num,num:num,lab:lab,kind:"avoir",date:dt,mois:genMoisPrec(dt),ht:Math.abs(ttc),ttc:Math.abs(ttc),src:"sy"})}}
+return{type:envoyees?"sy_envoyees":"sy_recues",docs:docs}}
+
+/* --- releve bancaire (export Excel Credit Agricole ou CSV) : virements des generiqueurs --- */
+function genLireBanque(rows){
+var h=-1,col={};
+for(var i=0;i<Math.min(rows.length,30)&&h<0;i++){var r=rows[i]||[];var c={};r.forEach(function(x,j){var t=nomNorm(x);
+if(/ DATE /.test(t)&&c.date===undefined)c.date=j;else if(/ LIBELLE /.test(t))c.lib=j;else if(/ CREDIT /.test(t))c.cr=j;else if(/ DEBIT /.test(t))c.db=j});
+if(c.date!==undefined&&c.lib!==undefined&&c.cr!==undefined){h=i;col=c}}
+if(h<0)return null;
+var out=[],nb=0,dMin=null,dMax=null;
+for(var k=h+1;k<rows.length;k++){var r2=rows[k]||[];var dt=rfaDate(r2[col.date]);if(!dt)continue;nb++;if(!dMin||dt<dMin)dMin=dt;if(!dMax||dt>dMax)dMax=dt;
+var cr=rfaMontant(r2[col.cr]);if(!(cr>0))continue;var lib=String(r2[col.lib]||"").replace(/\s+/g," ").trim();var lab=genLab(lib);if(!lab)continue;
+var refs=(lib.toUpperCase().match(/\b[0-9A-Z]{8,}\b/g)||[]).filter(function(x,i,a){return /\d{4}/.test(x)&&a.indexOf(x)===i});
+out.push({id:"bq|"+dt+"|"+Math.round(cr*100)+"|"+refs.join("+"),date:dt,montant:cr,lab:lab,refs:refs,lib:lib.slice(0,120)})}
+return{type:"banque",lignes:out,nb:nb,du:dMin,au:dMax}}
+
+/* --- CERP : recapitulatif mensuel des achats sous contrats (remise annoncee, par labo) --- */
+var GEN_N="(-?\\d+(?:\\.\\d+)?)";var GEN_N6=GEN_N+" "+GEN_N+" "+GEN_N+" "+GEN_N+" "+GEN_N+" "+GEN_N;
+function genLigne6(m,i){return{caM:genNbPt(m[i]),remM:genNbPt(m[i+1]),caA:genNbPt(m[i+3]),remA:genNbPt(m[i+4])}}
+function genLireContrats(txt){var t=genTexte(txt);if(!/achats sous contrats/i.test(t))return null;
+var mp=t.match(/Periode ?: ?([A-Za-z]+) (\d{4})/);var mois=mp?genMoisDeTexte(mp[1],mp[2]):null;if(!mois)return null;
+var labs={};var re=new RegExp("([A-Z][A-Z0-9 ()'&/.-]*?) Total Laboratoire "+GEN_N6,"g");var m,pos=[];
+while((m=re.exec(t))){var nom=m[1].trim();var k=genLab(nom)||nom;labs[k]=Object.assign({nom:nom,paliers:[]},genLigne6(m,2));pos.push({i:m.index,k:k})}
+var rt=new RegExp("Remise (\\d+(?:\\.\\d+)?)% "+GEN_N6,"g");
+while((m=rt.exec(t))){var cur=null;pos.forEach(function(p){if(p.i<m.index)cur=p.k});if(!cur)continue;var l=genLigne6(m,2);l.taux=genNbPt(m[1]);labs[cur].paliers.push(l)}
+function tot(lib){var r=new RegExp("TOTAL "+lib+" "+GEN_N6);var x=t.match(r);return x?genLigne6(x,1):null}
+return{type:"contrats",mois:mois,labs:labs,gen:tot("Marche Generique Categoriel"),crrm:tot("Marche-Produit CRRM"),accords:tot("Accords de collaboration"),total:tot("")}}
+
+/* --- CERP : avoir mensuel \u00ab remises commerciales \u00bb + recapitulatif des avantages commerciaux (remise appliquee) --- */
+var GEN_F="(\\d{1,3}(?:[ .]\\d{3})*,\\d{2})(-?)";
+function genLireAvantages(txt){var t=genTexte(txt);if(!/AVANTAGES COMMERCIAUX/i.test(t))return null;
+var mp=t.match(/AVANTAGES COMMERCIAUX (?:PERCUS POUR LE |DU )?MOIS (?:DE |D')?([A-Z]+) (\d{4})/i);var mois=mp?genMoisDeTexte(mp[1],mp[2]):null;if(!mois)return null;
+function ligne(lib){var r=new RegExp(lib+" "+GEN_F+"(?: "+GEN_F+")?","i");var x=t.match(r);if(!x)return null;return{rem:genNbFr(x[1],x[2]),ca:x[3]?genNbFr(x[3],x[4]):null}}
+var av=t.match(new RegExp("AVOIR REMISES COMMERCIALES "+GEN_F+" "+GEN_F));
+var tot=t.match(new RegExp("AVANTAGES COMMERCIAUX PERCUS POUR LE MOIS (?:DE |D')?[A-Z]+ \\d{4} "+GEN_F,"i"));
+var num=t.match(/Numero Date Page \d+ ([A-Z0-9-]+)/i)||t.match(/\b(RCO-\d+)\b/);
+return{type:"avantages",mois:mois,num:num?num[1]:null,avoir:av?genNbFr(av[3],av[4]):null,caAvoir:av?genNbFr(av[1],av[2]):null,
+gen:ligne("Remises Generiques CPV"),mp:ligne("Remises Marches-Produits"),upp:ligne("Remises Marches Groupement UPP"),accords:ligne("Remises Accord de Collaboration"),
+promos:ligne("Remises Promotions"),autres:ligne("Remises Autres"),pharmat:ligne("Remises Pharmat"),agios:ligne("Avoirs Extournement d'Agios"),exc:ligne("Avoirs Exceptionnels"),
+total:tot?genNbFr(tot[1],tot[2]):null}}
+
+/* --- fusion sans doublon : un document = un numero, une ligne de banque = date + montant + references --- */
+function genFusion(data,lu){var d=Object.assign({},GEN_VIDE,data||{});var nouv=0;
+if(lu.docs){var idx={};(d.docs||[]).forEach(function(x,i){idx[x.id]=i});var docs=(d.docs||[]).slice();
+lu.docs.forEach(function(x){if(idx[x.id]===undefined){idx[x.id]=docs.length;docs.push(x);nouv++}else{var o=docs[idx[x.id]];docs[idx[x.id]]=Object.assign({},x,{mois:o.moisManuel?o.mois:x.mois,moisManuel:o.moisManuel})}});d.docs=docs}
+if(lu.lignes){var vus={};(d.banque||[]).forEach(function(x){vus[x.id]=1});var bq=(d.banque||[]).slice();lu.lignes.forEach(function(x){if(!vus[x.id]){vus[x.id]=1;bq.push(x);nouv++}});d.banque=bq;
+var per=d.banquePeriode||{};if(lu.du&&(!per.du||lu.du<per.du))per.du=lu.du;if(lu.au&&(!per.au||lu.au>per.au))per.au=lu.au;d.banquePeriode=per}
+if(lu.type==="contrats"||lu.type==="avantages"){var c=Object.assign({},d.cerpManuel||{});var cle=lu.type+"|"+lu.mois;if(!c[cle])nouv++;c[cle]=lu;d.cerpManuel=c}
+return{data:d,nouveaux:nouv}}
+
+/* --- versements : chaque document est rapproche d'un virement par son numero, sinon par montant --- */
+function genPaiements(data){var docs=(data&&data.docs)||[];var bq=((data&&data.banque)||[]).slice().sort(function(a,b){return a.date<b.date?-1:1});
+var per=(data&&data.banquePeriode)||{};var res={};var utilise={};
+docs.forEach(function(x){var n=String(x.num||"").toUpperCase();if(!n)return;var b=null;bq.forEach(function(l){if(!b&&l.refs&&l.refs.indexOf(n)>=0)b=l});
+if(b){utilise[b.id]=(utilise[b.id]||0)+1;res[x.id]={statut:"paye",date:b.date,montant:b.montant,bq:b.id}}});
+Object.keys(res).forEach(function(k){if(utilise[res[k].bq]>1)res[k].groupe=utilise[res[k].bq]});
+docs.forEach(function(x){if(res[x.id])return;var du=x.kind==="coop"?x.ttc:x.ht;var b=null;
+bq.forEach(function(l){if(b||utilise[l.id]||l.lab!==x.lab||l.date<x.date)return;if(genJours(x.date,l.date)>75)return;if(Math.abs(l.montant-du)<0.02)b=l});
+if(b){utilise[b.id]=1;res[x.id]={statut:"paye",date:b.date,montant:b.montant,parMontant:true,bq:b.id};return}
+var auj=aujIso();var age=genJours(x.date,auj);
+/* le releve doit couvrir la periode ou le virement aurait du arriver (de la date du document a 45 jours apres) */
+var couvert=per.du&&per.au&&per.du<=x.date&&genJours(x.date,per.au)>=45;
+res[x.id]={statut:couvert?"retard":(per.du&&x.date<per.du?"hors_releve":(age>=60?"a_verifier":"attente")),age:age}});
+return res}
+
+/* --- tableau d'une annee pour un labo --- */
+function genAnnee(data,cerp,lab,an){data=data||GEN_VIDE;var pay=genPaiements(data);var mois=[];for(var i=1;i<=12;i++)mois.push(an+"-"+("0"+i).slice(-2));
+var contrats={},avant={};function lireCerp(src){Object.keys(src||{}).forEach(function(k){var x=src[k];if(!x||!x.mois)return;if(x.type==="contrats")contrats[x.mois]=x;if(x.type==="avantages")avant[x.mois]=x})}
+lireCerp(cerp&&cerp.lus);lireCerp(data.cerpManuel);
+var lignes=mois.map(function(m){var c=contrats[m]&&contrats[m].labs[lab];var av=(data.docs||[]).filter(function(x){return x.lab===lab&&x.kind==="avoir"&&x.mois===m});
+var co=(data.docs||[]).filter(function(x){return x.lab===lab&&x.kind==="coop"&&x.mois===m});var s=function(a,k){var t=0;a.forEach(function(x){t+=x[k]||0});return Math.round(t*100)/100};
+return{mois:m,achats:c?c.caM:null,cerp:c?c.remM:null,avoirs:av,avoir:av.length?s(av,"ht"):null,coops:co,coop:co.length?s(co,"ht"):null,
+total:(c?c.remM:0)+s(av,"ht")+s(co,"ht")}});
+/* cumul CERP : le recapitulatif le plus recent de l'annee donne le cumul annuel, plus fiable que la somme des mois connus */
+var dern=null;Object.keys(contrats).forEach(function(m){if(m.slice(0,4)===String(an)&&contrats[m].labs[lab]&&(!dern||m>dern))dern=m});
+var cum=dern?contrats[dern].labs[lab]:null;
+var tot={achats:cum?cum.caA:null,cerp:cum?cum.remA:null,cerpJusqua:dern,avoir:0,coop:0,nbAv:0,nbCoop:0,paye:0,attendu:0,retard:[],attente:[]};
+(data.docs||[]).forEach(function(x){if(x.lab!==lab||x.mois.slice(0,4)!==String(an))return;var p=pay[x.id]||{};var du=x.kind==="coop"?x.ttc:x.ht;
+if(x.kind==="avoir"){tot.avoir+=x.ht;tot.nbAv++}else{tot.coop+=x.ht;tot.nbCoop++}tot.attendu+=du;
+if(p.statut==="paye")tot.paye+=Math.min(du,p.montant||du);else if(p.statut==="retard")tot.retard.push(x);else tot.attente.push(x)});
+tot.total=(tot.cerp||0)+tot.avoir+tot.coop;
+return{lignes:lignes,tot:tot,pay:pay,contrats:contrats,avant:avant}}
+
+/* --- controle CERP : remise generiques annoncee (recap contrats) vs appliquee (avoir remises commerciales) --- */
+function genControle(cerp,data,an){var contrats={},avant={};function lire(src){Object.keys(src||{}).forEach(function(k){var x=src[k];if(!x||!x.mois||x.mois.slice(0,4)!==String(an))return;if(x.type==="contrats")contrats[x.mois]=x;if(x.type==="avantages")avant[x.mois]=x})}
+lire(cerp&&cerp.lus);lire(data&&data.cerpManuel);
+var mois=Object.keys(avant).concat(Object.keys(contrats)).filter(function(v,i,a){return a.indexOf(v)===i}).sort();
+var lignes=mois.map(function(m){var c=contrats[m],a=avant[m];var annG=c&&c.gen?c.gen.remM:null,appG=a&&a.gen?a.gen.rem:null;var annP=c&&c.crrm?c.crrm.remM:null,appP=a&&a.mp?a.mp.rem:null;
+return{mois:m,annGen:annG,appGen:appG,ecartGen:annG!=null&&appG!=null?Math.round((appG-annG)*100)/100:null,annMp:annP,appMp:appP,ecartMp:annP!=null&&appP!=null?Math.round((appP-annP)*100)/100:null,
+avoir:a?a.avoir:null,total:a?a.total:null,autres:a&&a.autres?a.autres.rem:null}});
+/* cumul : dernier recap contrats de l'annee vs somme des avoirs appliques jusqu'a ce mois */
+var dern=null;Object.keys(contrats).forEach(function(m){if(!dern||m>dern)dern=m});var cum=null;
+if(dern){var c=contrats[dern];var app={gen:0,mp:0,acc:0,n:0};Object.keys(avant).forEach(function(m){if(m<=dern){var a=avant[m];app.n++;app.gen+=a.gen?a.gen.rem:0;app.mp+=a.mp?a.mp.rem:0;app.acc+=a.accords?a.accords.rem:0}});
+var attendus=parseInt(dern.slice(5,7),10);
+cum={jusqua:dern,nbMois:app.n,complet:app.n>=attendus,manquants:attendus-app.n,annGen:c.gen?c.gen.remA:null,appGen:Math.round(app.gen*100)/100,annMp:c.crrm?c.crrm.remA:null,appMp:Math.round(app.mp*100)/100,annAcc:c.accords?c.accords.remA:null,appAcc:Math.round(app.acc*100)/100}}
+return{lignes:lignes,cumul:cum}}
+
+/* documents bruts deposes par le robot (texte du PDF) : lus avec les memes regles que les PDF deposes a la main */
+var GEN_CERP_CACHE={src:null,res:null};
+function genCerpLus(cerp){var lus=(cerp&&cerp.lus)||{};if(GEN_CERP_CACHE.src===lus)return GEN_CERP_CACHE.res;var out={};
+Object.keys(lus).forEach(function(k){var x=lus[k];if(!x)return;var r=x.texte?(genLireContrats(x.texte)||genLireAvantages(x.texte)):(x.mois?x:null);if(r){r.num=r.num||x.num;r.date=x.date;out[k]=r}});
+GEN_CERP_CACHE={src:lus,res:out};return out}
+
+/* --- stockage : remises_generiques (depots faits dans l'appli) et remises_cerp (ecrit par le robot du mois) --- */
+function genCharger(){return supaLoad("remises_generiques").then(function(d){if(d&&typeof d==="object")return d;try{var l=JSON.parse(localStorage.getItem("ps_remises_generiques")||"null");if(l)return l}catch(e){}return JSON.parse(JSON.stringify(GEN_VIDE))})}
+function genEnregistrer(d){try{localStorage.setItem("ps_remises_generiques",JSON.stringify(d))}catch(e){}return supaSave("remises_generiques",d)}
+function genTextePdf(bytes){return new Promise(function(ok){chargerPdfJs(function(err){if(err){ok("");return}
+window.pdfjsLib.getDocument({data:bytes}).promise.then(function(pdf){var n=Math.min(pdf.numPages,8);var pages=[];var ch=Promise.resolve();
+for(var i=1;i<=n;i++)(function(i){ch=ch.then(function(){return pdf.getPage(i).then(function(pg){return pg.getTextContent()}).then(function(tc){pages.push(tc.items.map(function(x){return x.str}).join(" "))})})})(i);
+return ch.then(function(){try{pdf.destroy()}catch(e){}ok(pages.join("\n"))})}).catch(function(){ok("")})})})}
+function genLignesTableur(file){return chargerXLSX().then(function(){return file.arrayBuffer()}).then(function(buf){var wb=window.XLSX.read(buf,{type:"array",cellDates:false});
+return wb.SheetNames.map(function(n){return window.XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:""})})})}
+/* reconnait tout seul le fichier depose : export SY (recues / envoyees), releve bancaire, recap CERP, avoir CERP */
+function genLireFichier(file){var nom=String(file.name||"");
+if(/\.pdf$/i.test(nom))return file.arrayBuffer().then(function(b){return genTextePdf(new Uint8Array(b))}).then(function(t){return genLireContrats(t)||genLireAvantages(t)||{err:"pdf"}});
+if(/\.xlsx?$/i.test(nom))return genLignesTableur(file).then(function(feuilles){var r=null;feuilles.forEach(function(rows){if(!r)r=genLireSy(rows)||genLireBanque(rows)});return r||{err:"colonnes"}});
+return file.arrayBuffer().then(function(buf){var t=new TextDecoder("utf-8").decode(buf);if(t.indexOf("\ufffd")>=0)t=new TextDecoder("windows-1252").decode(buf);var rows=rfaLireCsv(t);return genLireSy(rows)||genLireBanque(rows)||{err:"colonnes"}})}
+var GEN_TYPES={sy_recues:"Factures re\u00e7ues SY (avoirs des labos)",sy_envoyees:"Factures envoy\u00e9es SY (coop\u00e9ration commerciale)",banque:"Relev\u00e9 bancaire",contrats:"R\u00e9capitulatif CERP des achats sous contrats",avantages:"Avoir CERP des remises commerciales"};
+function fmtEur2(x){return (Math.round((x||0)*100)/100).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" \u20ac"}
+function genPct(x,base){return base>0?(Math.round(x/base*1000)/10).toString().replace(".",",")+" %":"\u2013"}
+var GEN_PAY={paye:["\u2713","var(--accent)","vers\u00e9"],attente:["\u23f3","var(--text3)","en attente"],a_verifier:["?","var(--orange)","\u00e0 v\u00e9rifier (d\u00e9posez le relev\u00e9)"],retard:["\u23f0","var(--red)","aucun virement trouv\u00e9"],hors_releve:["\u00b7","var(--text3)","avant le relev\u00e9 d\u00e9pos\u00e9"]};
+
+function GeneriquesPage(props){
+var dS=useState(null);var data=dS[0];var setData=dS[1];
+var cS=useState(null);var cerp=cS[0];var setCerp=cS[1];
+var lS=useState(null);var labSel=lS[0];var setLabSel=lS[1];
+var aS=useState(new Date().getFullYear());var an=aS[0];var setAn=aS[1];
+var mS=useState([]);var msgs=mS[0];var setMsgs=mS[1];
+var oS=useState(false);var occupe=oS[0];var setOccupe=oS[1];
+var vS=useState(null);var ouvert=vS[0];var setOuvert=vS[1];
+useEffect(function(){genCharger().then(setData);supaLoad("remises_cerp").then(function(c){setCerp(c||{})})},[]);
+if(!data||!cerp)return React.createElement("div",{style:{color:"var(--text3)",fontSize:14}},"Chargement\u2026");
+function maj(d){setData(d);genEnregistrer(d)}
+function deposer(files){if(!files||!files.length)return;setOccupe(true);setMsgs([]);var d=data;var lus=[];var ch=Promise.resolve();
+Array.prototype.forEach.call(files,function(f){ch=ch.then(function(){return genLireFichier(f).then(function(r){
+if(!r||r.err){lus.push("\u274c "+f.name+" : fichier non reconnu (exports SY, relev\u00e9 bancaire Excel ou CSV, PDF CERP).");return}
+var x=genFusion(d,r);d=x.data;var det=r.docs?r.docs.length+" document"+(r.docs.length>1?"s":"")+" de g\u00e9n\u00e9riqueurs":r.lignes?r.lignes.length+" virement"+(r.lignes.length>1?"s":"")+" de g\u00e9n\u00e9riqueurs sur "+r.nb+" op\u00e9rations":genMoisNom(r.mois);
+lus.push("\u2705 "+(GEN_TYPES[r.type]||r.type)+" : "+det+", "+(x.nouveaux?x.nouveaux+" nouveau"+(x.nouveaux>1?"x":""):"rien de nouveau (d\u00e9j\u00e0 connu)")+".")}).catch(function(){lus.push("\u274c "+f.name+" : lecture impossible.")})})});
+ch.then(function(){d=Object.assign({},d,{imports:[{le:new Date().toISOString(),nb:files.length}].concat(d.imports||[]).slice(0,20)});maj(d);setOccupe(false);setMsgs(lus)})}
+function changerMois(doc,ym){maj(Object.assign({},data,{docs:data.docs.map(function(x){return x.id===doc.id?Object.assign({},x,{mois:ym,moisManuel:true}):x})}))}
+
+/* labos presents : documents deposes ou recap CERP */
+var poids={};(data.docs||[]).forEach(function(x){poids[x.lab]=(poids[x.lab]||0)+(x.ht||0)});
+var tousCerp=[];var lusP=genCerpLus(cerp);Object.keys(lusP).forEach(function(k){tousCerp.push(lusP[k])});Object.keys(data.cerpManuel||{}).forEach(function(k){tousCerp.push(data.cerpManuel[k])});
+tousCerp.forEach(function(x){if(x&&x.type==="contrats")Object.keys(x.labs||{}).forEach(function(l){if(GEN_LABS.some(function(g){return g.k===l}))poids[l]=(poids[l]||0)+(x.labs[l].remM||0)})});
+var labs=Object.keys(poids).filter(function(l){return poids[l]>0}).sort(function(a,b){return poids[b]-poids[a]});
+var lab=labSel&&labs.indexOf(labSel)>=0?labSel:(labs.indexOf("BIOGARAN")>=0?"BIOGARAN":labs[0]);
+var annees=[];(data.docs||[]).forEach(function(x){var y=parseInt(x.mois.slice(0,4),10);if(annees.indexOf(y)<0)annees.push(y)});if(annees.indexOf(an)<0)annees.push(an);annees.sort();
+var cerpLu={lus:genCerpLus(cerp)};var A=lab?genAnnee(data,cerpLu,lab,an):null;var ctrl=genControle(cerpLu,data,an);
+var carte={background:"var(--bg2)",border:"1px solid var(--border)",borderRadius:12,padding:14};
+var pill=function(on,txt,fn,k){return React.createElement("button",{key:k||txt,onClick:fn,style:{padding:"6px 14px",borderRadius:20,fontSize:13,fontWeight:on?700:500,background:on?"var(--accent)":"var(--bg2)",color:on?"#fff":"var(--text2)",border:on?"none":"1px solid var(--border)"}},txt)};
+var robot=cerp.robot||null;var per=data.banquePeriode||null;
+var depot=React.createElement("div",{style:Object.assign({},carte,{borderStyle:"dashed",marginBottom:14})},
+React.createElement("div",{style:{fontWeight:700,marginBottom:4}},"\ud83d\udce5 D\u00e9poser les fichiers du mois"),
+React.createElement("div",{style:{fontSize:13,color:"var(--text2)",lineHeight:1.5,marginBottom:10}},"Vous pouvez tout d\u00e9poser d'un coup, PharmaScope reconna\u00eet chaque fichier et ne compte jamais deux fois le m\u00eame document : les deux exports de SY by Cegedim (factures re\u00e7ues et factures envoy\u00e9es), le relev\u00e9 du Cr\u00e9dit Agricole (Excel) et, si besoin, les PDF de la CERP."),
+React.createElement("label",{style:{display:"inline-block",padding:"8px 14px",borderRadius:8,background:"var(--accent)",color:"#fff",fontWeight:700,fontSize:13,cursor:"pointer",opacity:occupe?0.6:1}},occupe?"Lecture\u2026":"Choisir les fichiers",
+React.createElement("input",{type:"file",multiple:true,accept:".csv,.xlsx,.xls,.pdf,.txt",style:{display:"none"},onChange:function(e){var f=e.target.files;var copie=f?Array.prototype.slice.call(f):[];e.target.value="";deposer(copie)}})),
+msgs.length?React.createElement("div",{style:{fontSize:13,marginTop:10,lineHeight:1.5,display:"grid",gap:2}},msgs.map(function(m,i){return React.createElement("div",{key:i},m)})):null,
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:8,lineHeight:1.5}},
+(per&&per.au?"Relev\u00e9 bancaire connu jusqu'au "+dateCourteFr(per.au)+". ":"Aucun relev\u00e9 bancaire d\u00e9pos\u00e9 : les versements ne peuvent pas \u00eatre v\u00e9rifi\u00e9s. ")+
+(robot&&robot.le?"Robot CERP : dernier passage le "+dateCourteFr(String(robot.le).slice(0,10))+(robot.ok?" \u2713":" \u2013 "+(robot.msg||"en erreur")):"Robot CERP : pas encore pass\u00e9.")));
+if(!lab)return React.createElement("div",null,React.createElement(EnTeteOutil,{titre:"\ud83d\udc8a Remises g\u00e9n\u00e9riqueurs",sous:"Ce que vous rapporte chaque g\u00e9n\u00e9riqueur : remise CERP sur facture, avoirs du labo et coop\u00e9ration commerciale, avec la v\u00e9rification que tout a bien \u00e9t\u00e9 vers\u00e9."}),depot,
+React.createElement(VideOutil,{icone:"\ud83d\udc8a",titre:"Pas encore de donn\u00e9es",texte:"D\u00e9posez les exports SY by Cegedim et votre relev\u00e9 bancaire ci-dessus. Le r\u00e9capitulatif CERP arrive tout seul avec le robot de fin de mois."}));
+var T=A.tot;var aff=T.achats||0;
+var moisVis=A.lignes.filter(function(l){return l.achats!=null||l.avoir!=null||l.coop!=null||l.cerp!=null});
+/* documents non verses : toutes annees confondues, pour ne rien oublier (ex. avoir de decembre paye en janvier) */
+var retards=(data.docs||[]).filter(function(x){return x.lab===lab&&(A.pay[x.id]||{}).statut==="retard"}).sort(function(a,b){return a.date<b.date?-1:1});var resteRetard=0;retards.forEach(function(x){resteRetard+=x.kind==="coop"?x.ttc:x.ht});
+var nbAtt=T.attente.length;var sousVerse=T.attendu>0?genPct(T.paye,T.attendu)+" de ce qui est d\u00fb":"";
+function cellPay(docs){if(!docs||!docs.length)return null;return React.createElement("span",{style:{display:"inline-flex",gap:4,marginLeft:6}},docs.map(function(x){var p=A.pay[x.id]||{};var g=GEN_PAY[p.statut]||GEN_PAY.attente;
+return React.createElement("span",{key:x.id,title:(x.kind==="coop"?"Autofacture ":"Avoir ")+x.num+" : "+g[2]+(p.date?" le "+dateCourteFr(p.date):"")+(p.groupe?" (virement group\u00e9)":""),style:{color:g[1],fontWeight:800,fontSize:12}},g[0])}))}
+var cumul=ctrl.cumul;
+return React.createElement("div",null,
+React.createElement(EnTeteOutil,{titre:"\ud83d\udc8a Remises g\u00e9n\u00e9riqueurs",sous:"Ce que vous rapporte chaque g\u00e9n\u00e9riqueur : remise CERP d\u00e9duite des factures, avoirs du labo et coop\u00e9ration commerciale, avec la v\u00e9rification que tout a bien \u00e9t\u00e9 vers\u00e9 et que la CERP applique la remise annonc\u00e9e."}),
+React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:8}},labs.map(function(l){return pill(l===lab,l.charAt(0)+l.slice(1).toLowerCase(),function(){setLabSel(l)},l)})),
+annees.length>1?React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12}},annees.map(function(y){return pill(y===an,String(y),function(){setAn(y)},"a"+y)})):null,
+React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:10,marginBottom:14}},
+React.createElement(KPICard,{title:"Achats "+an+" chez la CERP",value:aff?fmtEur0(aff):"\u2013",sub:T.cerpJusqua?"jusqu'\u00e0 "+genMoisNom(T.cerpJusqua)+" (r\u00e9cap CERP)":"r\u00e9cap CERP pas encore lu"}),
+React.createElement(KPICard,{title:"Remise totale "+an,value:fmtEur0(T.total),sub:aff?genPct(T.total,aff)+" de vos achats":"remise CERP + avoirs + coop\u00e9ration"}),
+React.createElement(KPICard,{title:"D\u00e9j\u00e0 vers\u00e9 par le labo",value:fmtEur0(T.paye),sub:per&&per.au?sousVerse:"d\u00e9posez le relev\u00e9 bancaire"}),
+React.createElement(KPICard,{title:"Non vers\u00e9",value:retards.length?fmtEur0(resteRetard):(nbAtt?nbAtt+" en attente":"rien"),sub:retards.length?retards.length+" document"+(retards.length>1?"s":"")+" \u00e0 r\u00e9clamer":(nbAtt?"r\u00e9cents, d\u00e9lai normal":"tout est vers\u00e9"),subColor:retards.length?"var(--red)":null})),
+React.createElement("div",{style:Object.assign({},carte,{marginBottom:14})},
+React.createElement("div",{style:{fontWeight:700,marginBottom:8}},"D'o\u00f9 vient la remise"),
+[["Remise CERP d\u00e9duite des factures",T.cerp,T.cerpJusqua?"janv. \u2192 "+genMoisNom(T.cerpJusqua):"en attente du r\u00e9cap CERP"],["Avoirs du labo (remise de performance)",T.avoir,T.nbAv+" avoir"+(T.nbAv>1?"s":"")],["Coop\u00e9ration commerciale (HT)",T.coop,T.nbCoop+" autofacture"+(T.nbCoop>1?"s":"")]].map(function(r){var w=aff>0&&r[1]>0?Math.min(100,r[1]/aff*100*2.5):0;
+return React.createElement("div",{key:r[0],style:{display:"grid",gridTemplateColumns:"minmax(150px,1fr) auto",gap:"2px 12px",padding:"6px 0",borderTop:"1px solid var(--border)",fontSize:13}},
+React.createElement("span",null,r[0],React.createElement("span",{style:{color:"var(--text3)",fontSize:12}}," \u00b7 "+r[2])),
+React.createElement("span",{style:{fontWeight:700,textAlign:"right",whiteSpace:"nowrap"}},(r[1]!=null?fmtEur0(r[1]):"\u2013")+(aff?"  \u00b7  "+genPct(r[1]||0,aff):"")),
+React.createElement("div",{style:{gridColumn:"1 / -1",height:6,borderRadius:3,background:"var(--bg3)",overflow:"hidden"}},React.createElement("div",{style:{width:w+"%",height:"100%",background:"var(--accent)",borderRadius:3}})))})),
+retards.length?React.createElement("div",{style:Object.assign({},carte,{borderColor:"var(--red)",marginBottom:14})},
+React.createElement("div",{style:{fontWeight:700,marginBottom:6,color:"var(--red)"}},"\u23f0 Aucun virement trouv\u00e9 sur le relev\u00e9"),
+retards.map(function(x){return React.createElement("div",{key:x.id,style:{fontSize:13,padding:"5px 0",borderTop:"1px solid var(--border)"}},
+(x.kind==="coop"?"Autofacture ":"Avoir ")+x.num+" du "+dateCourteFr(x.date)+" \u00b7 "+fmtEur2(x.kind==="coop"?x.ttc:x.ht)+(x.kind==="avoir"?" (achats de "+genMoisNom(x.mois)+")":""))}),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:6}},"Le labo peut aussi l'avoir compens\u00e9 sur une facture : \u00e0 v\u00e9rifier avec lui ou votre d\u00e9l\u00e9gu\u00e9.")):null,
+React.createElement("div",{style:Object.assign({},carte,{marginBottom:14,overflowX:"auto"})},
+React.createElement("div",{style:{fontWeight:700,marginBottom:8}},"Mois par mois"),
+React.createElement("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:13,minWidth:520}},
+React.createElement("thead",null,React.createElement("tr",{style:{color:"var(--text3)",fontSize:12,textAlign:"right"}},
+React.createElement("th",{style:{textAlign:"left",padding:"4px 6px"}},"Mois"),React.createElement("th",{style:{padding:"4px 6px"}},"Remise CERP"),React.createElement("th",{style:{padding:"4px 6px"}},"Avoir labo"),React.createElement("th",{style:{padding:"4px 6px"}},"Coop\u00e9ration HT"),React.createElement("th",{style:{padding:"4px 6px"}},"Total"),React.createElement("th",{style:{padding:"4px 6px"}},"% achats"))),
+React.createElement("tbody",null,moisVis.map(function(l){return React.createElement("tr",{key:l.mois,style:{borderTop:"1px solid var(--border)",textAlign:"right"}},
+React.createElement("td",{style:{textAlign:"left",padding:"6px",fontWeight:600}},genMoisNom(l.mois)),
+React.createElement("td",{style:{padding:"6px"}},l.cerp!=null?fmtEur0(l.cerp):React.createElement("span",{style:{color:"var(--text3)"}},"\u2013")),
+React.createElement("td",{style:{padding:"6px",whiteSpace:"nowrap"}},l.avoir!=null?fmtEur0(l.avoir):React.createElement("span",{style:{color:"var(--text3)"}},"\u2013"),cellPay(l.avoirs)),
+React.createElement("td",{style:{padding:"6px",whiteSpace:"nowrap"}},l.coop!=null?fmtEur0(l.coop):React.createElement("span",{style:{color:"var(--text3)"}},"\u2013"),cellPay(l.coops)),
+React.createElement("td",{style:{padding:"6px",fontWeight:700}},fmtEur0(l.total)),
+React.createElement("td",{style:{padding:"6px",color:"var(--text2)"}},l.achats?genPct(l.total,l.achats):"\u2013"))}))),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginTop:8,lineHeight:1.5}},"\u2713 vers\u00e9 \u00b7 \u23f3 en attente \u00b7 \u23f0 aucun virement trouv\u00e9. L'avoir du labo est rang\u00e9 dans le mois des achats (le mois avant sa date) ; la coop\u00e9ration dans le mois de l'autofacture. Le % achats n'appara\u00eet que pour les mois dont le r\u00e9cap CERP est connu.")),
+React.createElement("div",{style:Object.assign({},carte,{marginBottom:14})},
+React.createElement("div",{style:{fontWeight:700,marginBottom:4}},"\ud83d\udd0e La CERP applique-t-elle la remise annonc\u00e9e ?"),
+React.createElement("div",{style:{fontSize:12,color:"var(--text3)",marginBottom:8}},"Remise g\u00e9n\u00e9riques annonc\u00e9e dans le r\u00e9cap des achats sous contrats, compar\u00e9e \u00e0 celle r\u00e9ellement d\u00e9duite (r\u00e9cap des avantages commerciaux de l'avoir mensuel). Tous g\u00e9n\u00e9riqueurs confondus."),
+ctrl.lignes.length?React.createElement("div",{style:{display:"grid",gap:2}},ctrl.lignes.map(function(l){var e=l.ecartGen;var col=e==null?"var(--text3)":(e<-1?"var(--red)":"var(--accent)");
+return React.createElement("div",{key:l.mois,style:{display:"flex",gap:10,flexWrap:"wrap",fontSize:13,padding:"5px 0",borderTop:"1px solid var(--border)"}},
+React.createElement("b",{style:{minWidth:70}},genMoisNom(l.mois)),
+React.createElement("span",{style:{flex:1,minWidth:200}},"annonc\u00e9e "+(l.annGen!=null?fmtEur2(l.annGen):"?")+" \u00b7 appliqu\u00e9e "+(l.appGen!=null?fmtEur2(l.appGen):"?")),
+React.createElement("span",{style:{color:col,fontWeight:700}},e==null?"\u00e0 compl\u00e9ter":(Math.abs(e)<1?"\u2713 conforme":(e>0?"+":"")+fmtEur2(e))))})):React.createElement("div",{style:{fontSize:13,color:"var(--text3)"}},"Pas encore de documents CERP : le robot les r\u00e9cup\u00e8re en fin de mois (ou d\u00e9posez les PDF)."),
+cumul?React.createElement("div",{style:{fontSize:13,marginTop:8,lineHeight:1.5}},cumul.complet?"Cumul janv. \u2192 "+genMoisNom(cumul.jusqua)+" : annonc\u00e9e "+fmtEur2(cumul.annGen)+", appliqu\u00e9e "+fmtEur2(cumul.appGen)+" ("+((cumul.appGen-cumul.annGen)>=0?"+":"")+fmtEur2(cumul.appGen-cumul.annGen)+")." :"Cumul janv. \u2192 "+genMoisNom(cumul.jusqua)+" annonc\u00e9 : "+fmtEur2(cumul.annGen)+". Il manque "+cumul.manquants+" avoir"+(cumul.manquants>1?"s":"")+" CERP de l'ann\u00e9e pour comparer le cumul."):null),
+React.createElement("div",{style:Object.assign({},carte,{marginBottom:14})},
+React.createElement("button",{onClick:function(){setOuvert(ouvert==="docs"?null:"docs")},style:{fontWeight:700,background:"transparent",padding:0,color:"var(--text)"}},(ouvert==="docs"?"\u25be ":"\u25b8 ")+"Documents "+rfaNomCourt(lab)+" "+an+" ("+(T.nbAv+T.nbCoop)+")"),
+ouvert==="docs"?React.createElement("div",{style:{marginTop:8}},(data.docs||[]).filter(function(x){return x.lab===lab&&x.mois.slice(0,4)===String(an)}).sort(function(a,b){return a.date<b.date?-1:1}).map(function(x){var p=A.pay[x.id]||{};var g=GEN_PAY[p.statut]||GEN_PAY.attente;
+return React.createElement("div",{key:x.id,style:{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",fontSize:13,padding:"6px 0",borderTop:"1px solid var(--border)"}},
+React.createElement("span",{style:{flex:"1 1 220px",minWidth:0}},React.createElement("b",null,(x.kind==="coop"?"Coop\u00e9ration ":"Avoir ")+x.num),React.createElement("span",{style:{color:"var(--text3)"}}," \u00b7 "+dateCourteFr(x.date)+" \u00b7 "+fmtEur2(x.kind==="coop"?x.ttc:x.ht)+(x.kind==="coop"?" TTC":""))),
+x.kind==="avoir"?React.createElement("select",{value:x.mois,onChange:function(e){changerMois(x,e.target.value)},title:"Mois des achats concern\u00e9s",style:{padding:"4px 6px",borderRadius:6,border:"1px solid var(--border)",background:"var(--bg)",color:"var(--text)",fontSize:12}},[-3,-2,-1,0,1].map(function(n){var ym=genMoisAjoute(x.date.slice(0,7),n);return React.createElement("option",{key:ym,value:ym},"achats "+genMoisNom(ym))})):null,
+React.createElement("span",{style:{color:g[1],fontSize:12,fontWeight:700,whiteSpace:"nowrap"}},g[0]+" "+g[2]+(p.date?" le "+dateCourteFr(p.date):"")+(p.groupe?" (avec "+(p.groupe-1)+" autre"+(p.groupe>2?"s":"")+")":"")))})):null),
+depot)}
+function rfaNomCourt(l){return String(l||"").charAt(0)+String(l||"").slice(1).toLowerCase()}
+
 function BandeauRfaLabo(props){
 var nm=props.lab;var conds=props.conditions||{};
 var dS=useState(window.PS_RFA||null);var data=dS[0];var setData=dS[1];
@@ -16992,6 +17254,8 @@ content=React.createElement(FicheProduitPage,{noms:nomsExt,setNoms:setNomsExt,la
 content=React.createElement(MeteoPage,{pd:pdCal,data:meteoData,onData:setMeteoData});
 }else if(page==="rfa"){
 content=React.createElement(VersementsRfaPage,{pd:pdCal,ld:ldLive,conditions:conditions,setPage:setPage,openLab:function(l){openLab(l,"conditions")}});
+}else if(page==="generiques"){
+content=React.createElement(GeneriquesPage,{pd:pdCal,setPage:setPage});
 }else if(page==="remises"){
 content=React.createElement(RemisesPage,{pd:pdCal,ld:ldLive,conditions:conditions,setCondition:setCondition,setPage:setPage,openLab:function(l){openLab(l,"conditions")}});
 }else if(page==="univers"){
