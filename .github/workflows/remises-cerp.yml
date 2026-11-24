@@ -4,6 +4,11 @@ on:
     # tous les soirs du 28 au 31 a 19 h 10 (heure de Paris en hiver) ; le script ne travaille que le dernier jour du mois
     - cron: "10 18 28-31 * *"
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - scripts/remises_cerp.py
+      - .github/workflows/remises-cerp.yml
 permissions:
   contents: read
 concurrency:

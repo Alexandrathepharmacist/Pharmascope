@@ -132,7 +132,8 @@ def fin_de_mois_paris():
 
 
 def main():
-    manuel = os.environ.get("GITHUB_EVENT_NAME") == "workflow_dispatch"
+    # lance a la main (bouton Run workflow) ou apres une mise a jour du robot : on travaille tout de suite
+    manuel = os.environ.get("GITHUB_EVENT_NAME") in ("workflow_dispatch", "push")
     if not manuel and not fin_de_mois_paris():
         journal("Pas le dernier jour du mois : rien a faire.")
         return 0
