@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="ps-version" content="v9.94">
+<meta name="ps-version" content="v9.95">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>PharmaScope - Pharmacie de Veyrier-du-Lac</title>
 <meta name="theme-color" content="#059669">
@@ -898,6 +898,8 @@ var HEATJ={},TK={},TKJ={},TKR={},TKHO={};var DERNV="";/* v9.71 : date et heure d
    on les isole pour ne pas fausser le rythme journalier du mois en cours. */
 var SEUIL_EXC=1000;
 var cnt=0,skipped=0,unknownCA=0;
+var NRA={codes:{},n:0};try{NRA=nrA21(lines,headerIdx+1,names)}catch(eN){}
+if(NRA.n)log("M\u00e9dicaments non rembours\u00e9s export\u00e9s \u00e0 2,1 % (Dolipranetabs, Liquiz...) reclass\u00e9s en non rembours\u00e9 : "+NRA.n);
 for(var i=headerIdx+1;i<lines.length;i++){
 var line=lines[i];if(!line)continue;
 var parts=line.split(";");
@@ -934,7 +936,7 @@ if(facture){if(!FACT[mo])FACT[mo]={};FACT[mo][facture]=1;
 /* v9.75 : passages au comptoir. Une facture = son jour, sa 1re minute, son vendeur ; regroupees plus bas */
 var hmP=((r0.split(" ")[1])||"").slice(0,5);var mnP=/^\d{1,2}:\d{2}$/.test(hmP)?(parseInt(hmP.split(":")[0],10)*60+parseInt(hmP.split(":")[1],10)):-1;var jP=dp[2]+"-"+dp[1]+"-"+dp[0];var eP=PASSF[facture];if(!eP)PASSF[facture]={mo:mo,j:jP,mn:mnP,v:r2.trim(),n:parseInt(facture,10)||0};else if(jP<eP.j||(jP===eP.j&&mnP>=0&&(eP.mn<0||mnP<eP.mn))){eP.j=jP;eP.mn=mnP;eP.mo=mo}}
 /* Hors ordonnance : on exclut les lignes remboursables (TVA 2,1% et 0%) */
-var tvaF=parseFloat(tva)||0;
+var tvaF=parseFloat(tva)||0;if(tvaF===2.1&&NRA.codes[code])tvaF=10;
 var dispoR=tvaF!==2.1&&tvaF!==0&&estDispoRemb(names[code]);
 if(tvaF!==2.1&&tvaF!==0&&!dispoR){
 CAHO[mo]=(CAHO[mo]||0)+ca;
@@ -1855,7 +1857,7 @@ return JSON.parse(new TextDecoder().decode(merged));
 
 var LOGO_URI="data:image/jpeg;base64,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";
 function logoImg(t){return React.createElement("img",{src:LOGO_URI,alt:"PharmaScope",width:t,height:t,style:{width:t,height:t,borderRadius:Math.round(t*0.22),display:"inline-block",flexShrink:0,verticalAlign:"middle"}})}
-var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.94";var DATA_DATE="06/03/2026";
+var APP_VERSION=(document.querySelector('meta[name="ps-version"]')||{}).content||"v9.95";var DATA_DATE="06/03/2026";
 /* ===== NAV ITEMS ===== */
 /* v8.81 : 4e onglet de la barre du bas = l'ecran que vous ouvrez le plus souvent
    (150 dernieres visites, memorisees sur cet appareil). Calcule a l'ouverture de l'appli
@@ -1868,6 +1870,10 @@ function enregistrerVisite(p){try{var a=JSON.parse(localStorage.getItem("ps_visi
 function ongletFrequent(){var fixes={home:1,aujourdhui:1,commandes:1,labdetail:1,menu:1};var a=[];try{a=JSON.parse(localStorage.getItem("ps_visites")||"[]")}catch(e){}
 var c={};(Array.isArray(a)?a:[]).forEach(function(p){if(!fixes[p])c[p]=(c[p]||0)+1});var best=null;
 Object.keys(c).forEach(function(p){if(navItem(p)&&(!best||c[p]>c[best]))best=p});return best&&c[best]>=3?best:"univers"}
+/* v9.95 : le reclassement v9.93/v9.94 s'applique a TOUTE l'appli, des l'import des ventes : un medicament non
+   rembourse que Winpharma exporte a 2,1 % (Dolipranetabs, Liquiz, Efferalganodis, Eludril, Bepanthen...) est traite
+   comme un produit a 10 % (chiffre conseil, univers, classements, tickets, vendeurs). La TVA reelle reste intacte
+   dans la repartition par taux de TVA. Repere par un premier passage sur le fichier (fonction nrA21). */
 /* v9.93 : medicaments NON remboursables que Winpharma exporte a 2,1 % de TVA (Dolipranetabs, Doliprane Liquiz...).
    Regle d'Alexandra : Doliprane sans "TABS" ni "LIQUIZ" = rembourse (sachets et suppositoires compris).
    Liste Q_NR_MOTS + repere automatique : produit a 2,1 % vendu au moins 20 fois, dont 90 % ou plus sans ordonnance. */
@@ -11979,6 +11985,20 @@ for(i=0;i<c.ok.length;i++){var m=c.ok[i];if(m.length<=3){if(NR.indexOf(" "+m+" "
 var Q_NR_MOTS=["DOLIPRANETABS","DOLIPRANE TABS","DOLIPRANELIQUIZ","DOLIPRANE LIQUIZ"];
 /* v9.94 : remboursables vendus presque toujours au comptoir, a ne pas basculer en non rembourse (Aspirine Upsa 1000 tamponnee : 65 %, base publique des medicaments) */
 var Q_REMB_MOTS=["ASPIRINE UPSA"];
+/* v9.95 : verdict par le nom seul : "N" force non rembourse, "R" force rembourse, null = on regarde les ventes */
+function nrParNom(nom){var N=String(nom||"").toUpperCase();var i;for(i=0;i<Q_REMB_MOTS.length;i++){if(N.indexOf(Q_REMB_MOTS[i])>=0)return"R"}
+for(i=0;i<Q_NR_MOTS.length;i++){if(N.indexOf(Q_NR_MOTS[i])>=0)return"N"}return null}
+/* v9.95 : premier passage sur le fichier des ventes -> codes non rembourses exportes a 2,1 % */
+function nrA21(lines,debut,names){var hon={},agg={};
+for(var i=debut;i<lines.length;i++){var l=lines[i];if(!l)continue;var pa=l.split(";");if(pa.length<11)continue;
+var d=(pa[0]||"").replace(/"/g,"").trim();if(!/^\d\d\/\d\d\/\d{4}/.test(d))continue;var f=(pa[1]||"").replace(/"/g,"").trim();if(!f||f==="0")continue;
+var c=(pa[3]||"").replace(/"/g,"").replace(/\s/g,"");var k=d.split(" ")[0]+"|"+f;
+if(/^-1[5-8]$/.test(c)){hon[k]=1;continue}
+if(!/^\d{7,14}$/.test(c))continue;var t=parseFloat((pa[5]||"").replace(/"/g,"").trim().replace(",","."))||0;if(t!==2.1)continue;
+var q=parseFloat((pa[7]||"").replace(/"/g,"").replace(/\s/g,"").replace(",","."))||0;(agg[c]=agg[c]||[]).push([k,q])}
+var out={},n=0;Object.keys(agg).forEach(function(c){var v=nrParNom(names[c]);if(v==="R")return;if(v==="N"){out[c]=1;n++;return}
+var tq=0,sq=0;agg[c].forEach(function(x){tq+=x[1];if(!hon[x[0]])sq+=x[1]});if(tq>=20&&sq>=0.9*tq){out[c]=1;n++}});
+return{codes:out,n:n}}
 function qNonRembAuto(p){if(!p)return false;var N=String(p.n||"").toUpperCase();for(var r=0;r<Q_REMB_MOTS.length;r++){if(N.indexOf(Q_REMB_MOTS[r])>=0)return false}for(var i=0;i<Q_NR_MOTS.length;i++){if(N.indexOf(Q_NR_MOTS[i])>=0)return true}
 if(p.tva!==2.1||!p.qsM||!p.qm)return false;var q=0,s=0;p.qm.forEach(function(v){q+=v||0});p.qsM.forEach(function(v){s+=v||0});return q>=20&&s>=0.9*q}
 function qRembDe(x){if(qNonRembAuto(x.p))return"N";var c=classeRembTaux(x.p.tva,x.l);if(c===null)c=(estProduitOrdo(x.p,x.l)||estDispoRemb(x.p.n))?"R":"N";else if(c==="N"&&estDispoRemb(x.p.n))c="R";return c}
