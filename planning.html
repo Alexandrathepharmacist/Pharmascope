@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="ps-version" content="p2.10">
+<meta name="ps-version" content="p2.11">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -917,13 +917,13 @@ function cpDays(pid,after,until){
 /* 28/11/2026 (demande d'Alexandra) : un congé payé se décompte en jours ouvrables du premier jour d'absence
    jusqu'à la veille du retour au planning (lundi-samedi, fériés exclus), et pas seulement les jours d'absence posés. */
 function retourApres(pid,to){var d=dAdd(dParse(to),1);for(var i=0;i<60;i++,d=dAdd(d,1)){var inf=dayInfo(pid,dIso(d));if(inf.act.length||(inf.t&&inf.t!=="cp"))return dIso(d);}return dIso(d);}
-function cpPeriode(pid,from,to){var ret=retourApres(pid,to),k=S.cpMode;S.cpMode="ouvrables";var n=cpDays(pid,dIso(dAdd(dParse(from),-1)),dIso(dAdd(dParse(ret),-1)));
-  var past=from<=tIso?cpDays(pid,dIso(dAdd(dParse(from),-1)),dIso(dAdd(dParse(ret),-1))<tIso?dIso(dAdd(dParse(ret),-1)):tIso):0;S.cpMode=k;return {n:n,past:past,ret:ret};}
+function cpPeriode(pid,from,to){var ret=retourApres(pid,to);var n=cpDays(pid,dIso(dAdd(dParse(from),-1)),dIso(dAdd(dParse(ret),-1)));
+  var past=from<=tIso?cpDays(pid,dIso(dAdd(dParse(from),-1)),dIso(dAdd(dParse(ret),-1))<tIso?dIso(dAdd(dParse(ret),-1)):tIso):0;return {n:n,past:past,ret:ret};}
 /* aperçu avant de poser : on simule le congé payé sur la période */
 function cpSimule(pid,from,to){var keep=S.changes;S.changes=cp(S.changes);
   rangeDays(from,to).forEach(function(ds){var inf=dayInfo(pid,ds);if(inf.exp.length&&!FERIES[ds])setChange(pid,ds,{b:[],t:"cp"});});
   var r=cpPeriode(pid,from,to);S.changes=keep;return r;}
-function cpTxt(r){return jj(r.n)+" de congés payés décomptés (jours ouvrables jusqu'à la veille du retour, le "+dFr(r.ret)+")";}
+function cpTxt(r){return jj(r.n)+" de congés payés décomptés"+(S.cpMode==="poses"?" (jours posés au planning)":" (jours ouvrables jusqu'à la veille du retour, le "+dFr(r.ret)+")");}
 function cpBalance(pid,at){
   var tIso=at||today0;
   var rep=latestReport(pid,"cp"),base=rep?rep.day:dIso(dAdd(FIRST,-1)),start=rep?rep.cp:0,adj=0;
@@ -2171,7 +2171,7 @@ function monthBilan(p,ym){
     r.chg+=dayBal(p.id,ds);
   });
   r.bank=r.bank||0;r.ecart=r.chg+r.bank;
-  var kcp=S.cpMode;S.cpMode="ouvrables";r.cpJ=cpDays(p.id,dIso(dAdd(dParse(a),-1)),b);S.cpMode=kcp;
+  r.cpJ=cpDays(p.id,dIso(dAdd(dParse(a),-1)),b);
   if(p.status==="salarie"){
     var hb=hoursBalanceAt(p.id,b);r.solde=hb?hb.total:null;
     var cb=cpBalance(p.id,b);r.cpRest=cb?cb.total:null;
