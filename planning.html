@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="ps-version" content="p2.09">
+<meta name="ps-version" content="p2.10">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PharmaScope Planning</title>
 <meta name="robots" content="noindex">
@@ -914,6 +914,16 @@ function cpDays(pid,after,until){
   }
   return n;
 }
+/* 28/11/2026 (demande d'Alexandra) : un congé payé se décompte en jours ouvrables du premier jour d'absence
+   jusqu'à la veille du retour au planning (lundi-samedi, fériés exclus), et pas seulement les jours d'absence posés. */
+function retourApres(pid,to){var d=dAdd(dParse(to),1);for(var i=0;i<60;i++,d=dAdd(d,1)){var inf=dayInfo(pid,dIso(d));if(inf.act.length||(inf.t&&inf.t!=="cp"))return dIso(d);}return dIso(d);}
+function cpPeriode(pid,from,to){var ret=retourApres(pid,to),k=S.cpMode;S.cpMode="ouvrables";var n=cpDays(pid,dIso(dAdd(dParse(from),-1)),dIso(dAdd(dParse(ret),-1)));
+  var past=from<=tIso?cpDays(pid,dIso(dAdd(dParse(from),-1)),dIso(dAdd(dParse(ret),-1))<tIso?dIso(dAdd(dParse(ret),-1)):tIso):0;S.cpMode=k;return {n:n,past:past,ret:ret};}
+/* aperçu avant de poser : on simule le congé payé sur la période */
+function cpSimule(pid,from,to){var keep=S.changes;S.changes=cp(S.changes);
+  rangeDays(from,to).forEach(function(ds){var inf=dayInfo(pid,ds);if(inf.exp.length&&!FERIES[ds])setChange(pid,ds,{b:[],t:"cp"});});
+  var r=cpPeriode(pid,from,to);S.changes=keep;return r;}
+function cpTxt(r){return jj(r.n)+" de congés payés décomptés (jours ouvrables jusqu'à la veille du retour, le "+dFr(r.ret)+")";}
 function cpBalance(pid,at){
   var tIso=at||today0;
   var rep=latestReport(pid,"cp"),base=rep?rep.day:dIso(dAdd(FIRST,-1)),start=rep?rep.cp:0,adj=0;
@@ -2029,9 +2039,11 @@ function renderCong(){
     S.people.forEach(function(p){
       var ps=byP[p.id];if((p.hors||p.arch)&&!ps.length)return;
       var gsum={cp:[0,0,0,0],recup:[0,0,0,0],maladie:[0,0,0,0],autre:[0,0,0,0]};
-      ps.forEach(function(q){var k=tGroup(q.t);q.days.forEach(function(ds,i){var f=ds>tIso?2:0;gsum[k][f]++;gsum[k][f+1]+=q.dh[i];});});
+      ps.forEach(function(q){var k=tGroup(q.t);
+        if(q.t==="cp"){var cpp=cpPeriode(q.p,q.from,q.to);gsum.cp[0]+=cpp.past;gsum.cp[2]+=cpp.n-cpp.past;q.days.forEach(function(ds,i){gsum.cp[ds>tIso?3:1]+=q.dh[i];});return;}
+        q.days.forEach(function(ds,i){var f=ds>tIso?2:0;gsum[k][f]++;gsum[k][f+1]+=q.dh[i];});});
       var c=function(k){var g=gsum[k];if(!g[0]&&!g[2])return "<td class='empty'>–</td>";
-        return "<td>"+(g[0]?"<b>"+g[0]+" j</b> pris <span class='sm'>"+hm(g[1])+"</span>":"<span class='empty'>0 j pris</span>")+(g[2]?"<div class='sm' style='color:var(--t-cp)'>+ "+g[2]+" j à venir ("+hm(g[3])+")</div>":"")+"</td>";};
+        return "<td>"+(g[0]?"<b>"+String(g[0]).replace(".",",")+" j</b> pris <span class='sm'>"+hm(g[1])+"</span>":"<span class='empty'>0 j pris</span>")+(g[2]?"<div class='sm' style='color:var(--t-cp)'>+ "+String(g[2]).replace(".",",")+" j à venir ("+hm(g[3])+")</div>":"")+"</td>";};
       th+="<tr><td><div class='who' style='--pc:"+p.color+"'>"+av(p)+"<span class='n'>"+esc(p.name)+"</span></div></td>"+c("cp")+c("recup")+c("maladie")+c("autre");
       if(adm){if(p.status==="salarie"){var cb=cpBalance(p.id),hb=hoursBalance(p.id);th+="<td>"+jj(cb.total)+(cb.planned?" <span class='sm'>dont "+jj(cb.planned)+" posés</span>":"")+"</td><td class='"+(hb.total>=0?"pos":"neg")+"'>"+sg(hb.total)+"</td>";}else th+="<td class='empty'>–</td><td class='empty'>–</td>";}
       th+="</tr>";
@@ -2069,7 +2081,7 @@ function renderCong(){
 function goPlan(ds){var d=dParse(ds);S.wk=dIso(monOf(d));S.pday=Math.min(5,wdOf(d));S.tab="plan";closeSheet();renderAll();window.scrollTo(0,0);}
 function periodLine(q){
   var p=P(q.p),d=el("button",{class:"req",style:"--pc:"+p.color+";text-align:left;width:100%"});
-  d.innerHTML=av(p)+"<div class='body'><div><b>"+esc(p.name)+"</b> <span class='tchip t-"+q.t+"'>"+esc(TYPES[q.t].l)+"</span>"+(q.from<=tIso&&q.to>=tIso?" <span class='st st-pending'>En cours</span>":"")+"</div><div class='meta num'>"+dRange(q)+" · "+q.n+" jour"+(q.n>1?"s":"")+" prévu"+(q.n>1?"s":"")+" au planning ("+hm(q.h)+")</div>"+(q.cs.length?"<div class='meta'>« "+esc(q.cs.join(" · "))+" »</div>":"")+"</div>";
+  d.innerHTML=av(p)+"<div class='body'><div><b>"+esc(p.name)+"</b> <span class='tchip t-"+q.t+"'>"+esc(TYPES[q.t].l)+"</span>"+(q.from<=tIso&&q.to>=tIso?" <span class='st st-pending'>En cours</span>":"")+"</div><div class='meta num'>"+dRange(q)+" · "+q.n+" jour"+(q.n>1?"s":"")+" prévu"+(q.n>1?"s":"")+" au planning ("+hm(q.h)+")"+(q.t==="cp"?" · <b>"+jj(cpPeriode(q.p,q.from,q.to).n)+" de CP</b> décomptés":"")+"</div>"+(q.cs.length?"<div class='meta'>« "+esc(q.cs.join(" · "))+" »</div>":"")+"</div>";
   d.addEventListener("click",function(){openPeriod(q);});
   return d;
 }
@@ -2077,7 +2089,7 @@ function openPeriod(q){
   var p=P(q.p);
   var c=el("div");
   c.appendChild(el("div",{class:"who",style:"--pc:"+p.color},av(p)+"<div><h2>"+esc(p.name)+"</h2><div class='sub'>"+esc(TYPES[q.t].l)+" "+dRange(q)+"</div></div>"));
-  c.appendChild(el("div",{class:"recap num"},"<b>"+q.n+" jour"+(q.n>1?"s":"")+"</b> prévu"+(q.n>1?"s":"")+" au planning ("+hm(q.h)+")"+(q.cs.length?"<br>« "+esc(q.cs.join(" · "))+" »":"")));
+  c.appendChild(el("div",{class:"recap num"},"<b>"+q.n+" jour"+(q.n>1?"s":"")+"</b> prévu"+(q.n>1?"s":"")+" au planning ("+hm(q.h)+")"+(q.t==="cp"?"<br>Soit "+cpTxt(cpPeriode(q.p,q.from,q.to))+".":"")+(q.cs.length?"<br>« "+esc(q.cs.join(" · "))+" »":"")));
   var row=el("div",{class:"row"});
   if(isEditor())row.appendChild(el("button",{class:"btn ghost",onclick:function(){
     snap();q.days.forEach(function(ds){setChange(q.p,ds,null);});
@@ -2121,7 +2133,7 @@ function openAbsence(pid,from,motif){
     var r=scan(),T=TYPES[at[0]];er.textContent="";ok.disabled=!r.n;
     eqb.innerHTML=(r.n&&at[0]==="cp"&&isAdmin()&&r.p.status==="titulaire"&&titulaires().length>1)?equilibreHtml(equilibre(r.p.id,fi.value,ti.value)):"";
     if(!r.n){rec.textContent=r.p.name+" n'est pas prévu(e) au planning sur ces dates : rien à poser.";return;}
-    rec.innerHTML="<b>"+esc(r.p.name)+"</b> · "+esc(T.l.toLowerCase())+" "+(fi.value===ti.value?"le "+dFr(fi.value):"du "+dFr(fi.value)+" au "+dFr(ti.value))+"<br><b>"+r.n+" jour"+(r.n>1?"s":"")+"</b> de travail prévu"+(r.n>1?"s":"")+" ("+hm(r.h)+") · "+(T.paid?"heures comptées comme dues, sans effet sur le solde d'heures":(T.neutral?"heures retirées du contrat, sans effet sur le solde d'heures":"solde d'heures "+sg(-r.h)))+
+    rec.innerHTML="<b>"+esc(r.p.name)+"</b> · "+esc(T.l.toLowerCase())+" "+(fi.value===ti.value?"le "+dFr(fi.value):"du "+dFr(fi.value)+" au "+dFr(ti.value))+"<br><b>"+r.n+" jour"+(r.n>1?"s":"")+"</b> de travail prévu"+(r.n>1?"s":"")+" ("+hm(r.h)+")"+(at[0]==="cp"?"<br>Soit <b>"+cpTxt(cpSimule(r.p.id,fi.value,ti.value))+"</b>":"")+" · "+(T.paid?"heures comptées comme dues, sans effet sur le solde d'heures":(T.neutral?"heures retirées du contrat, sans effet sur le solde d'heures":"solde d'heures "+sg(-r.h)))+
       (r.over?"<div style='color:var(--warn);margin-top:4px'>⚠ "+r.over+" journée"+(r.over>1?"s":"")+" déjà modifiée"+(r.over>1?"s":"")+" sur cette période (échange, horaires, autre absence) : "+(r.over>1?"elles seront remplacées":"elle sera remplacée")+" par cette absence.</div>":"")+
       (r.noPh.length?"<div style='color:var(--bad);margin-top:4px'>⚠ "+r.noPh.length+" jour"+(r.noPh.length>1?"s":"")+" avec un créneau sans pharmacien si rien n'est changé : "+r.noPh.slice(0,6).map(function(ds){return dLong(ds);}).join(", ")+(r.noPh.length>6?"…":"")+".</div>":"");
   }
@@ -2159,9 +2171,8 @@ function monthBilan(p,ym){
     r.chg+=dayBal(p.id,ds);
   });
   r.bank=r.bank||0;r.ecart=r.chg+r.bank;
+  var kcp=S.cpMode;S.cpMode="ouvrables";r.cpJ=cpDays(p.id,dIso(dAdd(dParse(a),-1)),b);S.cpMode=kcp;
   if(p.status==="salarie"){
-    var prev=dIso(dAdd(dParse(a),-1));
-    r.cpJ=cpDays(p.id,prev,b);
     var hb=hoursBalanceAt(p.id,b);r.solde=hb?hb.total:null;
     var cb=cpBalance(p.id,b);r.cpRest=cb?cb.total:null;
   }
@@ -2182,7 +2193,7 @@ function renderBilan(){
   rows.forEach(function(o){var p=o.p,r=o.r,sal=p.status==="salarie";tot+=r.worked;
     h+="<tr><td><div class='who' style='--pc:"+p.color+"'>"+av(p)+"<div style='min-width:0'><div class='n'>"+esc(p.name)+"</div><div class='h'>"+(sal?"contrat "+hm(p.contract)+"/sem.":(p.status==="facture"?"à facturer":STATUS[p.status]))+"</div></div></div></td>"+
       "<td>"+(r.days||"<span class='empty'>–</span>")+"</td><td class='avg'>"+hm(r.worked)+"</td>"+
-      "<td>"+(sal&&r.cpJ?jj(r.cpJ)+" <span class='sm'>"+hm(r.g.cp[1])+"</span>":gc(r.g.cp))+"</td><td>"+gc(r.g.cex)+"</td><td>"+gc(r.g.maladie)+"</td><td>"+gc(r.g.recup)+"</td><td>"+gc(r.g.autre)+"</td><td>"+hc(r.ferie)+"</td><td>"+hc(monthGardes(p.id,ym))+"</td>"+
+      "<td>"+(r.cpJ?jj(r.cpJ)+" <span class='sm'>"+hm(r.g.cp[1])+"</span>":gc(r.g.cp))+"</td><td>"+gc(r.g.cex)+"</td><td>"+gc(r.g.maladie)+"</td><td>"+gc(r.g.recup)+"</td><td>"+gc(r.g.autre)+"</td><td>"+hc(r.ferie)+"</td><td>"+hc(monthGardes(p.id,ym))+"</td>"+
       (sal||p.status==="facture"?"<td class='"+(r.ecart>=0?"pos":"neg")+"'>"+(r.ecart?sg(r.ecart):"0h")+"</td>":"<td class='empty'>–</td>")+
       (sal?"<td class='avg "+(r.solde==null?"":(r.solde>=0?"pos":"neg"))+"'>"+(r.solde==null?"–":sg(r.solde))+"</td><td class='avg'>"+(r.cpRest==null?"–":jj(r.cpRest))+"</td>":"<td class='empty'>–</td><td class='empty'>–</td>")+"</tr>";
   });
@@ -2195,7 +2206,7 @@ function bilanCsv(){
   var L=[["Bilan de fin de mois",MOISL[+ym.slice(5)-1]+" "+ym.slice(0,4),"Pharmacie de Veyrier-du-Lac"].map(q).join(";"),
     ["Prénom","Fonction","Statut","Contrat hebdo (h)","Jours travaillés","Heures travaillées","Congés payés (jours)","Congés payés (h)","Congés exceptionnels (jours)","Congés exceptionnels (h)","Maladie, accident (jours)","Maladie, accident (h)","Récup / échanges posés (h)","Autres absences (h)","Fériés (h)","Gardes (h)","Écart du mois (h)","Solde d'heures fin de mois (h)","Congés restants fin de mois (jours)"].map(q).join(";")];
   rows.forEach(function(o){var p=o.p,r=o.r,sal=p.status==="salarie";
-    L.push([q(p.name),q(p.role||""),q(STATUS[p.status]||""),sal?dec(p.contract):"",r.days,dec(r.worked),String(sal?r.cpJ:r.g.cp[0]).replace(".",","),dec(r.g.cp[1]),r.g.cex[0],dec(r.g.cex[1]),r.g.maladie[0],dec(r.g.maladie[1]),dec(r.g.recup[1]),dec(r.g.autre[1]),dec(r.ferie),dec(monthGardes(p.id,ym)),(sal||p.status==="facture")?dec(r.ecart):"",sal&&r.solde!=null?dec(r.solde):"",sal&&r.cpRest!=null?String(r.cpRest).replace(".",","):""].join(";"));});
+    L.push([q(p.name),q(p.role||""),q(STATUS[p.status]||""),sal?dec(p.contract):"",r.days,dec(r.worked),String(r.cpJ).replace(".",","),dec(r.g.cp[1]),r.g.cex[0],dec(r.g.cex[1]),r.g.maladie[0],dec(r.g.maladie[1]),dec(r.g.recup[1]),dec(r.g.autre[1]),dec(r.ferie),dec(monthGardes(p.id,ym)),(sal||p.status==="facture")?dec(r.ecart):"",sal&&r.solde!=null?dec(r.solde):"",sal&&r.cpRest!=null?String(r.cpRest).replace(".",","):""].join(";"));});
   var blob=new Blob(["﻿"+L.join("\r\n")],{type:"text/csv;charset=utf-8"}),u=URL.createObjectURL(blob),a=el("a",{href:u,download:"bilan-planning-"+ym+".csv"});
   document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u);},500);
   toast("Bilan de "+MOISL[+ym.slice(5)-1].toLowerCase()+" exporté (fichier lisible dans Excel)");
@@ -2590,7 +2601,7 @@ function openDay(pid,ds){
       rec.innerHTML="<b>"+hm(dur(res.bl))+"</b> travaillées · écart avec la trame <b class='"+(diff>=0?"pos":"neg")+"'>"+sg(diff)+"</b>"+(iss.length?"<div style='color:var(--warn);margin-top:4px'>⚠ "+iss.join(" ; ")+"</div>":"");}
     else{var to=toInp.value||ds;ok.disabled=to<ds||!at[0];if(!at[0])atH.textContent="Choisissez le motif de l'absence pour pouvoir enregistrer.";
       if(!at[0]){rec.textContent="";return;}var n=0,h=0;rangeDays(ds,to<ds?ds:to).forEach(function(x){var i2=dayInfo(pid,x);if(i2.exp.length&&!FERIES[x]){n++;h+=dur(i2.exp);}});
-      rec.innerHTML="<b>"+n+" jour"+(n>1?"s":"")+"</b> de travail prévu"+(n>1?"s":"")+" concerné"+(n>1?"s":"")+" ("+hm(h)+") · "+(TYPES[at[0]].paid?"compte comme des heures dues, sans effet sur le solde":(TYPES[at[0]].neutral?"heures retirées du contrat, sans effet sur le solde":"solde heures sup / récup "+sg(-h)));}
+      rec.innerHTML="<b>"+n+" jour"+(n>1?"s":"")+"</b> de travail prévu"+(n>1?"s":"")+" concerné"+(n>1?"s":"")+" ("+hm(h)+")"+(at[0]==="cp"&&n?"<br>Soit <b>"+cpTxt(cpSimule(pid,ds,to<ds?ds:to))+"</b><br>":" · ")+(TYPES[at[0]].paid?"compte comme des heures dues, sans effet sur le solde":(TYPES[at[0]].neutral?"heures retirées du contrat, sans effet sur le solde":"solde heures sup / récup "+sg(-h)));}
   }
   ok.addEventListener("click",function(){
     snap();
@@ -2620,8 +2631,8 @@ function openRequest(ds){
     if(!fi.value||!ti.value||ti.value<fi.value){er.textContent="Choisissez une date de fin après la date de début.";ok.disabled=true;rec.textContent="";return;}
     er.textContent="";ok.disabled=false;var n=0,h=0;rangeDays(fi.value,ti.value).forEach(function(x){var i2=dayInfo(p.id,x);if(i2.exp.length&&!FERIES[x]){n++;h+=dur(i2.exp);}});
     rec.textContent=n?"Vous êtes prévu(e) "+n+" jour"+(n>1?"s":"")+" sur cette période ("+hm(h)+").":"Vous n'êtes pas prévu(e) au planning sur ces dates.";
-    if(p.status==="salarie"&&t[0]==="cp"){var nb=0;rangeDays(fi.value,ti.value).forEach(function(x){if(wdOf(dParse(x))<=5&&!FERIES[x])nb++;});var cb=cpBalance(p.id);
-      rec.textContent+=" Cette demande représente environ "+jj(nb)+" de congés. Votre solde : "+jj(cb.total)+(cb.planned?", dont "+jj(cb.planned)+" déjà posés":"")+"."+(nb>cb.free?" Attention : c'est plus que votre solde disponible.":"");}
+    if(p.status==="salarie"&&t[0]==="cp"&&n){var sim=cpSimule(p.id,fi.value,ti.value),nb=sim.n;var cb=cpBalance(p.id);
+      rec.textContent+=" Cette demande représente "+jj(nb)+" de congés payés (jours ouvrables, du lundi au samedi, jusqu'à la veille de votre retour le "+dFr(sim.ret)+"). Votre solde : "+jj(cb.total)+(cb.planned?", dont "+jj(cb.planned)+" déjà posés":"")+"."+(nb>cb.free?" Attention : c'est plus que votre solde disponible.":"");}
     if(t[0]==="cex")rec.textContent+=" Congé exceptionnel (enfant malade, décès, mariage, naissance…) : il ne sera pas décompté de vos congés payés. Précisez le motif dans le commentaire.";
     if(p.status==="salarie"&&t[0]==="recup"){var hb2=hoursBalance(p.id,fi.value?fi.value.slice(0,7):null);if(hb2.total!=null)rec.textContent+=" Votre solde d'heures fin "+MOISL[+hb2.end.slice(5,7)-1].toLowerCase()+" : "+sg(hb2.total)+".";}
   }
